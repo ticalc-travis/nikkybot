@@ -1,0 +1,212 @@
+
+
+    ======================================
+    Nikky Simulator v0.10.00
+    Copyright (c) 2012 Travis Evans
+    -------
+
+
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, version 3.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
+Contents
+--------
+
+What is Nikky Simulator?
+Installing and starting the simulator
+Usage
+Bugs/limitations
+Thanks
+License
+Contact
+
+
+
+What is Nikky Simulator?
+------------------------
+
+Nikky Simulator is essentially a fun random sentence generator programmed
+with vocabulary intended to somewhat impersonate the character Nikky
+Southerland who is so infamous in the TI calculator community.  It started as
+one of those random ideas that came from seemingly nowhere.  The seed used
+for the pseudorandom number generator can be selected so that it is possible
+to return to a particular saying later.  It also offers the ability to save
+bookmarks (seeds) for later retrieval and search through seeds for a given
+word or phrase.
+
+
+
+Installing and starting the simulator
+-------------------------------------
+
+Installation is the same as with most other modern TTPacked programs.  Send
+the appropriate 'nikky' and 'nikkyppg' files to your calculator--.89y and .89y
+for TI-89 and TI-89 Titanium, .9xy and .9xz for TI-92 Plus, .v2y and .v2z for
+Voyage 200.  Actually, it shouldn't really matter which model's files you
+send; the versions are intercompatible across calculators.  Put both files in
+the same directory, set that directory as the current directory using the MODE
+screen or the setFold command, and execute the 'nikky' ASM file.  That's
+pretty much it.
+
+
+
+Usage
+-----
+
+The main screen contains a header at the top displaying the current saying
+number, the main area displaying the randomly generated saying, and a help
+bar at the bottom labeling the F-keys.  The saying number has three parts.
+The first part is a letter indicating the pseudorandom number algorithm in
+use (‘A’ for the original native routines used by Nikky Simulator v0.00.00,
+‘B’ for the Mersenne Twister algorithm introduced in v0.10.00).  The two
+remaining parts relate to the state of the random number generator.  A
+particular number will always generate the same particular saying.  This way
+if you find a saying you like, you can easily return to it later by going back
+to that saying number.
+
+Key functions are as follows:
+
+    - Cursor up/down/left/right:  Navigate through the sayings.  Up and down
+      change the first part of the saying number; left and right change the
+      second.
+      
+    - [ENTER]:  Page down, if the saying is too long to fit on one screen. 
+      Pressing again on the last screen of the saying returns back to the
+      beginning.
+      
+    - [STO]:  Bookmark the currently displayed saying (including the current
+      random number algorithm).   This will add the saying number to a list
+      for later retrieval.  A dialog box appears where you can give the saying
+      a name if you want.  If you choose not to, an excerpt from the saying is
+      used as a default name.
+      
+    - [F1]:  Display a dialog box giving a brief list of the keys available
+      and their functions.
+    
+    - [F2]:  Display the list of bookmarks.  Bookmarks are listed by the names
+      they were given when they were saved.  Select a bookmark to display
+      another menu with the three options “Open”, “Edit name…”, and “Delete…”.
+      “Open” jumps to the saying number recorded in the bookmark and displays
+      the saying.  “Edit name…” displays a dialog box allowing you to change
+      the name given to the bookmark.  “Delete…” permanently removes a
+      bookmark from the list (a confirmation dialog will ask you if you're
+      sure--press [ENTER] to delete, [ESC] to cancel).
+      
+    - [F8]:  Display the search dialog box.  This allows entering parameters
+      for searching sayings.  Sayings will be generated in turn until either
+      a match is found or the operation is manually interrupted (press [ON]
+      during the search process to do this).  Enter the word or phrase to
+      search for (case insensitive) and the search direction.  The options are
+      to search while incrementing the first part of the saying number,
+      incrementing the second part, decrementing the first part, and
+      decrementing the last part.  Confirm the dialog box to begin the search.
+      
+    - [F3]:  Immediately repeat the search using the parameters last entered
+      in the [F8] search dialog, looking for the next match.  (If no search
+      was entered yet, the dialog is presented first.)
+      
+    - [F4]:  Randomly select one of the two random number algorithms and then
+      jump to a random saying number.  The resulting saying will be displayed
+      immediately.
+      
+    - [F5]:  Go to a given saying number.  The number is entered in the
+      dialog box as it is displayed:  two integers separated with a hyphen,
+      for example, 1234-567.
+      
+    - [F6]:  Displays author and license information for Nikky Simulator.
+    
+    - [F7]:  Toggles random number algorithms (the ‘A’ and ‘B’ parts of the
+      saying number).  Each algorithm generates a unique sequence of random
+      numbers, resulting in different sayings.  The ‘B’ (Mersenne Twister)
+      algorithm is theoretically more random than the ‘A’ (original) one, but
+      searching is also much slower.
+      
+    - [CUT] ([Diamond]+[X] on TI-92+/V200):  Copy the current saying to the
+      AMS clipboard.  It can then be later pasted into the standard text editor
+      and the like.
+      
+    - [COPY] ([Diamond]+[C] on the TI-92+/V200):  Append the current saying to the
+      current clipboard.  The saying will be added to the end of the text the
+      clipboard currently holds.  This can be done for several sayings, then they
+      can later be pasted all in one batch.
+    
+    - [ESC] or [2nd]+[QUIT]:  Exit Nikky Simulator.
+    
+    
+    
+Bugs/limitations
+----------------
+
+My design goals for this program were to be able to create a wide variety of
+types of sentences and sayings and to try to maintain at least mostly valid
+grammar.  Given the complexity of the heuristics, it's entirely possible that
+there could be some rare errors show up that I didn't catch.  Some wording
+patterns are a bit awkward at times; these are mainly due to compromises I
+made to prevent the logic from getting more complicated than I felt like
+dealing with.
+
+Low memory handling is not the best (not that that is one of C's strong
+points, anyway).  I try to trap those and display an error instead of crash,
+but if there isn't enough RAM to rewrite the 'nikkycfg' config file, chances
+are good it will be corrupted and trash all your bookmarks.  Best to keep that
+backed up somewhere and make sure there is plenty of RAM free when running the
+simulator (preferably both).
+
+
+
+Thanks
+------
+
+Guess I'd better thank everyone who participated in the development of TIGCC,
+GCC4TI, VTI, TiEmu, TILP, and all the associated tools.  They are too
+numerous to list, but none of this would be possible without them.
+
+Thank you, of course, for trying it out.
+
+And thanks to Nikky for giving me the inspiration for this project.  :)
+
+
+
+License
+-------
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, version 3.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+See 'license.txt' for the full license text.
+
+
+
+Contact
+-------
+
+Questions, comments, bug reports, etc. are welcome.  At the time of
+this writing, I can be contacted using the following email address.
+
+<travise@ticalc.org>
+
+In case this address changes, you should check my ticalc.org user information
+for the current address:
+
+http://www.ticalc.org/cgi-bin/acct-view.cgi?userid=20532

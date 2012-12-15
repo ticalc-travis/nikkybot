@@ -1,0 +1,13 @@
+diff --git a/core.py b/core.py
+index 95a94e7..6a01e0e
+--- a/core.py
++++ b/core.py
+@@ -134,7 +134,7 @@ class _Core(variables._Variables, exceptions._Exceptions,
+                     self._socket.recv(4096).decode(self.encoding)
+                 except UnicodeDecodeError:
+                     sdata = sdata + \
+-                    self._socket.recv(4096).decode(self.fallback_encoding)
++                    self._socket.recv(4096).decode(self.fallback_encoding, errors='ignore')
+ 
+             lines = sdata.split(self._crlf)
+             for line in lines:

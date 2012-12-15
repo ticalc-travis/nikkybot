@@ -1,0 +1,161 @@
+63 abuse
+63 abused
+63 advocate
+63 advocated
+63 ate
+127 badmouth
+127 badmouthed
+127 ban
+127 banned
+63 beat up
+63 became
+63 become
+63 bias
+63 blame
+63 blamed
+63 block
+63 blocked
+63 bore
+63 bored
+63 boss around
+63 bribe
+63 bribed
+63 care about
+127 censor
+63 cheat
+63 cheated
+63 cite
+63 convey
+127 criticize
+127 criticized
+63 curse at
+63 cursed at
+63 debate
+63 defriend
+63 defriended
+63 delete
+63 deleted
+63 demolish
+63 demolished
+63 destroy
+63 destroyed
+127 disagree with
+63 dislike
+63 disliked
+63 double post
+63 double posted
+63 drank
+63 drink
+63 eat
+63 email
+63 emailed
+63 figure out
+63 gave
+63 gave away
+63 give
+63 give away
+63 hack
+63 hacked
+63 had something called
+63 hate
+63 have something called
+63 help
+63 helped
+63 highlight
+63 infuriate
+63 invade
+63 invaded
+63 involve
+63 kick
+63 kicked
+63 kill
+63 killed
+2 lick
+63 looked like
+63 look like
+63 love
+63 made
+127 made fun of
+63 make
+127 make fun of
+63 message
+63 messaged
+2 netsplit
+2 netsplit from
+63 offend
+63 offended
+2 op
+2 opped
+2 optimize
+2 optimized
+63 own
+63 paid
+63 pay
+2 Photoshop
+2 Photoshopped
+127 pirate
+2 program
+2 programmed
+63 promote
+63 promoted
+63 protest
+63 provide
+63 provided
+63 quote
+63 quoted
+63 reinstate
+63 repost
+63 reposted
+63 represent
+63 reserve
+63 reserved
+63 reset
+2 respawn
+2 respawned
+63 respect
+63 respected
+2 retweet
+2 retweeted
+63 sabotoge
+63 sabotoged
+63 screw
+2 shave
+2 shaved
+2 shut down
+2 shut down
+2 spawn
+2 spawned
+63 spend
+63 spent
+63 stab
+63 stabbed
+63 stereotype
+63 studied
+63 study
+127 suck
+63 support
+63 supress
+63 supressed
+63 survive
+63 survived
+63 swear at
+63 swore at
+63 tax
+63 taxed
+127 torrent
+127 torrented
+127 troll
+63 turned into
+63 turn into
+2 uninstall
+2 uninstalled
+2 upgrade
+2 upgraded
+63 use
+63 used
+63 voted for
+63 vote for
+127 win
+127 won
+63 write
+63 wrote

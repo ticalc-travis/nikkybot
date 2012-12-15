@@ -1,0 +1,57 @@
+
+
+   ===============================
+   Nikky Simulator v0.10.00
+   What's New
+   -------
+
+
+Release notes for Version 0.10.01
+---------------------------------
+
+Bug fix:
+
+  - Accidentally introduced a bug where #↓-# search mode incorrectly looped
+    back to X-32767 instead of X-9999.
+   
+   
+   
+Release notes for Version 0.10.00
+---------------------------------
+
+Features:
+
+  - New Mersenne Twister pseudorandom number algorithm introduced to
+    hopefully make up for some of the apparent deficiencies of the routines
+    used by the GCC4TI stdlib.h.  The old PRNG is still available so that
+    bookmarks created with the previous version are still accessible.  New
+    bookmarks will automatically keep track of which PRNG is used and select
+    it when opened.  No action needs to be taken to upgrade; the old config
+    file will still be recognized and opened as before.
+    
+  - Source code changes to build a simple PC command-line version of the
+    simulator using the Mersenne Twister PRNG.  This generates the same
+    “B-” sayings as the on-calc version.  (The original PRNG is not supported
+    since I have no idea what its algorithm/implementation is.)  Great for
+    searching for sayings and such--much faster than on the calc.
+    
+  - Added ability to copy sayings to the clipboard.  This way they can be
+    exported easily.  This is the recommended approach for archiving sayings,
+    since it is impossible to guarantee that a particular saying number will
+    always yield the same saying in future releases--every little change to
+    anything will potentially change the generated sayings completely.  That's
+    just the nature of the PRNG mathematics.
+    
+    
+Miscellaneous:
+
+  - Help/about text now uses the same text-wrap display engine as the sayings
+    (mainly done because I no longer had enough room to cram them into a
+    dialog box, and I hate working out screen coordinates, anyway).
+    
+    
+    
+Release notes for Version 0.00.00
+---------------------------------
+
+  - Initial public release

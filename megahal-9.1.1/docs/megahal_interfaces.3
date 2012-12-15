@@ -1,0 +1,122 @@
+.\" Copyright 2000, 2001, 2002 David N. Welton <davidw@dedasys.com>
+.\" $Id: megahal_interfaces.3,v 1.3 2003/08/26 12:49:16 lfousse Exp $
+.TH MEGAHAL INTERFACES 3  "April 12, 1993" "" "Linux Programmer's Manual"
+.SH NAME
+megahal interfaces - C, Python and Tcl interfaces to Megahal
+.SH SYNOPSIS
+.nf
+.B #include <megahal.h>
+.sp
+
+.B void megahal_setnoprompt(void);
+.sp
+.B void megahal_setnowrap(void);
+.sp
+.B void megahal_setnobanner(void);
+.sp
+.BI "void megahal_seterrorfile(char *"filename );
+.sp
+.BI "void megahal_setstatusfile(char *"filename );
+.sp
+.B void megahal_initialize(void);
+.sp
+.BI "char *megahal_initial_greeting(void" );
+.sp
+.BI "int megahal_command(char *"input );
+.sp
+.BI "char *megahal_do_reply(char *"input ", int" log );
+.sp
+.BI "void megahal_output(char *"output );
+.sp
+.BI "char *megahal_input(char *"prompt );
+.sp
+.B void megahal_cleanup(void);
+.sp
+
+.SH DESCRIPTION
+.p
+.B Initialization
+.br
+Megahal is initialized with the \fBmegahal_initialize()\fP function.
+\fBmegahal_setnoprompt\fP eliminates the prompt from interactive
+sessions.  \fBmegahal_setnowrap()\fP stops output from being wrapped.
+\fBmegahal_setnobanner()\fP prevents megahal from printing out the
+initial 'banner'.
+
+.B Files
+.br
+\fBmegahal_seterrorfile\fP and \fBmegahal_setstatusfile\fP set which
+files megahal will use for error and status reporting, respectively.
+
+.B User interaction
+.br
+\fBmegahal_initial_greeting\fP returns an initial greeting for the
+user, such as "hello", "ciao", etc...  \fBmegahal_command\fP checks
+its input for a Megahal command (like QUIT), and acts upon it, if
+found.  If it finds nothing, it returns 0.  \fBmegahal_do_reply\fP is
+the core of megahal.  It takes a string as input, and calculates a
+reply, which it returns.  \fBmeghal_output\fP is for outputting text
+to stdout, such as megahal's replies.  Input may be obtained with
+\fBmegahal_input\fP, which takes a prompt string as an argument, and
+returns a string input by the user.
+
+.B Example
+.br
+\fBmain.c\fP in the source distribution is a good example of how to
+use Megahal's C API.
+
+.SH "TCL INTERFACE"
+
+.BI "load"\ libmh_tcl.so
+.br
+Load the Tcl interface shared object into the Tcl interpreter.
+
+.B mh_init
+.br
+Initialize megahal brain.
+
+.BI "mh_doreply"\ text
+.br
+Takes some text as input and returns a megahal reply.
+
+.B mh_cleanup
+.br
+Save megahal brain to disk.  You will lose your changes if this does
+not occur.
+
+.SH "PYTHON INTERFACE"
+
+.BI "import"\ mh_python
+.br
+Import the Megahal Python interface into the Python interpreter.
+
+.B mh_python.initbrain()
+.br
+Initialize megahal brain.
+
+.BI "mh_python.doreply(" text )
+.br
+Takes some text as input and returns a megahal reply.
+
+.BI "mh_python.learn(" text )
+.br
+Takes some text as input and updates the model without generating a reply.
+
+.B mh_python.cleanup()
+.br
+Save megahal brain to disk.  You will lose your changes if this does
+not occur.
+
+.SH "REFERENCES"
+More information can be found about megahal at
+http://megahal.sourceforge.net
+
+Jason Hutchens, the original author of Megahal can be found at:
+http://www.amristar.com.au/~hutch/
+
+.SH BUGS
+The C library is not yet ready.
+
+.SH "AUTHOR"
+Man page written by David N. Welton <davidw@dedasys.com>, modified by
+Laurent Fousse <laurent@komite.net>.

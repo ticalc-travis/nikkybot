@@ -1,0 +1,34 @@
+.TH MEGAHAL 1 
+.SH NAME
+megahal, megahal-personal \- chat with megahal
+.SH SYNOPSIS
+.B megahal
+.br
+.B megahal-personal
+.SH "DESCRIPTION"
+.BR megahal
+is a conversation simulator. It differs from conversation simulators
+such as Eliza in that it uses a Markov Model to learn how to hold a 
+conversation. It is possible to teach MegaHAL to talk about new topics,
+and in different languages.
+.BR megahal-personal
+is a varient of megahal that saves its state files in ~/.megahal/ when it
+exits. This lets each user have thier own personal megahal.
+.SH OPTIONS
+.IP "--no-prompt, -p"
+Do not display prompt when asking user for input. This is a debian-specific
+modification, and is useful mainly if you want to interface megahal to
+another program.
+.IP "--no-wrap, -w"
+Do not word-wrap text megahal outputs. This is a debian-specific
+modification, and is useful mainly if you want to interface megahal to
+another program.
+.IP "--no-banner, -b"
+Supress the startup banner. This is a debian-specific
+modification, and is useful mainly if you want to interface megahal to
+another program.
+.SH "SEE ALSO"
+/usr/share/doc/megahal/README.TXT.gz
+.SH AUTHOR
+This manual page was written by Joey Hess,
+for the Debian GNU/Linux system.

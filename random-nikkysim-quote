@@ -1,0 +1,6 @@
+#!/bin/bash
+
+x=$(od -A n -t u4 -N 4 /dev/urandom)
+y=$(($RANDOM%10000))
+
+nikky $x-$y | cut -d : -f 2 | cut -d ' ' -f 2-

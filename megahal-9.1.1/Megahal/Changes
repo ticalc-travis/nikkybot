@@ -1,0 +1,6 @@
+Revision history for Perl extension Megahal.
+
+0.01  Tue Aug 19 19:52:35 2003
+	- original version; created by h2xs 1.22 with options
+		-Oan Megahal megahal.h
+

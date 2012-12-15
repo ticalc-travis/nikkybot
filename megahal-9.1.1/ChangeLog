@@ -1,0 +1,168 @@
+2004-02-25 21:19  lfousse
+
+	* megahal.h, Megahal/megahal.c: Updated header file and perl
+	  module.
+
+2004-02-23 12:12  lfousse
+
+	* main.c, megahal.c: Changed default working directory and added
+	  options to change it.
+
+2004-01-13 11:59  lfousse
+
+	* Makefile, main.c, megahal.c, python-interface.c, setup.py,
+	  tcl-interface.c, Megahal/Megahal.xs, debian/Hal.pm,
+	  debian/README.debian, debian/changelog, debian/control,
+	  debian/copyright, debian/hal.pl, debian/megahal-personal,
+	  debian/menu, debian/rules: * Applied code cleaning already
+	  shipped with the debian package.  * Removed pure debian stuff.  *
+	  Added lacking setup.py file for python module.
+
+2004-01-03 19:16  lfousse
+
+	* Makefile, Megahal/Makefile, Megahal/Makefile.old, debian/control,
+	  debian/rules: Cleaned the perl directory.  Cleaned the Makefile.
+	  Changed debian stuff (but this should not be a native package any
+	  longer).
+
+2003-08-26 14:49  lfousse
+
+	* ChangeLog, Makefile, megahal.c, megahal.h, python-interface.c,
+	  Megahal/Changes, Megahal/MANIFEST, Megahal/Makefile,
+	  Megahal/Makefile.PL, Megahal/Makefile.old, Megahal/Megahal.bs,
+	  Megahal/Megahal.c, Megahal/Megahal.pm, Megahal/Megahal.xs,
+	  Megahal/README, Megahal/const-c.inc, Megahal/const-xs.inc,
+	  Megahal/megahal.c, Megahal/megahal.h, Megahal/pm_to_blib,
+	  Megahal/ppport.h, debian/changelog, debian/control,
+	  debian/copyright, debian/menu, debian/rules,
+	  docs/megahal_interfaces.3: * Added the perl interface * cleaned
+	  up the python interface a bit (but this   still need some work by
+	  a python "expert") * Added a learn_no_reply function.
+
+2003-08-18 23:45  lfousse
+
+	* megahal.c, megahal.h, python-interface.c: Added
+	  megahal_learn_no_reply function for quick learning, and
+	  corresponding python interface.
+
+2002-10-16 06:32  davidw
+
+	* ChangeLog, Makefile, guile-interface.c, megahal.c,
+	  python-interface.c, docs/README.TXT: * megahal.c
+	  (change_personality): [ 541667 ] Added patch from Andrew   Burke
+	  to rework logic in change_personality.
+
+	  * megahal.c: Trailing white space cleanup.
+
+	  * python-interface.c: [ 546397 ] Change python include path to a
+	  more	 recent version.  This should really be fixed by using some
+	  of   Python's build automation tools.
+
+2002-02-16 12:29  davidw
+
+	* debian/changelog: * Added patch from Jose Carlos Garcia Sogo to
+	  depend on python1.5-dev   (closes: #133711)
+
+2002-02-16 12:24  davidw
+
+	* tcl-interface.c, debian/control: Updated Debian to depend on
+	  specific (1.5) version of Python.
+
+2002-01-03 13:44  davidw
+
+	* ChangeLog, cvsversion.tcl, megahal.dic, python-interface.c,
+	  tcl-interface.c, docs/README.TXT, docs/megahal_interfaces.3:
+	  Changed email references to dedasys.com.
+
+2001-07-06 12:16  davidw
+
+	* Makefile, debian/changelog: Added -fPIC for HPPA folks.
+
+2001-06-15 16:13  davidw
+
+	* main.c, debian/changelog, debian/control: Updated debian stuff.
+	  Made -h work.
+
+2001-02-25 20:36  davidw
+
+	* debian/: changelog, rules: Updated changelog, rules file.
+
+2001-02-25 20:36  davidw
+
+	* VERSION: Added VERSION file.
+
+2001-02-25 20:29  davidw
+
+	* main.c: Added Devin Carraway's patch to make Megahal print usage
+	  information.
+
+2001-02-16 14:55  davidw
+
+	* debian/rules: Updated makefile.
+
+2001-02-16 14:54  davidw
+
+	* debian/rules: Fixed debian/rules.
+
+2001-02-16 14:52  davidw
+
+	* debian/: changelog, control: Updated dependencies, changelog.
+
+2000-11-08 12:07  davidw
+
+	* Makefile, README.TXT, megahal.c, tcl-interface.c,
+	  debian/changelog, debian/control, debian/rules, docs/README.TXT:
+	  Moved README to docs directory.
+
+	  Changes to debian files.
+
+2000-10-16 21:48  davidw
+
+	* cvsversion.tcl, main.c, megahal.1, megahal.h, paper.txt,
+	  debian/rules, docs/megahal.1, docs/megahal_interfaces.3,
+	  docs/paper.txt: Moved docs to subdirectory.
+
+	  Added man page for 'library' interface.
+
+2000-09-07 23:51  davidw
+
+	* ChangeLog, README.TXT, main.c, megahal.c, megahal.h,
+	  python-interface.c, tcl-interface.c: Created some library
+	  functions that I think are workable, and moved everything else
+	  into megahal.c as static variables/functions.
+
+2000-09-07 13:43  davidw
+
+	* ChangeLog, Makefile, main.c, megahal.c, megahal.h,
+	  python-interface.c, tcl-interface.c, debian/rules: Started
+	  hacking:
+
+	  Reduced makefile targets, eliminating non-Linux OS's.  There
+	  should be a cleaner way to do this.
+
+	  Added Tcl and Python C level interfaces.
+
+2000-09-06 19:06  davidw
+
+	* README.TXT, megahal.c, megahal.h: Changed formatting of source
+	  code.  If I'm going to be maintaining it, I want it to look
+	  'nice':-)
+
+2000-09-01 19:36  davidw
+
+	* LICENSE.TXT, README.TXT, megahal.aux, megahal.ban, megahal.grt,
+	  megahal.swp, megahal.trn, paper.txt, Makefile, debug.c, debug.h,
+	  megahal.1, megahal.c, megahal.h, megahal.dic, debian/Hal.pm,
+	  debian/README.debian, debian/changelog, debian/control,
+	  debian/copyright, debian/hal.pl, debian/megahal-personal,
+	  debian/menu, debian/rules: Imported sources
+
+2000-09-01 19:36  davidw
+
+	* LICENSE.TXT, README.TXT, megahal.aux, megahal.ban, megahal.grt,
+	  megahal.swp, megahal.trn, paper.txt, Makefile, debug.c, debug.h,
+	  megahal.1, megahal.c, megahal.h, megahal.dic, debian/Hal.pm,
+	  debian/README.debian, debian/changelog, debian/control,
+	  debian/copyright, debian/hal.pl, debian/megahal-personal,
+	  debian/menu, debian/rules: Initial revision
+

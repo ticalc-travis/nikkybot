@@ -1,0 +1,22 @@
+diff --git a/megahal.c b/megahal.c
+index a396d13..d95dcc9 100644
+--- a/megahal.c
++++ b/megahal.c
+@@ -789,7 +789,7 @@ bool initialize_error(char *filename)
+ 
+     errorfp = fopen(filename, "a");
+     if(errorfp==NULL) {
+-	errorfp=stderr;
++	errorfp = fopen("/dev/null", "a");
+ 	return(FALSE);
+     }
+     return(print_header(errorfp));
+@@ -849,7 +849,7 @@ bool initialize_status(char *filename)
+     if(filename==NULL) return(FALSE);
+     statusfp=fopen(filename, "a");
+     if(statusfp==NULL) {
+-	statusfp=stdout;
++	statusfp=fopen("/dev/null", "a");
+ 	return(FALSE);
+     }
+     return(print_header(statusfp));

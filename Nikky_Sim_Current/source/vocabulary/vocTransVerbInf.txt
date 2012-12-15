@@ -1,0 +1,96 @@
+63 abuse
+63 advocate
+127 badmouth
+127 ban
+63 be
+63 beat up
+63 become
+63 bias
+63 blame
+63 block
+63 bore
+63 boss around
+63 bribe
+63 care about
+127 censor
+63 cheat
+63 cite
+63 convey
+127 criticize
+63 curse at
+63 debate
+63 defriend
+63 delete
+63 demolish
+63 destroy
+63 disagree with
+63 dislike
+63 double post
+63 drink
+63 eat
+63 email
+63 figure out
+63 give
+63 give away
+63 hack
+63 hate
+63 have something called
+63 help
+63 highlight
+63 infuriate
+63 invade
+63 involve
+63 kick
+63 kill
+2 lick
+63 look like
+63 love
+63 make
+127 make fun of
+63 message
+2 netsplit
+2 netsplit from
+63 offend
+2 op
+2 optimize
+63 own
+63 pay
+2 Photoshop
+127 pirate
+2 program
+63 promote
+63 protest
+63 provide
+63 quote
+63 reinstate
+63 repost
+63 represent
+63 reserve
+63 reset
+2 respawn
+63 respect
+2 retweet
+63 sabotoge
+63 screw
+2 shave
+2 shut down
+2 spawn
+63 spend
+63 stab
+63 stereotype
+63 study
+127 suck
+63 support
+63 supress
+63 survive
+63 swear at
+63 tax
+63 torrent
+127 troll
+63 turn into
+2 uninstall
+2 upgrade
+63 use
+63 vote for
+127 win
+63 write
