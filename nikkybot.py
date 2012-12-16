@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # TODO:
-#   - LurkLib is proving unreliable and buggy.  Probably need to find a
-#     different IRC/bot lib and port to that
+#   - LurkLib is proving quirky and unreliable.  Probably need to find a
+#     different IRC/bot lib and port to that and try it out
 
 import lurklib
 import lurklib.exceptions
