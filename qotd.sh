@@ -25,12 +25,7 @@ if [ -n "$qotd" ]; then
     exit 0
 fi
 
-act=$(($RANDOM%5))
-if [ $act -eq 0 ]; then
-    qotd=$(./random-nikkysim-quote)
-else
-    qotd=$(echo -e "#exit\n" | megahal -b -p -w 2> /dev/null)
-fi
+qotd=$(./random-nikkysim-quote)
 
 ./isRepeatedQOTD.py "$qotd"
 if [ $? -eq 1 ]; then

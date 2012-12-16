@@ -79,9 +79,6 @@ class Recurse(str):
     pass
 
 
-class Megahal(str):
-    pass
-
 # === DATA SECTION ============================================================
 
 # (has pattern response & awake, has pattern response & asleep,
@@ -362,7 +359,6 @@ E('" ".join(markov3.from_word_forward("""{4}"""))')),
 (r'#([A-Za-z]-)?([0-9]+)(-([0-9]+))?', -2, E('nikkysimSayingNo(self.match)')),
 (r'\b(qotd|quote of the day)\b', 0, E('"Today\'s quote of the day: " + qotd()')),
 (r'\brandom number\b', 0, R(E('randint(0,9999)'), E('randint(0,999999999999)'), E('str(randint(0,int(\'9\'*100))) + "\\nLong enough for you?"'))),
-(r'^megahal (.*)', -99, E('megahal(""" {1} """)')),
 (r'^markov5 (.*)', -99, E('do_markov5(""" {1} """)')),
 (r'^markov4 (.*)', -99, E('do_markov4(""" {1} """)')),
 (r'^markov3 (.*)', -99, E('do_markov3(""" {1} """)')),
@@ -423,13 +419,6 @@ def qotd():
     return subprocess.check_output(['./qotd.sh', './qotd.sh']).decode()
 
 
-def megahal(msg):
-    return subprocess.check_output(
-        ['sh', '-c',
-        'echo -e "{}\n\n#exit\n\n" | megahal -b -p -w -g 2>/dev/null'.format(msg)]
-    ).decode()
-    
-    
 def markovReply(msg):
     words = msg.split()
     m = {5: markov5, 4: markov4, 3: markov3, 2: markov2}
@@ -447,7 +436,7 @@ def markovReply(msg):
         response = markov5.sentence_from_word(word)
         if response:
             return response
-    return megahal('')
+    return markov5.sentence_from_chain(choice(tuple(markov5.chain_forward.keys())))
     
     
 def do_markov2(msg):
@@ -571,8 +560,6 @@ class NikkyAI:
             pass
         if type(reply) == Recurse:
             return self.patternReply(reply, _recurseLevel=_recurseLevel+1)
-        #elif type(reply) == Megahal:
-            #return megahal(reply.format(*((sourcenick,) + thismatch.groups()))).split('\n')
         else:
             fmt = (sourcenick,) + thismatch.groups()
             try:
@@ -596,7 +583,7 @@ class NikkyAI:
                     self.lastReplies[self.lastReply.lower()] = datetime.now()
                 return self.lastReply.split('\n')
 
-    def megahalReply(self, msg):
+    def markovReply(self, msg):
         m = re.match(r'<(.*?)> (.*)', msg)
         if m:
             sourcenick = m.group(1)
@@ -625,7 +612,7 @@ class NikkyAI:
         try:
             return self.patternReply(msg)
         except DontKnowHowToRespondError:
-            return self.megahalReply(msg)
+            return self.markovReply(msg)
             
     def decideRemark(self, msg):
         pacific = timezone('US/Pacific')    # Where Nikky lives
