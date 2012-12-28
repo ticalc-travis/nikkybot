@@ -256,9 +256,19 @@ class NikkyBot(irc.IRCClient):
                 if line:
                     this_time = delay + len(line)*rate
                     reactor.callLater(
-                        last_time + this_time, self.msg, target, line,
-                        length=256)
+                        last_time + this_time, self.msg, target,
+                        self.escape_message(line), length=256)
                     last_time += this_time
+                    
+    def escape_message(self, msg):
+        """'Escape' a message by inserting an invisible control character
+        at the beginning in some cases, to avoid trigger public bot
+        commands."""
+        if msg[0] in '~!?@#$%^&*-.,;:' and not msg.startswith('!k '):
+            print('Escaping/"protecting" message: {}'.format(msg))
+            return '\x0F' + msg
+        else:
+            return msg
 
 
 class NikkyBotFactory(protocol.ReconnectingClientFactory):
@@ -289,6 +299,7 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
 
     def clientConnectionFailed(self, connector, reason):
         print('Connection failed: {}'.format(reason))
+        url, port = random.choice(self.servers)
         reactor.connectTCP(url, port,
             NikkyBotFactory(self.servers, self.channels, self.nicks,
                 self.real_name, self.admin_hostmasks, self.min_send_time,
