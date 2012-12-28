@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # “NikkyBot”
 # Copyright ©2012 Travis Evans
@@ -16,14 +16,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# TODO:
-#   - Recurse() doesn't appear to be working properly
-#   - Randomly fails to honor priority settings and choose the wrong regex?
-#   - Getting messy; probably need some major refactoring
-
 from datetime import datetime, timedelta
 from random import randint, choice
-import pickle
+import cPickle
 import re
 import subprocess
 
@@ -368,13 +363,13 @@ E('" ".join(markov3.from_word_forward("""{4}"""))')),
 # Markov experiment
 
 f = open('nikky-markov.5.pickle', 'rb')
-markov5 = pickle.load(f)
+markov5 = cPickle.load(f)
 f = open('nikky-markov.4.pickle', 'rb')
-markov4 = pickle.load(f)
+markov4 = cPickle.load(f)
 f = open('nikky-markov.3.pickle', 'rb')
-markov3 = pickle.load(f)
+markov3 = cPickle.load(f)
 f = open('nikky-markov.2.pickle', 'rb')
-markov2 = pickle.load(f)
+markov2 = cPickle.load(f)
 f.close()
 
 # === END OF DATA SECTION =====================================================

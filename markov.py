@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # Simple Markov chain implementation
 # Copyright ©2012 Travis Evans
@@ -63,7 +63,7 @@ class Markov:
         
     def train(self, filename):
         """Train from all lines from the given text file"""
-        f = open(filename, 'r', errors='ignore')
+        f = open(filename, 'r')
         for line in f:
             self.add(line)
             

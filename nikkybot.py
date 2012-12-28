@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
 
 # “NikkyBot”
 # Copyright ©2012 Travis Evans
@@ -16,271 +17,295 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# TODO:
-#   - LurkLib is proving quirky and unreliable.  Probably need to find a
-#     different IRC/bot lib and port to that and try it out
+from __future__ import print_function
 
-import lurklib
-import lurklib.exceptions
-from nikkyai import NikkyAI
-
-from imp import reload
-from os import uname
-import sched
-import socket
+from collections import defaultdict
 import random
 import re
-import sys
-from time import time, sleep, strftime
+import time
 import traceback
+import sys
 
-# === CONFIGURATION SECTION ===========================================
+from twisted.words.protocols import irc
+from twisted.internet import reactor, protocol
+from twisted.internet.error import ConnectionDone
+from twisted.python import log
 
-SERVERS = (
-    # (Name, port, use tls?)
-    ('irc.choopa.net', 6667, False),
-    ('efnet.port80.se', 6667, False),
-    ('irc.eversible.net', 6667, False),
-    ('irc.shoutcast.com', 6667, False),
-# Buggy/problematic servers; do not use
-#    ('irc.teksavvy.ca', 6667, False),
-#    ('irc.paraphysics.net', 6667, False),
-#    ('irc.he.net', 6667, False),
-)
-REAL_NAME = 'NikkyBot'
-NICKS = ('nikkybot', 'nikkybot2', 'nikkybot_')
-CHANNELS = ('#tcpa', '#flood', '#cemetech')    # “Production” mode
-#CHANNELS = ('#flood',)   # Test only mode
-CLIENT_VERSION = \
-    "Lurklib bot (contact 'tev' or travisgevans@gmail.com):{}:{} {}".format(
-        lurklib.__version__, uname()[0], uname()[4])
-ADMIN_HOSTMASKS = ('*!ijel@ip68-102-86-156.ks.ok.cox.net',
-                   '*!travise@nvm2u.com',
-                   '*!travise@64.13.172.47')
-MIN_SEND_TIME = 1   # seconds
-RECONNECT_WAIT = 10    # seconds
-NICK_RETRY_WAIT = 300    # seconds
-SIMULATED_TYPING_SPEED = .1    # seconds/character
+from config import *
+from nikkyai import NikkyAI
 
-# === END CONFIGURATION SECTION =======================================
 
-requestedShutdown = False
+class BotError(Exception):
+    pass
 
-class NikkyDict(dict):
-    def __missing__(self, key):
-        self[key] = NikkyAI()
-        return self[key]
-        
-        
-class NikkyBot(lurklib.Client):
-    def __init__(self, *args, **kwargs):
-        self.scheduler = sched.scheduler(time, self.mainloopDelay)
-        self.lastSchedTime = time()
-        self.nikkies = NikkyDict()
-        lurklib.Client.__init__(self, *args, **kwargs)
-        
-    def join_(self, channel, key=None, process_only=False):
+
+class UnrecognizedCommandError(BotError):
+    pass
+
+
+class NikkyBot(irc.IRCClient):
+
+    ## Overridden methods ##
+    
+    def join(self, channel):
+        """Log bot's channel joins"""
         print('Joining {}'.format(channel))
-        lurklib.Client.join_(self, channel, key, process_only)
+        irc.IRCClient.join(self, channel)
         
-    def privmsg(self, target, message):
+    def leave(self, channel, reason):
+        """Log bot's channel parts"""
+        print('Leaving {}: {}'.format(channel, reason))
+        irc.IRCClient.leave(self, channel, reason)
+        
+    def msg(self, target, message, length=MAX_LINE_LENGTH):
+        """Provide default line length before split"""
+        irc.IRCClient.msg(self, target, message, length)
+        
+    def nickChanged(self, nick):
+        """Update NikkyAIs with new nick"""
+        irc.IRCClient.nickChanged(self, nick)
+        for n in self.nikkies.values():
+            n.nick = self.nickname
+        
+    def alterCollidedNick(self, nickname):
+        """Resolve nick conflicts and set up automatic preferred nick
+        reclaim task"""
         try:
-            if message:
-                lurklib.Client.privmsg(self, target, '\x0F' + message)
-        except self.CannotSendToChan as e:
-            print('WARNING: Cannot send to channel')
-            print(e)
-        
-    def nick(self, nick):
-        lurklib.Client.nick(self, nick)
-        for n in self.nikkies:
-            self.nikkies[n].nick = nick
-        
-    def queue(self, timeToRun, function, args, priority=1):
-        self.scheduler.enter(max(timeToRun, MIN_SEND_TIME), priority,
-            function, args)
-            
-    def mainloopDelay(self, seconds):
-        if seconds > 0:
-            self.mainloop(seconds)
-        else:
-            self.mainloop(1)
-            
-    def respondLines(self, target, lines):
-        last = 0
-        for l in lines:
-            t = 3 + len(l) * SIMULATED_TYPING_SPEED
-            self.queue(last + t, self.privmsg, (target, l))
-            last += t
+            return self.factory.nicks[self.factory.nicks.index(nickname) + 1]
+        except IndexError:
+            return self.factory.nicks[0] + '_'
+        reactor.callLater(self.nick_retry_wait, self.reclaim_nick)
 
-    def run(self):
-        while self.keep_going:
-            if self.scheduler.empty():
-                self.mainloop(1)
+    ## Callbacks ##
+
+    def connectionMade(self):
+        print('Connection established.')
+        self.factory.resetDelay()
+        self.factory.shut_down = False
+        self.nickname = self.factory.nicks[0]
+        self.lineRate = self.factory.min_send_time
+        self.versionName = self.factory.client_version
+        self.nikkies = self.factory.nikkies
+
+        irc.IRCClient.connectionMade(self)
+
+    def connectionLost(self, reason):
+        print('Connection lost: {}'.format(reason))
+        irc.IRCClient.connectionLost(self, reason)
+
+    def signedOn(self):
+        for channel in self.factory.channels:
+            self.join(channel)
+            self.nikkies[channel].nick = self.nickname
+
+    def privmsg(self, user, channel, msg):
+        nick, host = user.split('!', 1)
+        formatted_msg = '<{}> {}'.format(nick, msg)
+
+        if channel == self.nickname:
+            # Private message
+            print('privmsg from {}: {}'.format(user, repr(msg)))
+            if self.any_hostmask_match(self.factory.admin_hostmasks, user):
+                try:
+                    self.do_command(msg.strip(), nick)
+                except UnrecognizedCommandError:
+                    self.do_AI_reply(formatted_msg, nick)
+                else:
+                    print('Executed: {}'.format(msg.strip()))
             else:
-                self.scheduler.run()
-                
-    def quit(self):
-        requestedShutdown = True
-        lurklib.Client.quit()
+                self.do_AI_reply(formatted_msg, nick)
+        else:
+            # Public message
+            if re.match('saxjax!~saxjax@.*ip\-142\-4\-211\.net', host):
+                m = re.match(r'\(.\) \[(.*)\] (.*)', message)
+                if m:
+                    nick = m.group(1)
+                    formatted_msg = '<{}> {}'.format(nick, m.group(2))
+                else:
+                    m = re.match(r'\(.\) \*(.*?) (.*)', message)
+                    if m:
+                        nick = m.group(1)
+                        formatted_msg = '<{}> {}'.format(nick, m.group(2))
+            if self.is_highlight(msg):
+                self.do_AI_reply(formatted_msg, channel)
+            else:
+                self.do_AI_maybe_reply(formatted_msg, channel)
+
+    def action(self, user, channel, msg):
+        """Pass actions to AI like normal lines"""
+        self.privmsg(user, channel, msg)
         
-    def mainloop(self, duration=None):
-        if duration is None:
-            lurklib.Client.mainloop(self)
-        elif duration > 0:
-            with self.lock:
-                if self.on_connect and not self.readable(2):
-                    self.on_connect()
-                    self.on_connect = None
-            self.process_once(duration)
-            
-    def tryReclaimNick(self):
-        try:
-            self.nick(NICKS[0])
-        except self.NicknameInUse:
-            self.queue(NICK_RETRY_WAIT, self.tryReclaimNick, ())
-            
-    def hostmaskMatch(self, testmask, knownmask):
+    def ctcpQuery(self, user, channel, messages):
+        """Just log private CTCPs for the heck of it"""
+        for tag, data in messages:
+            if channel == self.nickname:
+                print('private CTCP {} from {}: {}'.format(tag, user, data))
+        irc.IRCClient.ctcpQuery(self, user, channel, messages)
+        
+    def noticed(self, user, channel, message):
+        """Log private notices, too, but don't do anything else with them"""
+        if channel == self.nickname:
+            print('private NOTICE from {}: {}'.format(user, message))
+
+    ## Custom methods ##
+        
+    def reclaim_nick(self):
+        """Attempt to reclaim preferred nick (self.alterCollidedNick will
+        set up this function to be called again later on failure)"""
+        if self.nickname != self.factory.nicks[0]:
+            self.setNick(self.factory.nicks[0])
+    
+    def hostmask_match(self, testmask, knownmask):
+        """Check if knownmask matches against testmask, resovling wildcards
+        in testmask"""
         testmask = \
             testmask.replace('.', '\\.').replace('?', '.').replace('*', '.*')
         return re.match(testmask, knownmask)
         
-    def anyHostmaskMatch(self, testmasks, knownmask):
+    def any_hostmask_match(self, testmasks, knownmask):
+        """Check if knownmask matches against any of the masks in iterable
+        testmasks, resolving wildcards in testmasks"""
         for mask in testmasks:
-            if self.hostmaskMatch(mask, knownmask):
+            if self.hostmask_match(mask, knownmask):
                 return True
         return False
         
-    def isHighlight(self, msg):
-        return re.search(r'\b{}\b'.format(re.escape(self.current_nick)),
-            msg, flags=re.I)
+    def is_highlight(self, msg):
+        """Check if msg contains an instance of one of bot's nicknames"""
+        for nick in self.factory.nicks:
+            if re.search(r'\b{}\b'.format(re.escape(self.nickname)),
+                         msg, flags=re.I):
+                return True
+        return False
             
-    def reportError(self, source, silent=False):
+    def report_error(self, source, silent=False):
+        """Log a traceback if NikkyAI fails due to an unhandled exception 
+        while generating a response, and respond with a random amusing line
+        if silent is False"""
         if not silent:
-            pubReply = random.choice(['Oops', 'Ow, my head hurts', 'TEV YOU SCREWED YOUR CODE UP AGAIN', 'Sorry, lost my marbles for a second', 'I forgot what I was going to say', 'Crap, unhandled exception again', 'TEV: FIX YOUR CODE PLZKTHX'])
-            self.privmsg(source, pubReply)
-        print()
+            pub_reply = random.choice(['Oops', 'Ow, my head hurts', 'TEV YOU SCREWED YOUR CODE UP AGAIN', 'Sorry, lost my marbles for a second', 'I forgot what I was going to say', 'Crap, unhandled exception again', 'TEV: FIX YOUR CODE PLZKTHX', 'ERROR: Operation failed successfully!', "Sorry, I find you too lame to give you a proper response", "Houston, we've had a problem.", 'Segmentation fault', 'This program has performed an illegal operation and will be prosecuted^H^H^H^H^H^H^H^H^H^Hterminated.', 'General protection fault', 'Guru Meditation #00000001.1337... wait, wtf? What kind of system am I running on, anyway?', 'Nikky panic - not syncing: TEV SUCKS', 'This is a useless error message. An error occurred. Goodbye.', 'HCF'])
+            self.privmsg(source, pub_reply)
+        print('\n=== Exception ===\n\n')
         traceback.print_exc()
         print()
-    
-    def on_connect(self):
-        print('Connection established.')
-        for c in CHANNELS:
-            self.queue(2, self.join_, (c,))
-        if self.current_nick != NICKS[0]:
-            self.queue(NICK_RETRY_WAIT, self.tryReclaimNick, ())
-        for k in self.nikkies:
-            self.nikkies[k].nick = self.current_nick
-
-    def on_privctcp(self, from_, message):
-        if message == 'VERSION':
-            self.notice(from_[0],
-                self.ctcp_encode('VERSION {}'.format(CLIENT_VERSION)))
-        else:
-            m = re.match('ACTION (.*)', message)
-            if m:
-                self.on_privmsg(from_,
-                    '*{} {}'.format(from_[0], m.group(1)))
-                    
-    def on_chanctcp(self, from_, channel, message):
-            m = re.match('ACTION (.*)', message)
-            if m:
-                self.on_chanmsg(from_, channel,
-                    '*{} {}'.format(from_[0], m.group(1)))
-
-    def on_chanmsg(self, from_, channel, message):
-        nick = from_[0]
-        hostmask = '{}!{}@{}'.format(*from_)
-        fullMsg = '<{}> {}'.format(nick, message)
-        if re.match('saxjax!~saxjax@.*ip\-142\-4\-211\.net', hostmask):
-            m = re.match(r'\(.\) \[(.*)\] (.*)', message)
-            if m:
-                nick = m.group(1)
-                fullMsg = '<{}> {}'.format(nick, m.group(2))
+        
+    def do_command(self, cmd, nick):
+        """Execute a special/admin command"""
+        if cmd.startswith('?quit'):
+            try:
+                msg = cmd.split(' ', 1)[1]
+            except IndexError:
+                msg = 'Shutdown initiated'
+            self.quit(msg)
+            self.factory.shut_down = True
+        elif cmd.startswith('?reload'):
+            try:
+                reload(sys.modules['nikkyai'])
+                from nikkyai import NikkyAI
+            except Exception as e:
+                self.notice(nick, 'Reload error: {}'.format(e))
             else:
-                m = re.match(r'\(.\) \*(.*?) (.*)', message)
-                if m:
-                    nick = m.group(1)
-                    fullMsg = '<{}> {}'.format(nick, m.group(2))
-        if self.isHighlight(message):
+                for k in self.nikkies:
+                    lastReplies = self.nikkies[k].lastReplies
+                    self.nikkies[k] = NikkyAI()
+                    self.nikkies[k].lastReplies = lastReplies
+                    self.nikkies[k].nick = self.current_nick
+                self.notice(nick, 'Reloaded nikkyai')
+        elif cmd.startswith('?code '):
             try:
-                self.respondLines(channel,
-                    self.nikkies[channel].reply(fullMsg))
-            except:
-                self.reportError(channel)
+                exec(cmd.split(' ', 1))[1]
+            except Exception as e:
+                self.notice(nick, 'Error: {}'.format(e))
         else:
-            try:
-                out = self.nikkies[channel].decideRemark(fullMsg)
-                if out:
-                    self.respondLines(channel, out)
-            except:
-                self.reportError(channel, silent=True)
-            
-    def on_privmsg(self, from_, message):
-        nick = from_[0]
-        hostmask = '{}!{}@{}'.format(*from_)
-        fullMsg = '<{}> {}'.format(nick, message)
-        print("{}: privmsg {}: {}".format(strftime('%Y-%m-%d %H:%M:%S'),
-            hostmask, message))
-        if self.anyHostmaskMatch(ADMIN_HOSTMASKS, hostmask):
-            if message.rstrip() == '?quit':
-                self.quit('Shutdown initiated')
-                return
-            elif message.startswith('?quit'):
-                self.quit(message[len('?quit')+1:])
-                return
-            elif message.rstrip() =='?reload':
-                # Reload AI-related module stuff
-                try:
-                    reload(sys.modules['nikkyai'])
-                    from nikkyai import NikkyAI
-                except Exception as e:
-                    self.notice(nick, 'Reload error: {}'.format(e))
-                else:
-                    for k in self.nikkies:
-                        lastReplies = self.nikkies[k].lastReplies
-                        self.nikkies[k] = NikkyAI()
-                        self.nikkies[k].lastReplies = lastReplies
-                        self.nikkies[k].nick = self.current_nick
-                    self.notice(nick, 'Reloaded nikkyai')
-                return
-            elif message.startswith('?code '):
-                try:
-                    exec(message[6:])
-                except Exception as e:
-                    self.notice(nick, 'Error: {}'.format(e))
-                return
+            raise UnrecognizedCommandError
+    
+    def do_AI_reply(self, msg, target, silent_errors=False, log_response=True):
+        """Output an AI response for the given msg to target (user or channel)
+        trapping for exceptions"""
         try:
-            replyText = self.nikkies[hostmask].reply(fullMsg)
-            self.respondLines(nick, replyText)
-            print("{}: privmsg response to {}: {}".format(
-                strftime('%Y-%m-%d %H:%M:%s'), hostmask, replyText))
+            reply = self.nikkies[target].reply(msg)
         except:
-            self.reportError(nick)
+            report_errors(target, silent_errors)
+        else:
+            if reply and log_response:
+                print('privmsg to {}: {}'.format(target, repr(reply)))
+            if reply:
+                self.output_timed_msg(target, reply)
+            
+    def do_AI_maybe_reply(self, msg, target, silent_errors=True,
+            log_response=False):
+        """Occasionally reply to the msg given, or say a random remark"""
+        try:
+            reply = self.nikkies[target].decideRemark(msg)
+        except:
+            report_errors(target, silent_errors)
+        else:
+            if reply and log_response:
+                print('privmsg response to {}: {}'.format(target, repr(reply)))
+            if reply:
+                self.output_timed_msg(target, reply)
+    
+    def output_timed_msg(self, target, msg):
+        """Output msg paced at a simulated typing rate.  msg will be split
+        into separate lines if it contains \n characters."""
+        delay = self.factory.initial_reply_delay
+        rate = self.factory.simulated_typing_speed
+        last_time = 0
+        for item in msg:
+            for line in item.split('\n'):
+                if line:
+                    this_time = delay + len(line)*rate
+                    reactor.callLater(
+                        last_time + this_time, self.msg, target, line,
+                        length=256)
+                    last_time += this_time
 
+
+class NikkyBotFactory(protocol.ReconnectingClientFactory):
+    
+    protocol = NikkyBot
+
+    def __init__(self, servers, channels, nicks, real_name=REAL_NAME,
+                 admin_hostmasks=ADMIN_HOSTMASKS,
+                 client_version=CLIENT_VERSION,
+                 min_send_time=MIN_SEND_TIME,
+                 nick_retry_wait=NICK_RETRY_WAIT,
+                 initial_reply_delay=INITIAL_REPLY_DELAY,
+                 simulated_typing_speed=SIMULATED_TYPING_SPEED):
+        self.servers = servers
+        self.channels = channels
+        self.nicks = nicks
+        self.real_name = real_name
+        self.admin_hostmasks = admin_hostmasks
+        self.client_version = client_version
+        self.initial_reply_delay = initial_reply_delay
+        self.min_send_time = min_send_time
+        self.nick_retry_wait = nick_retry_wait
+        self.simulated_typing_speed = simulated_typing_speed
+        
+        self.shut_down = False
+        
+        self.nikkies = defaultdict(NikkyAI)
+
+    def clientConnectionFailed(self, connector, reason):
+        print('Connection failed: {}'.format(reason))
+        reactor.connectTCP(url, port,
+            NikkyBotFactory(self.servers, self.channels, self.nicks,
+                self.real_name, self.admin_hostmasks, self.min_send_time,
+                self.nick_retry_wait, self.simulated_typing_speed))
+                
+    def clientConnectionLost(self, connector, reason):
+        if self.shut_down:
+            reactor.stop()
+        else:
+            protocol.ReconnectingClientFactory.clientConnectionLost(
+                self, connector, reason)
 
 
 if __name__ == '__main__':
-    while True:
-        uri, port, tls = random.choice(SERVERS)
-        print('Connecting to {}...'.format(uri))
-        try:
-            bot = NikkyBot(server=uri, port=port, nick=NICKS,
-                           tls=tls, real_name=REAL_NAME)
-            bot.run()
-        except Exception as e:
-            print(e)
-            if not requestedShutdown:
-                print('Unhandled exception, restarting in {} seconds'.format(
-                    RECONNECT_WAIT))
-                sleep(RECONNECT_WAIT)
-            else:
-                break
-        else:
-            if requestedShutdown:
-                break
-            print("Something happened; we quit but weren't supposed to")
-            print('Restarting in {} seconds'.format(RECONNECT_WAIT))
-            sleep(RECONNECT_WAIT)
-            
-
+    log.startLogging(sys.stdout)
+    url, port = random.choice(SERVERS)
+    print('Connecting to {}:{}'.format(url, port))
+    reactor.connectTCP(url, port, NikkyBotFactory(SERVERS, CHANNELS, NICKS))
+    reactor.run()
+    
