@@ -209,7 +209,7 @@ class NikkyBot(irc.IRCClient):
                     lastReplies = self.nikkies[k].lastReplies
                     self.nikkies[k] = NikkyAI()
                     self.nikkies[k].lastReplies = lastReplies
-                    self.nikkies[k].nick = self.current_nick
+                    self.nikkies[k].nick = self.nickname
                 self.notice(nick, 'Reloaded nikkyai')
         elif cmd.startswith('?code '):
             try:
