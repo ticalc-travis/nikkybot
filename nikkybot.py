@@ -116,13 +116,13 @@ class NikkyBot(irc.IRCClient):
                 self.do_AI_reply(formatted_msg, nick)
         else:
             # Public message
-            if self.hostmask_match('*!~saxjax@*', user):
-                m = re.match(r'\(.\) \[(.*)\] (.*)', msg)
+            if re.match('saxjax!~saxjax@.*ip\-142\-4\-211\.net', host):
+                m = re.match(r'\(.\) \[(.*)\] (.*)', message)
                 if m:
                     nick = m.group(1)
                     formatted_msg = '<{}> {}'.format(nick, m.group(2))
                 else:
-                    m = re.match(r'\(.\) \*(.*?) (.*)', msg)
+                    m = re.match(r'\(.\) \*(.*?) (.*)', message)
                     if m:
                         nick = m.group(1)
                         formatted_msg = '<{}> {}'.format(nick, m.group(2))
@@ -183,7 +183,7 @@ class NikkyBot(irc.IRCClient):
         while generating a response, and respond with a random amusing line
         if silent is False"""
         if not silent:
-            pub_reply = random.choice(['Oops', 'Ow, my head hurts', 'TEV YOU SCREWED YOUR CODE UP AGAIN', 'Sorry, lost my marbles for a second', 'I forgot what I was going to say', 'Crap, unhandled exception again', 'TEV: FIX YOUR CODE PLZKTHX', 'ERROR: Operation failed successfully!', "Sorry, I find you too lame to give you a proper response", "Houston, we've had a problem.", 'Segmentation fault', 'This program has performed an illegal operation and will be prosecuted^H^H^H^H^H^H^H^H^H^Hterminated.', 'General protection fault', 'Guru Meditation #00000001.1337... wait, wtf? What kind of system am I running on, anyway?', 'Nikky panic - not syncing: TEV SUCKS', 'This is a useless error message. An error occurred. Goodbye.', 'HCF'])
+            pub_reply = random.choice(['Oops', 'Ow, my head hurts', 'TEV YOU SCREWED YOUR CODE UP AGAIN', 'Sorry, lost my marbles for a second', 'I forgot what I was going to say', 'Crap, unhandled exception again', 'TEV: FIX YOUR CODE PLZKTHX', 'ERROR: Operation failed successfully!', "Sorry, I find you too lame to give you a proper response", "Houston, we've had a problem.", 'Segmentation fault', 'This program has performed an illegal operation and will be prosecuted^H^H^H^H^H^H^H^H^H^Hterminated.', 'General protection fault', 'Guru Meditation #00000001.1337... wait, wtf? What kind of system am I running on, anyway?', 'Nikky panic - not syncing: TEV SUCKS', 'This is a useless error message. An error occurred. Goodbye.', 'HCF', 'ERROR! ERROR!', '\001ACTION explodes due to an error\001'])
             self.msg(source, pub_reply)
         print('\n=== Exception ===\n\n')
         traceback.print_exc()
@@ -199,6 +199,8 @@ class NikkyBot(irc.IRCClient):
             self.quit(msg)
             self.factory.shut_down = True
         elif cmd.startswith('?reload'):
+            from nikkyai import memory_cleanup
+            memory_cleanup()
             try:
                 reload(sys.modules['nikkyai'])
                 from nikkyai import NikkyAI
@@ -206,9 +208,9 @@ class NikkyBot(irc.IRCClient):
                 self.notice(nick, 'Reload error: {}'.format(e))
             else:
                 for k in self.nikkies:
-                    lastReplies = self.nikkies[k].lastReplies
+                    last_replies = self.nikkies[k].last_replies
                     self.nikkies[k] = NikkyAI()
-                    self.nikkies[k].lastReplies = lastReplies
+                    self.nikkies[k].last_replies = last_replies
                     self.nikkies[k].nick = self.nickname
                 self.notice(nick, 'Reloaded nikkyai')
         elif cmd.startswith('?code '):
@@ -236,7 +238,7 @@ class NikkyBot(irc.IRCClient):
             log_response=False):
         """Occasionally reply to the msg given, or say a random remark"""
         try:
-            reply = self.nikkies[target].decideRemark(msg)
+            reply = self.nikkies[target].decide_remark(msg)
         except:
             self.report_error(target, silent_errors)
         else:

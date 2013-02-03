@@ -2,17 +2,17 @@
 
 # “NikkyBot”
 # Copyright ©2012 Travis Evans
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -26,9 +26,9 @@ from pytz import timezone
 
 import markov
 
-#For debugging
-from imp import reload
-reload(markov)
+
+RECURSE_LIMIT = 50
+
 
 class S(list):
     """Sequence table"""
@@ -36,7 +36,7 @@ class S(list):
         self.msg = ''
         self.match = None
         list.__init__(self, args)
-    
+
     def get(self, fmt=None):
         s = ''
         for i in self:
@@ -54,32 +54,33 @@ class R(S):
         try:
             return i.get(fmt)
         except AttributeError:
-            return i
-            
-            
+            return i.format(*fmt)
+
+
 class E(str):
     """Evaluate string"""
-    def __init__(self, *args):
-        self.msg = ''
-        self.match = None
-        str.__init__(self)
-    
     def get(self, fmt=None):
         if fmt is None:
             fmt = []
-        return str(eval(self.format(*fmt)))
+        return str(eval(self.format(*fmt))).format(*fmt)
 
 
 class Recurse(str):
-    pass
+    """Recursively find a response"""
+    def get(self, fmt=None, _recurse_level=0):
+        if _recurse_level > RECURSE_LIMIT:
+            raise Dont_know_how_to_respond_error
+        if fmt is None:
+            fmt = []
+        return pattern_reply(self.format(*fmt))[0]
 
 
 # === DATA SECTION ============================================================
 
 # (has pattern response & awake, has pattern response & asleep,
 #  random remark & awake, random remark & asleep)
-REMARK_CHANCE = (60, 180, 700, 2100)
-PATTERN_RESPONSE_RECYCLE_TIME = timedelta(7)
+REMARK_CHANCE = (200, 800, 700, 2100)
+PATTERN_RESPONSE_RECYCLE_TIME = timedelta(30)
 
 GENERIC_REMARKS = (
 'BORING',
@@ -156,7 +157,10 @@ GENERIC_REMARKS = (
 )
 
 PATTERN_REPLIES = (
+# Legal forms:
 # pattern regexp, priority, action
+# pattern regexp, priority, action, allow repeat?
+# pattern regexp, last reply, priority, action, allow repeat?
 
 # Basics
 (r'\b(hi|hello|hey)\b', 1, R(S(R('Sup ', "What's up "), R('homies', 'losers', 'whores', 'G', 'hookers')), 'Suppppppppp', "Shut up", "Flood your face!", "FLOOD YOUR FACE", 'HI {0}', 'Go away', 'No\ngo away')),
@@ -173,7 +177,7 @@ PATTERN_REPLIES = (
 (r'\bwelcome\b', 1, R('welcome to shut up')),
 
 # General
-(r"^(who is|who's|what is|what's|how's|how is) (.*?)\W?$", -1, E('markovReply(""" {2} is a """)')),
+(r"^(who is|who's|what is|what's|how's|how is) (.*?)\W?$", -1, E('markov_reply(""" {2} is a """)')),
 (r'\b(cares|care)\b', 1, R('No, nobody cares')),
 (r'\b(what|who) (is|are)\b', 1, R('Your mom', 'Your face', 'Me')),
 (r'\bwho\b', 0, R('Nobody', "nobody\nthat's who", 'NOBODY', "NOBODY\nTHAT'S WHO", 'me')),
@@ -188,7 +192,6 @@ PATTERN_REPLIES = (
 (r"\bfollowed us\b", 1, R("False. I've been here for two years.")),
 (r"^good$", 1, R('Great!', 'Great')),
 (r"\bwhat's up with you\b", 1, S(R("I'm just doing what I was told\nSO SUCK IT DRY"), R('', '\nsaniojfklsjfklsd;jskdl;jasdklajirsljraie;jriaserl;'))),
-(r'\b(book|manning)\b', 1, R("Oh God, Kerm's writing ANOTHER book?!\nI need a beer", "Kerm's writing ANOTHER one of those things?!\nExcuse me while I go jump off a cliff")),
 (r"\bwhat's up with\b", 2, R('It hates you')),
 (r"\bmy.*\b((blog|book|calc|calculator|channel|program|prog|website|site|bot)s)", 1, S('Your {1} suck\n', R('No one will like them', 'Can you give me a link so I can further make fun of them?', ''))),
 (r"\bmy.*\b(blog|book|calc|calculator|channel|program|prog|website|site|bot)\b", 2, S('Your {1} sucks\n', R('', 'No one will like it', 'Can you give me a link so I can further make fun of it?'))),
@@ -209,7 +212,7 @@ PATTERN_REPLIES = (
 (r'\byou need to\b', 1, R('You need to suck it.')),
 (r'\bi need to\b', 1, R('You also need to shut up', 'You also need to suck it')),
 (r"\b(should i|let'?s)\b", 1, R('Yes, you should', 'DO IT')),
-(r'\bwho am i\b', -1, R('You are {0}', E('markovReply("You are")'))),
+(r'\bwho am i\b', -1, R('You are {0}', E('markov_reply("You are")'))),
 (r'\butc\b', 1, R('UTC is pretty great')),
 (r'\bi will\b', 1, R('Good, go do it', 'k', 'thanks')),
 (r'\b(music|instrument)', 1, R('Music sucks\nOnly losers play instruments')),
@@ -221,7 +224,7 @@ PATTERN_REPLIES = (
 (r'\b(anyone|you) around\b', 1, R('yes', 'hi')),
 (r'\bso do(es)?\b', 1, R('so does your face', 'so does your mom', 'so do you', 'so do I')),
 (r'\bsounds like fun\b', 1, R('sure is', 'nope')),
-(r"\b(what's up|what are you (up to|doing))\b", 0, R('studying', 'studying\nhow to be a human', 'studying\ncomparitive law')),
+(r"\b(what's up|what are you (up to|doing))\b", 1, R('studying', 'studying\nhow to be a human', 'studying\ncomparitive law')),
 (r'\byour mom\b', 1, R(':(')),
 (r'\b(beer|booze|drink|drunk|wine|vodka)\b', 1, R('BOOZE')),
 (r'\bI hate\b', 1, R('I hate you too', ':(\nI hate you too', 'I HATE YOU {0}\nNerd')),
@@ -251,7 +254,6 @@ PATTERN_REPLIES = (
 (r'\bstatus nick\b', 1, R("And I won't hesitate to squat your nick if you use a status nick")),
 (r'\brules\b', 1, R("\001ACTION rules {0}\001")),
 (r'\b(how much|how many|what amount)\b', -1, R(E("' '.join(markov5.from_word_forward('Enough'))") ,E("' '.join(markov3.from_chain_forward(('Too','many')))"), E("' '.join(markov3.from_chain_forward(('More','than','you')))"))),
-(r'\btroll', 0, R('Need a troll fix?\nTry TrollMix(TM)\nbrought to you by yours truly')),
 
 # Meta
 (r'\b((how much|how many lines (of)?|how much) (code|coding|programming)|how long .* to (make|program|code|design|write) you)', -2, R(E('subprocess.check_output(["sh", "/home/nikkybot/bot/codecount.sh"]).decode()'), S("About ", E('str((datetime.now() - datetime(2012, 10, 30)).days)'), " days' worth ongoing so far, give or take"), 'About a billion lines of Perl', 'I started out as lines of Perl\nbut then tev had to be a tard and convert it all to Python')),
@@ -280,18 +282,18 @@ PATTERN_REPLIES = (
 (r"\b(was|wasn't|was not|was never)*anti", 1, R('I am')),
 (r'\bsorry\b', 1, R('you should be')),
 (r'\btokens\b', 1, R("No, we're not featuring Tokens.\nHar har har")),
-(r"^(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -3,
-E('" ".join(markov3.from_word_forward("""{6}"""))')),
+(r'^(what do you think|how do you feel) (about|of) (a |the |an )?(.*?)\W?$', -1,
+E('" ".join(markov3.from_word_forward("""{4}"""))')),
 
 # Generic Nikky phrases
-(r'\b(Arch Linux|Arch|email|the internet|Dell|iPhone|Nspire|Omnimaga|Ubuntu|X\b|Xorg|basic|TI.?BASIC|Blackberry|censorship|communism|dialup|drama|KDE|Linux|Lunix|Mac\b|OS X\b|Palm\b|PC\b|Pentium|Pokemon|Pokémon|Prizm|rickrolling|spelling|(TI.?)?(81|82|83\+|83 Plus|83|84\+|84|84 Plus|85|86|89|Voyage 200|V200|92\+|92 Plus|92)\s?(Titanium|SE)?|eyecandy|malware|Omnidrama|Casio|HP|Emacs|Word\b|pico|nano|vim\b|vi\b|GIMP|Photoshop|Paint|MS Paint|Windows|Winblows|Window\$|C#|C\+\+|C\s|Perl|TCL|Java|Javascript|Ruby|Lua|\s\.NET\s|PHP\b|Python|Apple|LaTeX|Emacs|United TI|UTI|Firefox|Thunderbird|Britain|Evolution|Pine\b|slypheeed|IE\b|Opera|Doctor Who|Stargate|MySpace|Kofler|Kevin Kofler|regex|regexp|sc2|sourcecoder|jstified|Scheme|dcs\b|doorscs|doors cs|being productive|productivity|efnet|irc\b|digg|punctuation|decbot3|decbot2|decbot|sax\b|irc\b|Tokens)', 2, R('{1} sucks', '{1} rules', '{1} is awesome', '{1} sucks balls', 'Gotta love {}', '{1} <3', "Don't use {1}", '{1} seriously is horrible.', '{1} is too complicated.', 'lol {1}', 'lol {1}\n{0} fails', '{1} ftl', '{1} sucks penis', 'Haha fail\n{1}tard', 'Your face is {1}', 'Your mom is {1}', '{1} kicks ass', '{1} is the downfall of society', '{0}: {1}tard', '<3 {1}', '{1} is blah', '{1} is for losers', E("do_markov4('{1}')"))),
+(r'\b(Arch Linux|Arch|email|the internet|Dell|iPhone|Nspire|Omnimaga|Ubuntu|X\b|Xorg|basic|TI.?BASIC|Blackberry|censorship|communism|dialup|drama|KDE|Linux|Lunix|Mac\b|OS X\b|Palm\b|PC\b|Pentium|Pokemon|Pokémon|Prizm|rickrolling|spelling|(TI.?)?(81|82|83\+|83 Plus|83|84\+|84|84 Plus|85|86|89|Voyage 200|V200|92\+|92 Plus|92)\s?(Titanium|SE)?|eyecandy|malware|Omnidrama|Casio|HP|Emacs|Word\b|pico|nano|vi|vim|GIMP|Photoshop|Paint|MS Paint|Windows|Winblows|Window\$|C#|C\+\+|C\s|Perl|TCL|Java|Javascript|Ruby|Lua|\s\.NET\s|PHP\b|Python|Apple|LaTeX|Emacs|United TI|UTI|Firefox|Thunderbird|Britain|Evolution|Pine\b|slypheeed|IE\b|Opera|Doctor Who|Stargate|MySpace|Kofler|Kevin Kofler|regex|regexp|sc2|sourcecoder|jstified|Scheme|dcs\b|doorscs|doors cs|being productive|productivity|efnet|irc\b|digg|punctuation|decbot3|decbot2|decbot|sax\b|irc\b|Tokens)', 2, R('{1} sucks', '{1} rules', '{1} is awesome', '{1} sucks balls', 'Gotta love {}', '{1} <3', "Don't use {1}", '{1} seriously is horrible.', '{1} is too complicated.', 'lol {1}', 'lol {1}\n{0} fails', '{1} ftl', '{1} sucks penis', 'Haha fail\n{1}tard', 'Your face is {1}', 'Your mom is {1}', '{1} kicks ass', '{1} is the downfall of society', '{0}: {1}tard', '<3 {1}', '{1} is blah', '{1} is for losers', E("do_markov4('{1}')"))),
 (r'\b(EEEPCs|iPhones|Blackberries|calculators|closed formats|communism|free formats|guns|laptops|memes|notebooks|Palms|PCs|Pentiums|Pokemon|Pokémon|Prizms|quadratic solvers|rickrolls|semicolons|spelling|TI-81s|TI-82s|TI-83s|TI-85s|TI-86s|TI-89s|Voyage 200s|V200s|TI-92s|Windows phones|Winphones|wikis|Casios|HPs|Linux users|regexes|regular expressions|question marks|exclamation points|interrobangs|periods|semicolons|commas|quotes|quotation marks|progress bars)\b', 2, R('{1} suck', '{1} rule', '{1} are awesome', '{1} suck balls', '{1} fail', '{1} kick ass', '{1} are the downfall of society', '{1} are for losers', '{1} are for losers\nGuess who has {1}?\n<-- this champ', '<3 {1}')),
 
 # Memes
 (r'\b(fail|epic fail)\b', 1, R('Yeah, you suck', 'HAW HAW', 'Lame')),
 (r'\<3 (.*)', 1, R('{0} loves {1}')),
 (r'\o/', 1, R('\o/')),
-(r'^\>.*', 1, R('>true dat', '>hi kerm\n>is\n>this\n>annoying?')),
+(r'$\>.*', 1, R('>true dat')),
 
 # Calculators
 (r'\b(for|for( the)?|(port|ports|porting|ported).*to( the)?|on( the)?) (Nspire|TI-83|TI-83 Plus|TI-83\+|TI-84\+|TI-84 Plus|TI-89|Prizm|Casio Prizm)\b', 1, R("Don't care\n{5} sucks")),
@@ -348,43 +350,32 @@ E('" ".join(markov3.from_word_forward("""{6}"""))')),
 (r'\bbetter channel\b', 1, R('A better channel is #omnimaga', 'A better channel is #tcpa', 'A better channel is #cemetech', 'A better channel is #ti', 'A better channel is #calcgames', 'A better channel is #tiasm', 'A better channel is #nspire-lua', 'A better channel is #nspired', 'A better channel is #tcpa', 'A better channel is #prizm', 'A better channel is #hp48', 'A better channel is #omnimagay', 'A better channel is #nikky')),
 (r'\b(channel|irc|efnet|chat)\b', 1, R(Recurse('better channel'), 'I was told I should stop by #tcpa')),
 (r'\bhighlight\b', 1, R('I like to highlight nikky just to annoy him', 'Hi {0}\nI dare you to highlight everyone in the channel\nin one line')),
-(r'^\!q', -1, R('When do I get quoted?')),
-(r'^\!', -1, S("You're lucky tev only allows me to do !k commands")),
+(r'^\!q', 1, R('When do I get quoted?')),
 
 # Special functions
 (r'\b(random (quote|saying)|nikkysim)\b', 1, E('nikkysim(stripNumber=False)[0]')),
 (r'\b(tell|tell us|tell me|say) (something|anything) (.*)(smart|intelligent|funny|interesting|cool|awesome|bright|thoughtful|entertaining|amusing|exciting|confusing|sensical|inspiring|random|wise)\b', 1, E('choice(["","","","","","Okay\\n","k\\n","kk\\n","Fine\\n"])+nikkysim(stripNumber=True)[0]')),
-(r'#([A-Za-z]-)?([0-9]+)(-([0-9]+))?', -2, E('nikkysimSayingNo(self.match)')),
-(r'\b(qotd|quote of the day)\b', 0, E('"Today\'s quote of the day: " + qotd()')),
+(r'#([A-Za-z]-)?([0-9]+)(-([0-9]+))?', -2, E('nikkysim_parse_saying_no("{1}", "{2}", "{3}")'), True),
 (r'\brandom number\b', 0, R(E('randint(0,9999)'), E('randint(0,999999999999)'), E('str(randint(0,int(\'9\'*100))) + "\\nLong enough for you?"'))),
-(r'^markov5 (.*)', -99, E('do_markov5(""" {1} """)')),
-(r'^markov4 (.*)', -99, E('do_markov4(""" {1} """)')),
-(r'^markov3 (.*)', -99, E('do_markov3(""" {1} """)')),
-(r'^markov2 (.*)', -99, E('do_markov2(""" {1} """)')),
+(r'^markov5 (.*)', -99, E('manual_markov(5, """ {1} """)')),
+(r'^markov4 (.*)', -99, E('manual_markov(4, """ {1} """)')),
+(r'^markov3 (.*)', -99, E('manual_markov(3, """ {1} """)')),
+(r'^markov2 (.*)', -99, E('manual_markov(2, """ {1} """)')),
 )
 
-# Markov experiment
-
-f = open('nikky-markov.5.pickle', 'rb')
-markov5 = cPickle.load(f)
-f = open('nikky-markov.4.pickle', 'rb')
-markov4 = cPickle.load(f)
-f = open('nikky-markov.3.pickle', 'rb')
-markov3 = cPickle.load(f)
-f = open('nikky-markov.2.pickle', 'rb')
-markov2 = cPickle.load(f)
-f.close()
-
 # === END OF DATA SECTION =====================================================
-    
-class NikkyError(Exception):
+
+
+class Nikky_error(Exception):
+    pass
+
+class Dont_know_how_to_respond_error(Nikky_error):
+    pass
+
+class Repeated_response_error(Nikky_error):
     pass
 
 
-class DontKnowHowToRespondError(NikkyError):
-    pass
-
-    
 def nikkysim(stripNumber=True, saying=None):
     if saying is None:
         x, y = randint(0, 4294967295), randint(0, 9999)
@@ -395,35 +386,56 @@ def nikkysim(stripNumber=True, saying=None):
         return (out.split(': ')[1].rstrip(), (x, y))
     else:
         return (out.rstrip(), (x, y))
-        
-        
-def nikkysimSayingNo(reMatch):
-    w, x, dummy, y = reMatch.groups()
-    if y is None:
-        y = 0
+
+
+def nikkysim_parse_saying_no(w, x, y):
+    if w == 'None':
+        w = 'B-'
+    if y == 'None':
+        y = '-0'
+    x, y = int(x), int(y.strip('-'))
     x, y = int(x), int(y)
     if w == 'A-' or w == 'a-':
         return "Only tev's TI-89 NikkySim can do the 'A-' quotes"
     elif w == 'B-' or w == 'b-' or w is None:
         if (x >= 0 and x <= 4294967295) and (y >= 0 and y <= 9999):
-            return nikkysim(False, (x, y))[0]
+            return nikkysim(True, (x, y))[0]
         else:
             return 'Sayings go from 0-0 to 4294967295-9999, champ'
     else:
         return "No such thing as a {}type quote yet".format(w)
-    
-    
-def qotd():
-    return subprocess.check_output(['./qotd.sh', './qotd.sh']).decode()
 
 
-def markovReply(msg):
+# Markov chain initialization
+f = open('nikky-markov.5.pickle', 'rb')
+markov5 = cPickle.load(f)
+f = open('nikky-markov.4.pickle', 'rb')
+markov4 = cPickle.load(f)
+f = open('nikky-markov.3.pickle', 'rb')
+markov3 = cPickle.load(f)
+f = open('nikky-markov.2.pickle', 'rb')
+markov2 = cPickle.load(f)
+f.close()
+markovs = {5: markov5, 4: markov4, 3: markov3, 2: markov2}
+
+
+def memory_cleanup():
+    """Workaround to allow avoiding excessive memory consumption when
+    reloading module (these variables can consume an enormous amount)"""
+    global markovs, markov2, markov3, markov4, markov5
+    try:
+        del markovs, markov2, markov3, markov4, markov5
+    except:
+        pass
+
+
+def markov_reply(msg):
     words = msg.split()
-    m = {5: markov5, 4: markov4, 3: markov3, 2: markov2}
     for order in (5, 4, 3, 2):
         availReplies = []
         for i in range(len(words)):
-            response = m[order].sentence_from_chain(tuple(words[i:i+order]))
+            response = \
+                markovs[order].sentence_from_chain(tuple(words[i:i+order]))
             if response:
                 availReplies.append(response)
         if availReplies:
@@ -435,189 +447,214 @@ def markovReply(msg):
         if response:
             return response
     return markov5.sentence_from_chain(choice(tuple(markov5.chain_forward.keys())))
-    
-    
-def do_markov2(msg):
+    ### FIXME: Handle empty replies ###
+    ### TODO: Experiment with priorities (choosing response based on length, etc.) ###
+
+
+def manual_markov(order, msg):
+    m = markovs[order]
     chain = tuple(msg.split())
     if len(chain) == 1:
-        response = markov2.sentence_from_word(chain[0])
+        response = m.sentence_from_word(chain[0])
     else:
-        response = markov2.sentence_from_chain(chain)
+        response = m.sentence_from_chain(chain)
     if response:
         return response
     return '"{}": chain not found'.format(' '.join(chain))
+    ### TODO: Try harder to find a chain if not found initially
 
 
-def do_markov3(msg):
-    chain = tuple(msg.split())
-    if len(chain) == 1:
-        response = markov3.sentence_from_word(chain[0])
+def pattern_reply(msg, last_used_reply='', nick='nikkybot'):
+    # Separate out speaker's nick if known
+    m = re.match(r'<(.*?)> (.*)', msg)
+    if m:
+        sourcenick = m.group(1)
+        msg = m.group(2)
     else:
-        response = markov3.sentence_from_chain(chain)
-    if response:
-        return response
-    return '"{}": chain not found'.format(' '.join(chain))
+        sourcenick = ''
+
+    # Remove highlight at beginning of line, if it exists
+    m = re.match(re.escape(nick) + r'\W *(.*)', msg)
+    if m:
+        msg = m.group(1)
+
+    # Find matching responses for msg, honoring priorities
+    cur_priority = None
+    matches = []
+    for p in PATTERN_REPLIES:
+        if len(p) == 3:
+            pattern, priority, action = p
+            allow_repeat = False
+            last_reply = ''
+        elif len(p) == 4:
+            pattern, priority, action, allow_repeat = p
+            last_reply = ''
+        elif len(p) == 5:
+            pattern, last_reply, priority, action, allow_repeat = p
+        else:
+            raise IndexError('Pattern reply tuple must be length 3, 4, or 5, not {} (pattern: {})'.format(len(p), p))
+        # Does input msg match?
+        try:
+            m = re.search(pattern, msg, flags=re.I)
+        except Exception as e:
+            print('Regex: {}'.format(pattern))
+            raise e
+        if m:
+            # Input matches, what about last_reply?
+            if last_reply is None or re.search(last_reply, last_used_reply):
+                # last_reply good, does potential response have priority?
+                # (Lower values = higher precedence)
+                if cur_priority is None or priority < cur_priority:
+                    # Found higher priority, discard everything found and start
+                    # again with this one
+                    matches = [(m, action, allow_repeat)]
+                    cur_priority = priority
+                elif priority == cur_priority:
+                    # Equal priority to highest seen so far, add to list of
+                    # potential responses
+                    matches.append((m, action, allow_repeat))
+
+    # Choose a response and generate output
+    try:
+        match, reply, allow_repeat = choice(matches)
+    except IndexError:
+        raise Dont_know_how_to_respond_error
+    fmt_list = (sourcenick,) + match.groups()
+    try:
+        return (reply.get(fmt_list), allow_repeat)
+    except AttributeError as e:
+        if str(e).endswith("'get'"):
+            # In case of a plain string
+            return (reply.format(*fmt_list), allow_repeat)
+        else:
+            raise e
 
 
-def do_markov4(msg):
-    chain = tuple(msg.split())
-    if len(chain) == 1:
-        response = markov4.sentence_from_word(chain[0])
-    else:
-        response = markov4.sentence_from_chain(chain)
-    if response:
-        return response
-    return '"{}": chain not found'.format(' '.join(chain))
-
-
-def do_markov5(msg):
-    chain = tuple(msg.split())
-    if len(chain) == 1:
-        response = markov5.sentence_from_word(chain[0])
-    else:
-        response = markov5.sentence_from_chain(chain)
-    if response:
-        return response
-    return '"{}": chain not found'.format(' '.join(chain))
-    
-    
 class NikkyAI(object):
     def __init__(self):
-        self.lastNikkysimSaying = None
-        self.lastReply = None
-        self.lastReplies = {}
+        self.last_nikkysim_saying = None
+        self.last_reply = ''
+        self.last_replies = {}
         self.nick = 'nikkybot'
-    
-    def nikkysimRemark(self, msg='', stripNumber=True):
-        out, self.lastNikkysimSaying = nikkysim(stripNumber)
-        self.lastReply = out
-        return [out]
-        
-    def genericRemark(self, msg=''):
+
+    def check_output_response(self, response, allow_repeat=False):
+        """If not allow_repeat, check if the response was already output
+        not too long ago; do exception if so, else record when this response
+        was last used.  Also set response as last-used response if accepted.
+        If accepted, return response list, split by newlines."""
+
+        if not allow_repeat:
+            try:
+                if (datetime.now() -
+                    self.last_replies[response.lower()] <
+                        PATTERN_RESPONSE_RECYCLE_TIME):
+                    raise Repeated_response_error
+            except KeyError:
+                self.last_replies[response.lower()] = datetime.now()
+
+        self.last_reply = response
+        return response.split('\n')
+
+    def nikkysim_remark(self, msg='', strip_number=True):
+        """Generate a NikkySim remark.  If not strip_number, include the
+        saying number before the remark."""
+
+        out, self.last_nikkysim_saying = nikkysim(strip_number)
+        return out
+
+    def generic_remark(self, msg=''):
+        """Select a random remark from the predefined random remark list"""
         nick=''
         m = re.match(r'<(.*)>', msg)
         if m:
             nick = m.group(1)
-        self.lastReply = choice(GENERIC_REMARKS).format(nick)
-        return self.lastReply.split('\n')
-    
+        return choice(GENERIC_REMARKS).format(nick)
+
     def remark(self, msg=''):
-        return choice((self.nikkysimRemark(), self.genericRemark(msg)))
-    
-    def patternReply(self, msg, _recurseLevel=0):
-        if _recurseLevel > 25:
-            raise DontKnowHowToRespondError
-        
+        """Choose between a context-less predefined generic remark or a
+        NikkySim remark, avoiding repeats in short succession"""
+        for i in xrange(RECURSE_LIMIT):
+            try:
+                return choice(
+                    (self.nikkysim_remark(), self.generic_remark(msg)))
+            except Repeated_response_error:
+                pass
+        return ''
+
+    def pattern_reply(self, msg):
+        """Generate a reply using predefined pattern/response patterns.
+        Check for and avoids repeated responses."""
+        for i in xrange(RECURSE_LIMIT):
+            response, allow_repeat = \
+                pattern_reply(msg, self.last_reply, self.nick)
+            try:
+                return self.check_output_response(response, allow_repeat)
+            except Repeated_response_error:
+                pass
+        return self.markov_reply(msg)
+
+    def markov_reply(self, msg, _recurse_level=0):
+        """Generate a reply using Markov chaining. Check and avoid repeated
+        responses."""
+        if _recurse_level > RECURSE_LIMIT:
+            # FIXME: Output a random Markov response
+            return markov_reply('')
+
+        # Split speaker nick and rest of message
         m = re.match(r'<(.*?)> (.*)', msg)
         if m:
             sourcenick = m.group(1)
             msg = m.group(2)
         else:
             sourcenick = ''
-        m = re.match(re.escape(self.nick) + r'\W *(.*)', msg)
-        if m:
-            msg = m.group(1)
 
-        topPriority = None
-        matches = []
-        assert self.lastReply is None or isinstance(self.lastReply, str)
-        for p in PATTERN_REPLIES:
-            if len(p) == 3:
-                pattern, priority, action = p
-                lastReply = None
-            elif len(p) == 4:
-                pattern, lastReply, priority, action = p
-            else:
-                raise IndexError('Pattern reply tuple must be length 3 or 4, not {} (pattern: {})'.format(len(p), p))
-            try:
-                m = re.search(pattern, msg, flags=re.I)
-            except Exception as e:
-                print('Regex: {}'.format(pattern))
-                raise e
-            if m:
-                assert lastReply is None or isinstance(lastReply, str)
-                if lastReply is None or re.search(lastReply, self.lastReply):
-                    if topPriority is None or priority < topPriority:
-                        matches = [(m, action)]
-                        topPriority = priority
-                    elif priority == topPriority:
-                        matches.append((m, action))
-        try:
-            thismatch, reply = choice(matches)
-        except IndexError:
-            raise DontKnowHowToRespondError
-        try:
-            reply.match = thismatch
-        except AttributeError:
-            pass
-        if type(reply) == Recurse:
-            return self.patternReply(reply, _recurseLevel=_recurseLevel+1)
-        else:
-            fmt = (sourcenick,) + thismatch.groups()
-            try:
-                self.lastReply = reply.get(fmt).format(*fmt)
-            except AttributeError as e:
-                if str(e).endswith("'get'"):
-                    self.lastReply = reply.format(*fmt)
-                else:
-                    raise e
-            finally:
-                try:
-                    if (datetime.now() -
-                            self.lastReplies[self.lastReply.lower()] <
-                            PATTERN_RESPONSE_RECYCLE_TIME and not
-                            isinstance(reply, E)):
-                        return self.patternReply(msg, _recurseLevel + 1)
-                except KeyError:
-                    pass
-                finally:
-                    self.lastReplies[self.lastReply.lower()] = datetime.now()
-                return self.lastReply.split('\n')
-
-    def markovReply(self, msg):
-        m = re.match(r'<(.*?)> (.*)', msg)
-        if m:
-            sourcenick = m.group(1)
-            msg = m.group(2)
-        else:
-            sourcenick = ''
-            
-        if randint(0, 10):
-            msg = msg.replace('nikkybot', sourcenick, 1)
-        out = markovReply(msg).rstrip()
-        for transform in (('nikkybot has ', 'I have '),
-                          ('nikkybot is', 'I am'),
-                          ('nikkybot: ', sourcenick + ': '),
-                         ):
+        # Avoid referring to self in third person
+        msg = msg.replace(self.nick, sourcenick, 1)
+        out = markov_reply(msg).rstrip()
+        for transform in ((self.nick + ' has ', 'I have '),
+                        (self.nick + ' is', 'I am'),
+                        (self.nick + ':', sourcenick + ': '),
+                        ):
             old, new = transform
             if out.lower().startswith(old):
                 out = new + out[len(old):]
                 break
-        out = out.replace('nikkybot', sourcenick)
+        out = out.replace(self.nick, sourcenick)
+
+        # TODO: More transformations? (you <-> I, why -> because, etc.)
+
+        # Occasionally highlight the speaker back for a sense of realism
         if randint(0, 10):
             out = re.sub(r'\S+: ', sourcenick + ': ', out)
-        self.lastReply = out
-        return self.lastReply.split('\n')
-    
-    def reply(self, msg):
         try:
-            return self.patternReply(msg)
-        except DontKnowHowToRespondError:
-            return self.markovReply(msg)
-            
-    def decideRemark(self, msg):
+            return self.check_output_response(out)
+        except Repeated_response_error:
+            return self.markov_reply(msg, _recurse_level + 1)
+
+    def reply(self, msg):
+        """Generic reply method.  Try to use pattern_reply; if no response
+        found, fall back to markov_reply"""
+
+        try:
+            return self.pattern_reply(msg)
+        except Dont_know_how_to_respond_error:
+            return self.markov_reply(msg)
+
+    def decide_remark(self, msg):
+        """Determine whether a random response to a line not directed to
+        nikkybot should be made"""
+
         pacific = timezone('US/Pacific')    # Where Nikky lives
         hour = datetime.now(pacific).hour
         i = int(hour >= 2 and hour <= 12)   # 0 = awake; more activity
                                             # 1 = usually asleep; less activity
         try:
-            potentialResponse = self.patternReply(msg)
-        except DontKnowHowToRespondError:
+            potential_response = self.pattern_reply(msg)
+        except Dont_know_how_to_respond_error:
             c = REMARK_CHANCE[2 + i]
             if re.search(r'\bnikky\b', msg, re.I):
                 c = int(c/2)
             r = randint(0, c)
-            #print('Remark chance {}/{}'.format(r, c))
             if not r:
                 return self.remark(msg)
             else:
@@ -627,9 +664,9 @@ class NikkyAI(object):
             if re.search(r'\bnikky\b', msg, re.I):
                 c=int(c/2)
             r = randint(0, c)
-            #print('Response chance {}/{}'.format(r, c))
             if not r:
-                return potentialResponse
+                return potential_response
             else:
-                self.lastReplies.pop('\n'.join(potentialResponse).lower())
+                #self.last_replies.pop('\n'.join(potential_response).lower())
                 return None
+
