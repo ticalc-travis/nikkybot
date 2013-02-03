@@ -79,7 +79,7 @@ class Recurse(str):
 
 # (has pattern response & awake, has pattern response & asleep,
 #  random remark & awake, random remark & asleep)
-REMARK_CHANCE = (200, 800, 700, 2100)
+REMARK_CHANCE = (50, 200, 700, 2100)
 PATTERN_RESPONSE_RECYCLE_TIME = timedelta(30)
 
 GENERIC_REMARKS = (
@@ -193,6 +193,7 @@ PATTERN_REPLIES = (
 (r"^good$", 1, R('Great!', 'Great')),
 (r"\bwhat's up with you\b", 1, S(R("I'm just doing what I was told\nSO SUCK IT DRY"), R('', '\nsaniojfklsjfklsd;jskdl;jasdklajirsljraie;jriaserl;'))),
 (r"\bwhat's up with\b", 2, R('It hates you')),
+(r'\b(book|manning)\b', 1, R("Oh God, Kerm's writing ANOTHER book?!\nI need a beer", "Kerm's writing ANOTHER one of those things?!\nExcuse me while I go jump off a cliff")),
 (r"\bmy.*\b((blog|book|calc|calculator|channel|program|prog|website|site|bot)s)", 1, S('Your {1} suck\n', R('No one will like them', 'Can you give me a link so I can further make fun of them?', ''))),
 (r"\bmy.*\b(blog|book|calc|calculator|channel|program|prog|website|site|bot)\b", 2, S('Your {1} sucks\n', R('', 'No one will like it', 'Can you give me a link so I can further make fun of it?'))),
 (r"\b(some|these|those)\b.*\b((blog|book|calc|calculator|channel|program|prog|website|site|bot)s)\b", 1, S('Those {2} suck\n', R('', 'No one will like them', 'Can you give me a link so I can further make fun of them?'))),
@@ -254,6 +255,7 @@ PATTERN_REPLIES = (
 (r'\bstatus nick\b', 1, R("And I won't hesitate to squat your nick if you use a status nick")),
 (r'\brules\b', 1, R("\001ACTION rules {0}\001")),
 (r'\b(how much|how many|what amount)\b', -1, R(E("' '.join(markov5.from_word_forward('Enough'))") ,E("' '.join(markov3.from_chain_forward(('Too','many')))"), E("' '.join(markov3.from_chain_forward(('More','than','you')))"))),
+(r'\btroll', 0, R('Need a troll fix?\nTry TrollMix(TM)\nbrought to you by yours truly')),
 
 # Meta
 (r'\b((how much|how many lines (of)?|how much) (code|coding|programming)|how long .* to (make|program|code|design|write) you)', -2, R(E('subprocess.check_output(["sh", "/home/nikkybot/bot/codecount.sh"]).decode()'), S("About ", E('str((datetime.now() - datetime(2012, 10, 30)).days)'), " days' worth ongoing so far, give or take"), 'About a billion lines of Perl', 'I started out as lines of Perl\nbut then tev had to be a tard and convert it all to Python')),
@@ -282,8 +284,7 @@ PATTERN_REPLIES = (
 (r"\b(was|wasn't|was not|was never)*anti", 1, R('I am')),
 (r'\bsorry\b', 1, R('you should be')),
 (r'\btokens\b', 1, R("No, we're not featuring Tokens.\nHar har har")),
-(r'^(what do you think|how do you feel) (about|of) (a |the |an )?(.*?)\W?$', -1,
-E('" ".join(markov3.from_word_forward("""{4}"""))')),
+(r"^(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -3, E('" ".join(markov3.from_word_forward("""{6}"""))')),
 
 # Generic Nikky phrases
 (r'\b(Arch Linux|Arch|email|the internet|Dell|iPhone|Nspire|Omnimaga|Ubuntu|X\b|Xorg|basic|TI.?BASIC|Blackberry|censorship|communism|dialup|drama|KDE|Linux|Lunix|Mac\b|OS X\b|Palm\b|PC\b|Pentium|Pokemon|Pokémon|Prizm|rickrolling|spelling|(TI.?)?(81|82|83\+|83 Plus|83|84\+|84|84 Plus|85|86|89|Voyage 200|V200|92\+|92 Plus|92)\s?(Titanium|SE)?|eyecandy|malware|Omnidrama|Casio|HP|Emacs|Word\b|pico|nano|vi|vim|GIMP|Photoshop|Paint|MS Paint|Windows|Winblows|Window\$|C#|C\+\+|C\s|Perl|TCL|Java|Javascript|Ruby|Lua|\s\.NET\s|PHP\b|Python|Apple|LaTeX|Emacs|United TI|UTI|Firefox|Thunderbird|Britain|Evolution|Pine\b|slypheeed|IE\b|Opera|Doctor Who|Stargate|MySpace|Kofler|Kevin Kofler|regex|regexp|sc2|sourcecoder|jstified|Scheme|dcs\b|doorscs|doors cs|being productive|productivity|efnet|irc\b|digg|punctuation|decbot3|decbot2|decbot|sax\b|irc\b|Tokens)', 2, R('{1} sucks', '{1} rules', '{1} is awesome', '{1} sucks balls', 'Gotta love {}', '{1} <3', "Don't use {1}", '{1} seriously is horrible.', '{1} is too complicated.', 'lol {1}', 'lol {1}\n{0} fails', '{1} ftl', '{1} sucks penis', 'Haha fail\n{1}tard', 'Your face is {1}', 'Your mom is {1}', '{1} kicks ass', '{1} is the downfall of society', '{0}: {1}tard', '<3 {1}', '{1} is blah', '{1} is for losers', E("do_markov4('{1}')"))),
@@ -293,7 +294,7 @@ E('" ".join(markov3.from_word_forward("""{4}"""))')),
 (r'\b(fail|epic fail)\b', 1, R('Yeah, you suck', 'HAW HAW', 'Lame')),
 (r'\<3 (.*)', 1, R('{0} loves {1}')),
 (r'\o/', 1, R('\o/')),
-(r'$\>.*', 1, R('>true dat')),
+(r'$\>.*', 1, R('>true dat', '>hi kerm\n>is\n>this\n>annoying?')),
 
 # Calculators
 (r'\b(for|for( the)?|(port|ports|porting|ported).*to( the)?|on( the)?) (Nspire|TI-83|TI-83 Plus|TI-83\+|TI-84\+|TI-84 Plus|TI-89|Prizm|Casio Prizm)\b', 1, R("Don't care\n{5} sucks")),
