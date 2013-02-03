@@ -287,7 +287,7 @@ PATTERN_REPLIES = (
 (r"^(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -3, E('" ".join(markov3.from_word_forward("""{6}"""))')),
 
 # Generic Nikky phrases
-(r'\b(Arch Linux|Arch|email|the internet|Dell|iPhone|Nspire|Omnimaga|Ubuntu|X\b|Xorg|basic|TI.?BASIC|Blackberry|censorship|communism|dialup|drama|KDE|Linux|Lunix|Mac\b|OS X\b|Palm\b|PC\b|Pentium|Pokemon|Pokémon|Prizm|rickrolling|spelling|(TI.?)?(81|82|83\+|83 Plus|83|84\+|84|84 Plus|85|86|89|Voyage 200|V200|92\+|92 Plus|92)\s?(Titanium|SE)?|eyecandy|malware|Omnidrama|Casio|HP|Emacs|Word\b|pico|nano|vi|vim|GIMP|Photoshop|Paint|MS Paint|Windows|Winblows|Window\$|C#|C\+\+|C\s|Perl|TCL|Java|Javascript|Ruby|Lua|\s\.NET\s|PHP\b|Python|Apple|LaTeX|Emacs|United TI|UTI|Firefox|Thunderbird|Britain|Evolution|Pine\b|slypheeed|IE\b|Opera|Doctor Who|Stargate|MySpace|Kofler|Kevin Kofler|regex|regexp|sc2|sourcecoder|jstified|Scheme|dcs\b|doorscs|doors cs|being productive|productivity|efnet|irc\b|digg|punctuation|decbot3|decbot2|decbot|sax\b|irc\b|Tokens)', 2, R('{1} sucks', '{1} rules', '{1} is awesome', '{1} sucks balls', 'Gotta love {}', '{1} <3', "Don't use {1}", '{1} seriously is horrible.', '{1} is too complicated.', 'lol {1}', 'lol {1}\n{0} fails', '{1} ftl', '{1} sucks penis', 'Haha fail\n{1}tard', 'Your face is {1}', 'Your mom is {1}', '{1} kicks ass', '{1} is the downfall of society', '{0}: {1}tard', '<3 {1}', '{1} is blah', '{1} is for losers', E("do_markov4('{1}')"))),
+(r'\b(Arch Linux|Arch|email|the internet|Dell|iPhone|Nspire|Omnimaga|Ubuntu|X\b|Xorg|basic|TI.?BASIC|Blackberry|censorship|communism|dialup|drama|KDE|Linux|Lunix|Mac\b|OS X\b|Palm\b|PC\b|Pentium|Pokemon|Pokémon|Prizm|rickrolling|spelling|(TI.?)?(81|82|83\+|83 Plus|83|84\+|84|84 Plus|85|86|89|Voyage 200|V200|92\+|92 Plus|92)\s?(Titanium|SE)?|eyecandy|malware|Omnidrama|Casio|HP|Emacs|Word\b|pico|nano|vi|vim|GIMP|Photoshop|Paint|MS Paint|Windows|Winblows|Window\$|C#|C\+\+|C\s|Perl|TCL|Java|Javascript|Ruby|Lua|\s\.NET\s|PHP\b|Python|Apple|LaTeX|Emacs|United TI|UTI|Firefox|Thunderbird|Britain|Evolution|Pine\b|slypheeed|IE\b|Opera|Doctor Who|Stargate|MySpace|Kofler|Kevin Kofler|regex|regexp|sc2|sourcecoder|jstified|Scheme|dcs\b|doorscs|doors cs|being productive|productivity|efnet|irc\b|digg|punctuation|decbot3|decbot2|decbot|sax\b|irc\b|Tokens)', 2, R('{1} sucks', '{1} rules', '{1} is awesome', '{1} sucks balls', 'Gotta love {}', '{1} <3', "Don't use {1}", '{1} seriously is horrible.', '{1} is too complicated.', 'lol {1}', 'lol {1}\n{0} fails', '{1} ftl', '{1} sucks penis', 'Haha fail\n{1}tard', 'Your face is {1}', 'Your mom is {1}', '{1} kicks ass', '{1} is the downfall of society', '{0}: {1}tard', '<3 {1}', '{1} is blah', '{1} is for losers', E("manual_markov(4, '{1}')"))),
 (r'\b(EEEPCs|iPhones|Blackberries|calculators|closed formats|communism|free formats|guns|laptops|memes|notebooks|Palms|PCs|Pentiums|Pokemon|Pokémon|Prizms|quadratic solvers|rickrolls|semicolons|spelling|TI-81s|TI-82s|TI-83s|TI-85s|TI-86s|TI-89s|Voyage 200s|V200s|TI-92s|Windows phones|Winphones|wikis|Casios|HPs|Linux users|regexes|regular expressions|question marks|exclamation points|interrobangs|periods|semicolons|commas|quotes|quotation marks|progress bars)\b', 2, R('{1} suck', '{1} rule', '{1} are awesome', '{1} suck balls', '{1} fail', '{1} kick ass', '{1} are the downfall of society', '{1} are for losers', '{1} are for losers\nGuess who has {1}?\n<-- this champ', '<3 {1}')),
 
 # Memes
@@ -576,11 +576,11 @@ class NikkyAI(object):
         NikkySim remark, avoiding repeats in short succession"""
         for i in xrange(RECURSE_LIMIT):
             try:
-                return choice(
-                    (self.nikkysim_remark(), self.generic_remark(msg)))
+                return self.check_output_response(choice(
+                    (self.nikkysim_remark(), self.generic_remark(msg))))
             except Repeated_response_error:
                 pass
-        return ''
+        return ['']
 
     def pattern_reply(self, msg):
         """Generate a reply using predefined pattern/response patterns.
@@ -668,6 +668,5 @@ class NikkyAI(object):
             if not r:
                 return potential_response
             else:
-                #self.last_replies.pop('\n'.join(potential_response).lower())
                 return None
 

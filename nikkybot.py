@@ -250,9 +250,13 @@ class NikkyBot(irc.IRCClient):
     def output_timed_msg(self, target, msg):
         """Output msg paced at a simulated typing rate.  msg will be split
         into separate lines if it contains \n characters."""
+
         delay = self.factory.initial_reply_delay
         rate = self.factory.simulated_typing_speed
         last_time = 0
+        if isinstance(msg, str) or isinstance(msg, unicode):
+            msg = [msg]
+        
         for item in msg:
             for line in item.split('\n'):
                 if line:
