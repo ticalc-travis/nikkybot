@@ -78,7 +78,7 @@ class Recurse(str):
 
 # (has pattern response & awake, has pattern response & asleep,
 #  random remark & awake, random remark & asleep)
-REMARK_CHANCE = (200, 800, 700, 2100)
+REMARK_CHANCE = (60, 180, 700, 2100)
 PATTERN_RESPONSE_RECYCLE_TIME = timedelta(7)
 
 GENERIC_REMARKS = (
@@ -188,6 +188,7 @@ PATTERN_REPLIES = (
 (r"\bfollowed us\b", 1, R("False. I've been here for two years.")),
 (r"^good$", 1, R('Great!', 'Great')),
 (r"\bwhat's up with you\b", 1, S(R("I'm just doing what I was told\nSO SUCK IT DRY"), R('', '\nsaniojfklsjfklsd;jskdl;jasdklajirsljraie;jriaserl;'))),
+(r'\b(book|manning)\b', 1, R("Oh God, Kerm's writing ANOTHER book?!\nI need a beer", "Kerm's writing ANOTHER one of those things?!\nExcuse me while I go jump off a cliff")),
 (r"\bwhat's up with\b", 2, R('It hates you')),
 (r"\bmy.*\b((blog|book|calc|calculator|channel|program|prog|website|site|bot)s)", 1, S('Your {1} suck\n', R('No one will like them', 'Can you give me a link so I can further make fun of them?', ''))),
 (r"\bmy.*\b(blog|book|calc|calculator|channel|program|prog|website|site|bot)\b", 2, S('Your {1} sucks\n', R('', 'No one will like it', 'Can you give me a link so I can further make fun of it?'))),
@@ -220,7 +221,7 @@ PATTERN_REPLIES = (
 (r'\b(anyone|you) around\b', 1, R('yes', 'hi')),
 (r'\bso do(es)?\b', 1, R('so does your face', 'so does your mom', 'so do you', 'so do I')),
 (r'\bsounds like fun\b', 1, R('sure is', 'nope')),
-(r"\b(what's up|what are you (up to|doing))\b", 1, R('studying', 'studying\nhow to be a human', 'studying\ncomparitive law')),
+(r"\b(what's up|what are you (up to|doing))\b", 0, R('studying', 'studying\nhow to be a human', 'studying\ncomparitive law')),
 (r'\byour mom\b', 1, R(':(')),
 (r'\b(beer|booze|drink|drunk|wine|vodka)\b', 1, R('BOOZE')),
 (r'\bI hate\b', 1, R('I hate you too', ':(\nI hate you too', 'I HATE YOU {0}\nNerd')),
@@ -250,6 +251,7 @@ PATTERN_REPLIES = (
 (r'\bstatus nick\b', 1, R("And I won't hesitate to squat your nick if you use a status nick")),
 (r'\brules\b', 1, R("\001ACTION rules {0}\001")),
 (r'\b(how much|how many|what amount)\b', -1, R(E("' '.join(markov5.from_word_forward('Enough'))") ,E("' '.join(markov3.from_chain_forward(('Too','many')))"), E("' '.join(markov3.from_chain_forward(('More','than','you')))"))),
+(r'\btroll', 0, R('Need a troll fix?\nTry TrollMix(TM)\nbrought to you by yours truly')),
 
 # Meta
 (r'\b((how much|how many lines (of)?|how much) (code|coding|programming)|how long .* to (make|program|code|design|write) you)', -2, R(E('subprocess.check_output(["sh", "/home/nikkybot/bot/codecount.sh"]).decode()'), S("About ", E('str((datetime.now() - datetime(2012, 10, 30)).days)'), " days' worth ongoing so far, give or take"), 'About a billion lines of Perl', 'I started out as lines of Perl\nbut then tev had to be a tard and convert it all to Python')),
@@ -274,23 +276,22 @@ PATTERN_REPLIES = (
 (r'\b((ask|tell) nikky .*)\b', 0, R('HEY NIKKY NIKKY NIKKY\n{0} says "{1}"')),
 (r'\bdid you\b', 1, R("I don't remember", "Can't say", 'yes', 'with much gusto!')),
 (r"\byour (a|an|my|his|her|its|it's|dumb|stupid)\b", 1, R('"Your" retarded', "*You're")),
-(r"\b(you are|you're|nikkybot is)\b", 1, R("I'm actually a very passive person.", "I'm a troll", 'no u', 'yes', 'no', 'of course', 'What can I say?')),
-(r"\b(you are|you're|nikkybot is)\b", 1, R("I'm actually a very passive person.", "I'm a troll", 'no u', 'yes', 'no', 'of course', 'What can I say?')),
+(r"\b(you are|you're|nikkybot is)\b", 1, R("I'm a troll", 'no u', 'yes', 'no', 'of course', 'What can I say?')),
 (r"\b(was|wasn't|was not|was never)*anti", 1, R('I am')),
 (r'\bsorry\b', 1, R('you should be')),
 (r'\btokens\b', 1, R("No, we're not featuring Tokens.\nHar har har")),
-(r'^(what do you think|how do you feel) (about|of) (a |the |an )?(.*?)\W?$', -1,
-E('" ".join(markov3.from_word_forward("""{4}"""))')),
+(r"^(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -3,
+E('" ".join(markov3.from_word_forward("""{6}"""))')),
 
 # Generic Nikky phrases
-(r'\b(Arch Linux|Arch|email|the internet|Dell|iPhone|Nspire|Omnimaga|Ubuntu|X\b|Xorg|basic|TI.?BASIC|Blackberry|censorship|communism|dialup|drama|KDE|Linux|Lunix|Mac\b|OS X\b|Palm|PC|Pentium|Pokemon|Pokémon|Prizm|rickrolling|spelling|(TI.?)?(81|82|83\+|83 Plus|83|84\+|84|84 Plus|85|86|89|Voyage 200|V200|92\+|92 Plus|92)\s?(Titanium|SE)?|eyecandy|malware|Omnidrama|Casio|HP|Emacs|Word\b|pico|nano|vi|vim|GIMP|Photoshop|Paint|MS Paint|Windows|Winblows|Window\$|C#|C\+\+|C\s|Perl|TCL|Java|Javascript|Ruby|Lua|\s\.NET\s|PHP\b|Python|Apple|LaTeX|Emacs|United TI|UTI|Firefox|Thunderbird|Britain|Evolution|Pine|slypheeed|IE\b|Opera|Doctor Who|Stargate|MySpace|Kofler|Kevin Kofler|regex|regexp|sc2|sourcecoder|jstified|Scheme|dcs\b|doorscs|doors cs|being productive|productivity|efnet|irc\b|digg|punctuation|decbot|decbot2|sax\b|irc\b|Tokens)', 2, R('{1} sucks', '{1} rules', '{1} is awesome', '{1} sucks balls', 'Gotta love {}', '{1} <3', "Don't use {1}", '{1} seriously is horrible.', '{1} is too complicated.', 'lol {1}', 'lol {1}\n{0} fails', '{1} ftl', '{1} sucks penis', 'Haha fail\n{1}tard', 'Your face is {1}', 'Your mom is {1}', '{1} kicks ass', '{1} is the downfall of society', '{0}: {1}tard', '<3 {1}', '{1} is blah', '{1} is for losers', E("do_markov4('{1}')"))),
+(r'\b(Arch Linux|Arch|email|the internet|Dell|iPhone|Nspire|Omnimaga|Ubuntu|X\b|Xorg|basic|TI.?BASIC|Blackberry|censorship|communism|dialup|drama|KDE|Linux|Lunix|Mac\b|OS X\b|Palm\b|PC\b|Pentium|Pokemon|Pokémon|Prizm|rickrolling|spelling|(TI.?)?(81|82|83\+|83 Plus|83|84\+|84|84 Plus|85|86|89|Voyage 200|V200|92\+|92 Plus|92)\s?(Titanium|SE)?|eyecandy|malware|Omnidrama|Casio|HP|Emacs|Word\b|pico|nano|vim\b|vi\b|GIMP|Photoshop|Paint|MS Paint|Windows|Winblows|Window\$|C#|C\+\+|C\s|Perl|TCL|Java|Javascript|Ruby|Lua|\s\.NET\s|PHP\b|Python|Apple|LaTeX|Emacs|United TI|UTI|Firefox|Thunderbird|Britain|Evolution|Pine\b|slypheeed|IE\b|Opera|Doctor Who|Stargate|MySpace|Kofler|Kevin Kofler|regex|regexp|sc2|sourcecoder|jstified|Scheme|dcs\b|doorscs|doors cs|being productive|productivity|efnet|irc\b|digg|punctuation|decbot3|decbot2|decbot|sax\b|irc\b|Tokens)', 2, R('{1} sucks', '{1} rules', '{1} is awesome', '{1} sucks balls', 'Gotta love {}', '{1} <3', "Don't use {1}", '{1} seriously is horrible.', '{1} is too complicated.', 'lol {1}', 'lol {1}\n{0} fails', '{1} ftl', '{1} sucks penis', 'Haha fail\n{1}tard', 'Your face is {1}', 'Your mom is {1}', '{1} kicks ass', '{1} is the downfall of society', '{0}: {1}tard', '<3 {1}', '{1} is blah', '{1} is for losers', E("do_markov4('{1}')"))),
 (r'\b(EEEPCs|iPhones|Blackberries|calculators|closed formats|communism|free formats|guns|laptops|memes|notebooks|Palms|PCs|Pentiums|Pokemon|Pokémon|Prizms|quadratic solvers|rickrolls|semicolons|spelling|TI-81s|TI-82s|TI-83s|TI-85s|TI-86s|TI-89s|Voyage 200s|V200s|TI-92s|Windows phones|Winphones|wikis|Casios|HPs|Linux users|regexes|regular expressions|question marks|exclamation points|interrobangs|periods|semicolons|commas|quotes|quotation marks|progress bars)\b', 2, R('{1} suck', '{1} rule', '{1} are awesome', '{1} suck balls', '{1} fail', '{1} kick ass', '{1} are the downfall of society', '{1} are for losers', '{1} are for losers\nGuess who has {1}?\n<-- this champ', '<3 {1}')),
 
 # Memes
 (r'\b(fail|epic fail)\b', 1, R('Yeah, you suck', 'HAW HAW', 'Lame')),
 (r'\<3 (.*)', 1, R('{0} loves {1}')),
 (r'\o/', 1, R('\o/')),
-(r'$\>.*', 1, R('>true dat')),
+(r'^\>.*', 1, R('>true dat', '>hi kerm\n>is\n>this\n>annoying?')),
 
 # Calculators
 (r'\b(for|for( the)?|(port|ports|porting|ported).*to( the)?|on( the)?) (Nspire|TI-83|TI-83 Plus|TI-83\+|TI-84\+|TI-84 Plus|TI-89|Prizm|Casio Prizm)\b', 1, R("Don't care\n{5} sucks")),
@@ -303,9 +304,9 @@ E('" ".join(markov3.from_word_forward("""{4}"""))')),
 (r'\bdelete.*\bpost\b', 1, R('CENSORSHIP')),
 (r'\*(\S+) deleted a post in', 1, R('CENSORSHIP', 'Censorship', '{1} YOU CENSORING TARDMUFFIN')),
 (r'\bspam post', 1, R("Don't care", "\001ACTION spams {0}\001")),
-(r'\b(karma|decbot|decbot2)\b', 1, R('karma sucks', '!karma SET KARMA = 0 WHERE `user` = "{0}"; DROP DATABASE', 'Decbot sucks', 'Decbot2 sucks', 'Decbot sucks\nDecbot2--', '!karma your face', '!karma your mom')),
-(r'nikkybot\+\+', 0, R('Thanks', 'Thanks {0}', 'Thanks {0}\n<3', '{0}++', 'karma sucks', 'Decbot sucks', 'Decbot2 sucks', 'Decbot sucks\nDecbot2--', 'yourmom++', 'yourface++')),
-(r'\b(.*)\+\+', 1, R('{0}++', '{0}--', '{0}--\nTake THAT', '{0}--\nHAHAHAHAHAHA ROLFILIL', '{1}++', '{1}--', '{1} sucks', '{1} is awesome', '{1} kicks ass', '{1} sucks balls', 'karma sucks', '!karma SET KARMA = 0 WHERE `user` = "{0}"; DROP DATABASE', '!karma SET KARMA = 0 WHERE `user` = "{1}"; DROP DATABASE', 'Decbot sucks', 'Decbot2 sucks', 'Decbot sucks\nDecbot2--', '{1}++')),
+(r'\b(karma|decbot3|decbot2|decbot)\b', 1, R('karma sucks', '!karma SET KARMA = 0 WHERE `user` = "{0}"; DROP DATABASE', 'Decbot sucks', 'Decbot3 sucks', 'Decbot sucks\nDecbot3--', '!karma your face', '!karma your mom')),
+(r'nikkybot\+\+', 0, R('Thanks', 'Thanks {0}', 'Thanks {0}\n<3', '{0}++', 'karma sucks', 'Decbot sucks', 'Decbot3 sucks', 'Decbot sucks\nDecbot3--', 'yourmom++', 'yourface++')),
+(r'\b(.*)\+\+', 1, R('{0}++', '{0}--', '{0}--\nTake THAT', '{0}--\nHAHAHAHAHAHA ROLFILIL', '{1}++', '{1}--', '{1} sucks', '{1} is awesome', '{1} kicks ass', '{1} sucks balls', 'karma sucks', '!karma SET KARMA = 0 WHERE `user` = "{0}"; DROP DATABASE', '!karma SET KARMA = 0 WHERE `user` = "{1}"; DROP DATABASE', 'Decbot sucks', 'Decbot3 sucks', 'Decbot sucks\nDecbot3--', '{1}++')),
 
 
 # Omnimaga
@@ -347,6 +348,8 @@ E('" ".join(markov3.from_word_forward("""{4}"""))')),
 (r'\bbetter channel\b', 1, R('A better channel is #omnimaga', 'A better channel is #tcpa', 'A better channel is #cemetech', 'A better channel is #ti', 'A better channel is #calcgames', 'A better channel is #tiasm', 'A better channel is #nspire-lua', 'A better channel is #nspired', 'A better channel is #tcpa', 'A better channel is #prizm', 'A better channel is #hp48', 'A better channel is #omnimagay', 'A better channel is #nikky')),
 (r'\b(channel|irc|efnet|chat)\b', 1, R(Recurse('better channel'), 'I was told I should stop by #tcpa')),
 (r'\bhighlight\b', 1, R('I like to highlight nikky just to annoy him', 'Hi {0}\nI dare you to highlight everyone in the channel\nin one line')),
+(r'^\!q', -1, R('When do I get quoted?')),
+(r'^\!', -1, S("You're lucky tev only allows me to do !k commands")),
 
 # Special functions
 (r'\b(random (quote|saying)|nikkysim)\b', 1, E('nikkysim(stripNumber=False)[0]')),
@@ -387,7 +390,7 @@ def nikkysim(stripNumber=True, saying=None):
         x, y = randint(0, 4294967295), randint(0, 9999)
     else:
         x, y = saying
-    out = subprocess.check_output(['nikky', '{}-{}'.format(x, y)]).decode()
+    out = subprocess.check_output(['nikky', '{}-{}'.format(x, y)])
     if stripNumber:
         return (out.split(': ')[1].rstrip(), (x, y))
     else:
@@ -403,7 +406,7 @@ def nikkysimSayingNo(reMatch):
         return "Only tev's TI-89 NikkySim can do the 'A-' quotes"
     elif w == 'B-' or w == 'b-' or w is None:
         if (x >= 0 and x <= 4294967295) and (y >= 0 and y <= 9999):
-            return nikkysim(True, (x, y))[0]
+            return nikkysim(False, (x, y))[0]
         else:
             return 'Sayings go from 0-0 to 4294967295-9999, champ'
     else:
@@ -478,7 +481,7 @@ def do_markov5(msg):
     return '"{}": chain not found'.format(' '.join(chain))
     
     
-class NikkyAI:
+class NikkyAI(object):
     def __init__(self):
         self.lastNikkysimSaying = None
         self.lastReply = None
@@ -511,10 +514,10 @@ class NikkyAI:
             msg = m.group(2)
         else:
             sourcenick = ''
-        m = re.match(re.escape(self.nick) + r'\W*(.*)', msg)
+        m = re.match(re.escape(self.nick) + r'\W *(.*)', msg)
         if m:
             msg = m.group(1)
-        
+
         topPriority = None
         matches = []
         assert self.lastReply is None or isinstance(self.lastReply, str)
@@ -543,12 +546,6 @@ class NikkyAI:
             thismatch, reply = choice(matches)
         except IndexError:
             raise DontKnowHowToRespondError
-        # Debug
-        print()
-        print(msg)
-        print(thismatch.re.pattern)
-        print()
-        #
         try:
             reply.match = thismatch
         except AttributeError:
@@ -560,7 +557,6 @@ class NikkyAI:
             try:
                 self.lastReply = reply.get(fmt).format(*fmt)
             except AttributeError as e:
-                raise e
                 if str(e).endswith("'get'"):
                     self.lastReply = reply.format(*fmt)
                 else:

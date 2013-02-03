@@ -116,13 +116,13 @@ class NikkyBot(irc.IRCClient):
                 self.do_AI_reply(formatted_msg, nick)
         else:
             # Public message
-            if re.match('saxjax!~saxjax@.*ip\-142\-4\-211\.net', host):
-                m = re.match(r'\(.\) \[(.*)\] (.*)', message)
+            if self.hostmask_match('*!~saxjax@*', user):
+                m = re.match(r'\(.\) \[(.*)\] (.*)', msg)
                 if m:
                     nick = m.group(1)
                     formatted_msg = '<{}> {}'.format(nick, m.group(2))
                 else:
-                    m = re.match(r'\(.\) \*(.*?) (.*)', message)
+                    m = re.match(r'\(.\) \*(.*?) (.*)', msg)
                     if m:
                         nick = m.group(1)
                         formatted_msg = '<{}> {}'.format(nick, m.group(2))
@@ -184,7 +184,7 @@ class NikkyBot(irc.IRCClient):
         if silent is False"""
         if not silent:
             pub_reply = random.choice(['Oops', 'Ow, my head hurts', 'TEV YOU SCREWED YOUR CODE UP AGAIN', 'Sorry, lost my marbles for a second', 'I forgot what I was going to say', 'Crap, unhandled exception again', 'TEV: FIX YOUR CODE PLZKTHX', 'ERROR: Operation failed successfully!', "Sorry, I find you too lame to give you a proper response", "Houston, we've had a problem.", 'Segmentation fault', 'This program has performed an illegal operation and will be prosecuted^H^H^H^H^H^H^H^H^H^Hterminated.', 'General protection fault', 'Guru Meditation #00000001.1337... wait, wtf? What kind of system am I running on, anyway?', 'Nikky panic - not syncing: TEV SUCKS', 'This is a useless error message. An error occurred. Goodbye.', 'HCF'])
-            self.privmsg(source, pub_reply)
+            self.msg(source, pub_reply)
         print('\n=== Exception ===\n\n')
         traceback.print_exc()
         print()
@@ -225,7 +225,7 @@ class NikkyBot(irc.IRCClient):
         try:
             reply = self.nikkies[target].reply(msg)
         except:
-            report_errors(target, silent_errors)
+            self.report_error(target, silent_errors)
         else:
             if reply and log_response:
                 print('privmsg to {}: {}'.format(target, repr(reply)))
@@ -238,7 +238,7 @@ class NikkyBot(irc.IRCClient):
         try:
             reply = self.nikkies[target].decideRemark(msg)
         except:
-            report_errors(target, silent_errors)
+            self.report_error(target, silent_errors)
         else:
             if reply and log_response:
                 print('privmsg response to {}: {}'.format(target, repr(reply)))
@@ -265,6 +265,8 @@ class NikkyBot(irc.IRCClient):
         at the beginning in some cases, to avoid trigger public bot
         commands."""
         if msg[0] in '~!?@#$%^&*-.,;:' and not msg.startswith('!k '):
+        # Change the above line to the following one once the fun's over
+        #if msg[0] in '~!?@#$%^&*-.,;:':
             print('Escaping/"protecting" message: {}'.format(msg))
             return '\x0F' + msg
         else:
@@ -300,6 +302,7 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
     def clientConnectionFailed(self, connector, reason):
         print('Connection failed: {}'.format(reason))
         url, port = random.choice(self.servers)
+        print('Connecting to {}:{}'.format(url, port))
         reactor.connectTCP(url, port,
             NikkyBotFactory(self.servers, self.channels, self.nicks,
                 self.real_name, self.admin_hostmasks, self.min_send_time,
