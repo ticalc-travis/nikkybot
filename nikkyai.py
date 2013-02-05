@@ -401,7 +401,7 @@ def nikkysim_parse_saying_no(w, x, y):
         return "Only tev's TI-89 NikkySim can do the 'A-' quotes"
     elif w == 'B-' or w == 'b-' or w is None:
         if (x >= 0 and x <= 4294967295) and (y >= 0 and y <= 9999):
-            return nikkysim(True, (x, y))[0]
+            return nikkysim(False, (x, y))[0]
         else:
             return 'Sayings go from 0-0 to 4294967295-9999, champ'
     else:
@@ -640,16 +640,15 @@ class NikkyAI(object):
         # TODO: More transformations? (you <-> I, why -> because, etc.)
 
         # Occasionally highlight the speaker back for a sense of realism
-        if sourcenick:
-            if randint(0, 10):
-                out = re.sub(r'\S+: ', sourcenick + ': ', out)
-            try:
-                return self.check_output_response(out)
-            except Repeated_response_error:
-                return self.markov_reply(msg, _recurse_level + 1)
+        if sourcenick and randint(0, 10):
+            out = re.sub(r'\S+: ', sourcenick + ': ', out)
         ### TEMP DEBUGGING CODE ###
         else:
             print('Nick, msg: {}, {}'.format(sourcenick, msg))
+        try:
+            return self.check_output_response(out)
+        except Repeated_response_error:
+            return self.markov_reply(msg, _recurse_level + 1)
 
     def reply(self, msg):
         """Generic reply method.  Try to use pattern_reply; if no response
@@ -676,7 +675,7 @@ class NikkyAI(object):
                 c = int(c/2)
             r = randint(0, c)
             if not r:
-                return self.remark(msg)
+                return choice(self.remark(msg), self.markov_reply(msg))
             else:
                 return None
         else:

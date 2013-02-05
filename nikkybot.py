@@ -122,7 +122,7 @@ class NikkyBot(irc.IRCClient):
                 self.do_AI_reply(formatted_msg, nick)
         else:
             # Public message
-            if re.match('saxjax!~saxjax@.*ip\-142\-4\-211\.net', host):
+            if re.match('saxjax!~saxjax@.*', host):
                 m = re.match(r'\(.\) \[(.*)\] (.*)', message)
                 if m:
                     nick = m.group(1)
