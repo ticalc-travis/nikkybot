@@ -616,6 +616,7 @@ class NikkyAI(object):
             return markov_reply('')
 
         # Split speaker nick and rest of message
+        print(msg) # !DEBUG
         m = re.match(r'<(.*?)> (.*)', msg)
         if m:
             print(m.groups()) # !DEBUG

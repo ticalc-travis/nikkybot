@@ -122,13 +122,13 @@ class NikkyBot(irc.IRCClient):
                 self.do_AI_reply(formatted_msg, nick)
         else:
             # Public message
-            if re.match('saxjax!~saxjax@.*', host):
-                m = re.match(r'\(.\) \[(.*)\] (.*)', message)
+            if self.hostmask_match('*!~saxjax@*', user):
+                m = re.match(r'\(.\) \[(.*)\] (.*)', msg)
                 if m:
                     nick = m.group(1)
                     formatted_msg = '<{}> {}'.format(nick, m.group(2))
                 else:
-                    m = re.match(r'\(.\) \*(.*?) (.*)', message)
+                    m = re.match(r'\(.\) \*(.*?) (.*)', msg)
                     if m:
                         nick = m.group(1)
                         formatted_msg = '<{}> {}'.format(nick, m.group(2))
@@ -205,8 +205,13 @@ class NikkyBot(irc.IRCClient):
             self.quit(msg)
             self.factory.shut_down = True
         elif cmd.startswith('?reload'):
-            self.reload_ai()
-            self.notice(nick, 'Reloaded nikkyai')
+            try:
+                self.reload_ai()
+            except Exception as e:
+                self.notice(nick, 'Reload error: {}'.format(e))
+            else:
+                self.notice(nick, 'Reloaded nikkyai')
+
         elif cmd.startswith('?code '):
             try:
                 exec(cmd.split(' ', 1))[1]
@@ -275,17 +280,13 @@ class NikkyBot(irc.IRCClient):
     def reload_ai(self):
         from nikkyai import memory_cleanup
         memory_cleanup()
-        try:
-            reload(sys.modules['nikkyai'])
-            from nikkyai import NikkyAI
-        except Exception as e:
-            self.notice(nick, 'Reload error: {}'.format(e))
-        else:
-            for k in self.nikkies:
-                last_replies = self.nikkies[k].last_replies
-                self.nikkies[k] = NikkyAI()
-                self.nikkies[k].last_replies = last_replies
-                self.nikkies[k].nick = self.nickname
+        reload(sys.modules['nikkyai'])
+        from nikkyai import NikkyAI
+        for k in self.nikkies:
+            last_replies = self.nikkies[k].last_replies
+            self.nikkies[k] = NikkyAI()
+            self.nikkies[k].last_replies = last_replies
+            self.nikkies[k].nick = self.nickname
 
     def check_markov_reload(self):
         """See if Markov chain pickles have been updated and reload the
