@@ -5,6 +5,7 @@ qotd.txt
 *.pyc
 *.[oa]
 *~
-
+nikky-markov.?.pickle
+nikkybot.trn
 
 
