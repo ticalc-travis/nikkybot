@@ -19,6 +19,7 @@
 from datetime import datetime, timedelta
 from random import randint, choice
 import cPickle
+from os import fstat, stat
 import re
 import subprocess
 
@@ -408,16 +409,29 @@ def nikkysim_parse_saying_no(w, x, y):
 
 
 # Markov chain initialization
-f = open('nikky-markov.5.pickle', 'rb')
-markov5 = cPickle.load(f)
-f = open('nikky-markov.4.pickle', 'rb')
-markov4 = cPickle.load(f)
-f = open('nikky-markov.3.pickle', 'rb')
-markov3 = cPickle.load(f)
-f = open('nikky-markov.2.pickle', 'rb')
-markov2 = cPickle.load(f)
-f.close()
+f5 = open('nikky-markov.5.pickle', 'rb')
+markov5 = cPickle.load(f5)
+f4 = open('nikky-markov.4.pickle', 'rb')
+markov4 = cPickle.load(f4)
+f3 = open('nikky-markov.3.pickle', 'rb')
+markov3 = cPickle.load(f3)
+f2 = open('nikky-markov.2.pickle', 'rb')
+markov2 = cPickle.load(f2)
+last_mtime = (fstat(f2.fileno()).st_mtime, fstat(f3.fileno()).st_mtime,
+    fstat(f4.fileno()).st_mtime, fstat(f5.fileno()).st_mtime)
+f5.close()
+f4.close()
+f3.close()
+f2.close()
 markovs = {5: markov5, 4: markov4, 3: markov3, 2: markov2}
+
+
+def markov_pickles_changed():
+    new_mtime = (stat('nikky-markov.2.pickle').st_mtime,
+        stat('nikky-markov.3.pickle').st_mtime,
+        stat('nikky-markov.4.pickle').st_mtime,
+        stat('nikky-markov.5.pickle').st_mtime,)
+    return new_mtime != last_mtime
 
 
 def memory_cleanup():
@@ -604,6 +618,7 @@ class NikkyAI(object):
         # Split speaker nick and rest of message
         m = re.match(r'<(.*?)> (.*)', msg)
         if m:
+            print(m.groups()) # !DEBUG
             sourcenick = m.group(1)
             msg = m.group(2)
         else:
@@ -625,12 +640,16 @@ class NikkyAI(object):
         # TODO: More transformations? (you <-> I, why -> because, etc.)
 
         # Occasionally highlight the speaker back for a sense of realism
-        if randint(0, 10):
-            out = re.sub(r'\S+: ', sourcenick + ': ', out)
-        try:
-            return self.check_output_response(out)
-        except Repeated_response_error:
-            return self.markov_reply(msg, _recurse_level + 1)
+        if sourcenick:
+            if randint(0, 10):
+                out = re.sub(r'\S+: ', sourcenick + ': ', out)
+            try:
+                return self.check_output_response(out)
+            except Repeated_response_error:
+                return self.markov_reply(msg, _recurse_level + 1)
+        ### TEMP DEBUGGING CODE ###
+        else:
+            print('Nick, msg: {}, {}'.format(sourcenick, msg))
 
     def reply(self, msg):
         """Generic reply method.  Try to use pattern_reply; if no response

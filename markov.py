@@ -56,7 +56,8 @@ class Markov:
         
     def add(self, sentence):
         """Parse and add a string of words to the chain"""
-        words = sentence.split()
+        words = sentence.replace('\n', ' \n ').split(' ')
+        words = [x.strip(' ') for x in words]
         self._add(words, self.word_forward, self.chain_forward)
         words.reverse()
         self._add(words, self.word_backward, self.chain_backward)
@@ -129,7 +130,7 @@ class Markov:
         if not left and not right:
             return ''
             # Omit first element, which is a duplicate of the word
-        return (left + ' ' + word + ' ' + right).strip()
+        return (left + ' ' + word + ' ' + right).replace(' \n ', '\n').strip()
         
     def sentence_from_chain(self, forward_chain):
         """Generate a full saying from the given chain (in forward order). 
@@ -143,7 +144,7 @@ class Markov:
             # Omit first element, which is a duplicate of the word
         result = (left + ' ' + right).strip()
         if result != ' '.join(forward_chain):
-            return result
+            return result.replace(' \n ', '\n')
         return ''
 
 

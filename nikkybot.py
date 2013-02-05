@@ -20,6 +20,7 @@
 from __future__ import print_function
 
 from collections import defaultdict
+
 import random
 import re
 import time
@@ -33,6 +34,9 @@ from twisted.python import log
 
 from config import *
 from nikkyai import NikkyAI
+
+
+RELOAD_CHECK_INTERVAL = 60 * 60
 
 
 class BotError(Exception):
@@ -88,6 +92,8 @@ class NikkyBot(irc.IRCClient):
         self.nikkies = self.factory.nikkies
 
         irc.IRCClient.connectionMade(self)
+
+        reactor.callLater(RELOAD_CHECK_INTERVAL, self.check_markov_reload)
 
     def connectionLost(self, reason):
         print('Connection lost: {}'.format(reason))
@@ -199,20 +205,8 @@ class NikkyBot(irc.IRCClient):
             self.quit(msg)
             self.factory.shut_down = True
         elif cmd.startswith('?reload'):
-            from nikkyai import memory_cleanup
-            memory_cleanup()
-            try:
-                reload(sys.modules['nikkyai'])
-                from nikkyai import NikkyAI
-            except Exception as e:
-                self.notice(nick, 'Reload error: {}'.format(e))
-            else:
-                for k in self.nikkies:
-                    last_replies = self.nikkies[k].last_replies
-                    self.nikkies[k] = NikkyAI()
-                    self.nikkies[k].last_replies = last_replies
-                    self.nikkies[k].nick = self.nickname
-                self.notice(nick, 'Reloaded nikkyai')
+            self.reload_ai()
+            self.notice(nick, 'Reloaded nikkyai')
         elif cmd.startswith('?code '):
             try:
                 exec(cmd.split(' ', 1))[1]
@@ -277,6 +271,30 @@ class NikkyBot(irc.IRCClient):
             return '\x0F' + msg
         else:
             return msg
+
+    def reload_ai(self):
+        from nikkyai import memory_cleanup
+        memory_cleanup()
+        try:
+            reload(sys.modules['nikkyai'])
+            from nikkyai import NikkyAI
+        except Exception as e:
+            self.notice(nick, 'Reload error: {}'.format(e))
+        else:
+            for k in self.nikkies:
+                last_replies = self.nikkies[k].last_replies
+                self.nikkies[k] = NikkyAI()
+                self.nikkies[k].last_replies = last_replies
+                self.nikkies[k].nick = self.nickname
+
+    def check_markov_reload(self):
+        """See if Markov chain pickles have been updated and reload the
+        nikkyai module to reread them if so"""
+        from nikkyai import markov_pickles_changed
+        if markov_pickles_changed():
+            print('Automatically reloading due to Markov pickle change')
+            self.reload_ai()
+        reactor.callLater(RELOAD_CHECK_INTERVAL, self.check_markov_reload)
 
 
 class NikkyBotFactory(protocol.ReconnectingClientFactory):
