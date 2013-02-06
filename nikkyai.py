@@ -616,10 +616,8 @@ class NikkyAI(object):
             return markov_reply('')
 
         # Split speaker nick and rest of message
-        print(msg) # !DEBUG
         m = re.match(r'<(.*?)> (.*)', msg)
         if m:
-            print(m.groups()) # !DEBUG
             sourcenick = m.group(1)
             msg = m.group(2)
         else:
@@ -643,9 +641,6 @@ class NikkyAI(object):
         # Occasionally highlight the speaker back for a sense of realism
         if sourcenick and randint(0, 10):
             out = re.sub(r'\S+: ', sourcenick + ': ', out)
-        ### TEMP DEBUGGING CODE ###
-        else:
-            print('Nick, msg: {}, {}'.format(sourcenick, msg))
         try:
             return self.check_output_response(out)
         except Repeated_response_error:
@@ -676,7 +671,7 @@ class NikkyAI(object):
                 c = int(c/2)
             r = randint(0, c)
             if not r:
-                return choice(self.remark(msg), self.markov_reply(msg))
+                return choice((self.remark(msg), self.markov_reply(msg)))
             else:
                 return None
         else:

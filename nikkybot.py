@@ -115,7 +115,7 @@ class NikkyBot(irc.IRCClient):
                 try:
                     self.do_command(msg.strip(), nick)
                 except UnrecognizedCommandError:
-                    self.do_AI_reply(formatted_msg, nick)
+                    self.do_AI_reply(formatted_msg, nick, no_delay=True)
                 else:
                     print('Executed: {}'.format(msg.strip()))
             else:
@@ -220,7 +220,8 @@ class NikkyBot(irc.IRCClient):
         else:
             raise UnrecognizedCommandError
     
-    def do_AI_reply(self, msg, target, silent_errors=False, log_response=True):
+    def do_AI_reply(self, msg, target, silent_errors=False, log_response=True,
+            no_delay=False):
         """Output an AI response for the given msg to target (user or channel)
         trapping for exceptions"""
         try:
@@ -231,7 +232,7 @@ class NikkyBot(irc.IRCClient):
             if reply and log_response:
                 print('privmsg to {}: {}'.format(target, repr(reply)))
             if reply:
-                self.output_timed_msg(target, reply)
+                self.output_timed_msg(target, reply, no_delay=no_delay)
             
     def do_AI_maybe_reply(self, msg, target, silent_errors=True,
             log_response=False):
@@ -246,12 +247,16 @@ class NikkyBot(irc.IRCClient):
             if reply:
                 self.output_timed_msg(target, reply)
     
-    def output_timed_msg(self, target, msg):
+    def output_timed_msg(self, target, msg, no_delay=False):
         """Output msg paced at a simulated typing rate.  msg will be split
         into separate lines if it contains \n characters."""
 
-        delay = self.factory.initial_reply_delay
-        rate = self.factory.simulated_typing_speed
+        if no_delay:
+            delay = 2
+            rate = 0
+        else:
+            delay = self.factory.initial_reply_delay
+            rate = self.factory.simulated_typing_speed
         last_time = 0
         if isinstance(msg, str) or isinstance(msg, unicode):
             msg = [msg]
