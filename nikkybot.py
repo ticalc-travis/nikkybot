@@ -153,6 +153,10 @@ class NikkyBot(irc.IRCClient):
         if channel == self.nickname:
             print('private NOTICE from {}: {}'.format(user, message))
 
+    def kickedFrom(self, channel, kicker, message):
+        """On kick, automatically try to rejoin after a bit"""
+        reactor.callLater(random.randint(5, 300), self.join, channel)
+
     ## Custom methods ##
         
     def reclaim_nick(self):
