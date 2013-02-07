@@ -90,6 +90,21 @@ for fn in os.listdir(log_path):
                     training_glob.append('\n'.join(line_group))
                 line_group = []
 
+# More miscellaneous junk I threw in a separate huge file because it was
+# too scattered around my system
+with open('misc_irc_lines.txt', 'r') as f:
+    line_group = []
+    for line in f:
+        line = line.strip()
+        m = re.match(r'[0-9]{2}:[0-9]{2}(:[0-9]{2})? <.?nikky.*> (.*)', line, re.I)
+        if m:
+            line_group.append(m.group(2))
+        else:
+            if line_group:
+                training_glob.append('\n'.join(line_group))
+            line_group = []
+
+
 # There, that's all I have
 #   ...I think...
 
@@ -102,7 +117,7 @@ for order in (2, 3, 4, 5):
         m = markov.Markov(order, case_sensitive=False)
         for i, l in enumerate(training_glob):
             if not (i+1) % 1000 or i+1 == items:
-                stdout.write('    Training {}/{}...\r'.format(i, items))
+                stdout.write('    Training {}/{}...\r'.format(i+1, items))
                 stdout.flush()
             m.add(l)
         stdout.write('\n    Writing...\n')
