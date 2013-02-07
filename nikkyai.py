@@ -250,7 +250,7 @@ PATTERN_REPLIES = (
         'np'
     )
 ),
-(r'\bno\W*thanks\b', 0, R('DIAF then')),
+(r'\bno\W*thanks\b', 1, R('DIAF then')),
 (r'\b(wb|welcome back|welcoem back)\b', 1, R('Thanks', 'No\nGo away')),
 (r"\b\*\*\*yes/no\*\*\*\b", 1,
     R(
@@ -502,10 +502,10 @@ PATTERN_REPLIES = (
     R('"Your" retarded', "*You're")
 ),
 (r'\bsorry\b', 1, R('you should be')),
-(r"^(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -3,
+(r"^(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -1,
     R(Markov_forward('{6}'))
 ),
-(r"^(how is|how's|do you like|you like) (.*?)\W?$", -3,
+(r"^(how is|how's|do you like|you like) (.*?)\W?$", -1,
     Recurse('what do you think of {2}')
 ),
 
@@ -669,7 +669,7 @@ PATTERN_REPLIES = (
 ),
 
 # Special functions
-(r'\b(random (quote|saying)|nikkysim)\b', 1,
+(r'\b(random (quote|saying)|nikkysim)\b', -2,
     E('nikkysim(stripNumber=False)[0]')
 ),
 (r'\b(tell|tell us|tell me|say) (something|anything) (.*)(smart|intelligent|funny|interesting|cool|awesome|bright|thoughtful|entertaining|amusing|exciting|confusing|sensical|inspiring|random|wise)\b', 1,
@@ -678,7 +678,7 @@ PATTERN_REPLIES = (
 (r'#([A-Za-z]-)?([0-9]+)(-([0-9]+))?', -2,
     E('nikkysim_parse_saying_no("{1}", "{2}", "{3}")'),
 True),
-(r'\brandom number\b', 0,
+(r'\brandom number\b', -2,
     R(
         E('randint(0,9999)'),
         E('randint(0,999999999999)'),
