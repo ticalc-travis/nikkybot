@@ -103,7 +103,7 @@ class Recurse(str):
 
 # (has pattern response & awake, has pattern response & asleep,
 #  random remark & awake, random remark & asleep)
-REMARK_CHANCE = (50, 200, 700, 2100)
+REMARK_CHANCE = (100, 400, 700, 2100)
 PATTERN_RESPONSE_RECYCLE_TIME = timedelta(30)
 
 GENERIC_REMARKS = (
