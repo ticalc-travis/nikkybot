@@ -208,6 +208,9 @@ class NikkyBot(irc.IRCClient):
             try:
                 self.reload_ai()
             except Exception as e:
+                print('\n=== Exception ===\n\n')
+                traceback.print_exc()
+                print()
                 self.notice(nick, 'Reload error: {}'.format(e))
             else:
                 self.notice(nick, 'Reloaded nikkyai')
@@ -216,6 +219,9 @@ class NikkyBot(irc.IRCClient):
             try:
                 exec(cmd.split(' ', 1))[1]
             except Exception as e:
+                print('\n=== Exception ===\n\n')
+                traceback.print_exc()
+                print()
                 self.notice(nick, 'Error: {}'.format(e))
         else:
             raise UnrecognizedCommandError
