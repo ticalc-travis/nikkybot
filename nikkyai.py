@@ -373,20 +373,6 @@ PATTERN_REPLIES = (
         'DO IT ANYWAY'
     )
 ),
-(r'\bdisallowed word\b', 1,
-    R(
-        'Shut up {0}',
-        'SHUT UP {0}',
-        Markov_forward('shut up {0}'),
-        Markov_forward('shut up'),
-        Recurse('censorship'),
-        Recurse('censoring'),
-        Recurse('censoring tardmuffin'),
-        Recurse('tardmuffin'),
-        Recurse('saxjax'),
-        'This channel sucks\ntoo much censorship'
-    )
-),
 (r'\brules\b', 1, R("\001ACTION rules {0}\001")),
 (r'\b(how much|how many|what amount)\b', -1,
     R(
@@ -536,6 +522,18 @@ PATTERN_REPLIES = (
         Recurse('disallowed word')
     )
 ),
+(r'\bdisallowed word\b', -10,
+    R(
+        'Shut up {0}',
+        'SHUT UP {0}',
+        Recurse('censorship'),
+        Recurse('censoring'),
+        Recurse('censoring tardmuffin'),
+        Recurse('tardmuffin'),
+        Recurse('saxjax'),
+        'This channel sucks\ntoo much censorship'
+    )
+),
 (r'\*(\S+) deleted a post in', 1,
     R('CENSORSHIP', 'Censorship', '{1} YOU CENSORING TARDMUFFIN')
 ),
@@ -593,7 +591,7 @@ PATTERN_REPLIES = (
 ),
 
 # Programming
-(r'\b(BASIC|C\+\+|C#|C\s|Java|Javascript|Lua|\s\.NET\s|Ruby|TCL|TI\-BASIC|TI BASIC|Python|PHP|Scheme)', 2,
+(r'\b(BASIC\b|C\+\+|C#|C\s\b|Java\b|Javascript\b|Lua\b|\s\.NET\s\b|Ruby\b|TCL\b|TI\-BASIC\b|TI BASIC\b|Python\b|PHP\b|Scheme\b)', 2,
     R(
         '{1} sucks. Should have used Perl.',
         'Perl is better',
