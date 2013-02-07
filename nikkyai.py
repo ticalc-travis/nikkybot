@@ -91,12 +91,14 @@ class Manual_markov(object):
 
 class Recurse(str):
     """Recursively find a response"""
-    def get(self, fmt=None, _recurse_level=0):
-        if _recurse_level > RECURSE_LIMIT:
-            raise Dont_know_how_to_respond_error
+    def get(self, fmt=None):
+        print 'Recurse(): {}'.format(self)
         if fmt is None:
             fmt = []
-        return pattern_reply(self.format(*fmt))[0]
+        try:
+            return pattern_reply(self.format(*fmt))[0]
+        except Dont_know_how_to_respond_error:
+            return markov_reply(self.format(*fmt))
 
 
 # === DATA SECTION ============================================================
@@ -815,7 +817,10 @@ def markov_forward(chain):
         return ' '.join(m.from_chain_forward(chain)).replace(' \n ', '\n')
 
 
-def pattern_reply(msg, last_used_reply='', nick='nikkybot'):
+def pattern_reply(msg, last_used_reply='', nick='nikkybot', _recurse_level=0):
+    if _recurse_level > RECURSE_LIMIT:
+        raise Dont_know_how_to_respond_error
+    
     # Separate out speaker's nick if known
     m = re.match(r'<(.*?)> (.*)', msg)
     if m:
