@@ -92,7 +92,6 @@ class Manual_markov(object):
 class Recurse(str):
     """Recursively find a response"""
     def get(self, fmt=None):
-        print 'Recurse(): {}'.format(self)
         if fmt is None:
             fmt = []
         try:
@@ -675,18 +674,20 @@ PATTERN_REPLIES = (
 ),
 (r'#([A-Za-z]-)?([0-9]+)(-([0-9]+))?', -2,
     E('nikkysim_parse_saying_no("{1}", "{2}", "{3}")'),
-True),
+    True
+),
 (r'\brandom number\b', -2,
     R(
         E('randint(0,9999)'),
         E('randint(0,999999999999)'),
         E('str(randint(0,int(\'9\'*100))) + "\\nLong enough for you?"')
-    )
+    ),
+    True
 ),
-(r'^markov5 (.*)', -99, Manual_markov(5, '{1}')),
-(r'^markov4 (.*)', -99, Manual_markov(4, '{1}')),
-(r'^markov3 (.*)', -99, Manual_markov(3, '{1}')),
-(r'^markov2 (.*)', -99, Manual_markov(2, '{1}')),
+(r'^markov5 (.*)', -99, Manual_markov(5, '{1}'), True),
+(r'^markov4 (.*)', -99, Manual_markov(4, '{1}'), True),
+(r'^markov3 (.*)', -99, Manual_markov(3, '{1}'), True),
+(r'^markov2 (.*)', -99, Manual_markov(2, '{1}'), True),
 )
 
 # === END OF DATA SECTION =====================================================
