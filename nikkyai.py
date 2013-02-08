@@ -781,7 +781,7 @@ def markov_reply(msg):
         for i in xrange(len(words) - (order-1)):
             response = \
                 markovs[order].sentence_from_chain(tuple(words[i:i+order]))
-            if response:
+            if response.strip():
                 avail_replies.append(response)
         if avail_replies:
             return choice(avail_replies)
@@ -789,11 +789,11 @@ def markov_reply(msg):
     words.reverse()
     for word in words:
         response = markov5.sentence_from_word(word)
-        if response:
+        if response.strip():
             return response
-    return markov5.sentence_from_chain(choice(tuple(markov5.chain_forward.keys())))
-    ### FIXME: Handle empty replies ###
-    ### TODO: Experiment with priorities (choosing response based on length, etc.) ###
+    return markov5.sentence_from_chain(
+        choice(tuple(markov5.chain_forward.keys()))
+    )
 
 
 def manual_markov(order, msg, _recurse_level=0):
