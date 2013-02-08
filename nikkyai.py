@@ -383,6 +383,8 @@ PATTERN_REPLIES = (
 (r'\btroll', 0,
     R('Need a troll fix?\nTry TrollMix(TM)\nbrought to you by yours truly')
 ),
+(r'\bmore like\b', 0, E('markov_reply("\\n more like \\n")')),
+(r'(.*) more like\b', -1, E('manual_markov(4, "{1} \\n more like")'), True),
 
 # Meta
 (r'\b((how much|how many lines (of)?|how much) (code|coding|programming)|how long .* to (make|program|code|design|write) you)', -2,
@@ -690,7 +692,7 @@ PATTERN_REPLIES = (
 (r'^markov5 (.*)', -99, Manual_markov(5, '{1}'), True),
 (r'^markov4 (.*)', -99, Manual_markov(4, '{1}'), True),
 (r'^markov3 (.*)', -99, Manual_markov(3, '{1}'), True),
-(r'^markov2 (.*)', -99, Manual_markov(2, '{1}'), True),
+(r'^markov2 (.*)', -99, Manual_markov(2, '{1}'), True)
 )
 
 # === END OF DATA SECTION =====================================================
@@ -773,16 +775,16 @@ def memory_cleanup():
 
 
 def markov_reply(msg):
-    words = msg.split()
+    words = msg.split(' ')
     for order in (5, 4, 3, 2):
-        availReplies = []
-        for i in range(len(words)):
+        avail_replies = []
+        for i in xrange(len(words) - (order-1)):
             response = \
                 markovs[order].sentence_from_chain(tuple(words[i:i+order]))
             if response:
-                availReplies.append(response)
-        if availReplies:
-            return choice(availReplies)
+                avail_replies.append(response)
+        if avail_replies:
+            return choice(avail_replies)
     words.sort(key=len)
     words.reverse()
     for word in words:
@@ -794,17 +796,20 @@ def markov_reply(msg):
     ### TODO: Experiment with priorities (choosing response based on length, etc.) ###
 
 
-def manual_markov(order, msg):
+def manual_markov(order, msg, _recurse_level=0):
     m = markovs[order]
-    chain = tuple(msg.split())
+    chain = tuple(msg.split(' '))
     if len(chain) == 1:
         response = m.sentence_from_word(chain[0])
     else:
         response = m.sentence_from_chain(chain)
     if response:
         return response
-    return '"{}": chain not found'.format(' '.join(chain))
-    ### TODO: Try harder to find a chain if not found initially
+    else:
+        if _recurse_level < RECURSE_LIMIT:
+            return manual_markov(order, msg, _recurse_level=_recurse_level+1)
+        else:
+            return '{}: Markov chain not found'.format(repr(' '.join(chain)))
 
 
 def markov_forward(chain):
