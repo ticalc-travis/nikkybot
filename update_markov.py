@@ -96,7 +96,7 @@ with open('misc_irc_lines.txt', 'r') as f:
     line_group = []
     for line in f:
         line = line.strip()
-        m = re.match(r'[0-9]{2}:[0-9]{2}(:[0-9]{2})? <.?nikky.*> (.*)', line, re.I)
+        m = re.match(r'\[?[0-9]{2}:[0-9]{2}(:[0-9]{2})?\]? <.?nikky.*> (.*)', line, re.I)
         if m:
             line_group.append(m.group(2))
         else:
