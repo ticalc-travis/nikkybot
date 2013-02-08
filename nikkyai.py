@@ -28,7 +28,7 @@ from pytz import timezone
 import markov
 
 
-RECURSE_LIMIT = 50
+RECURSE_LIMIT = 333
 
 
 class S(list):
@@ -640,9 +640,12 @@ PATTERN_REPLIES = (
         Markov_forward('sudo'),
         Markov_forward('chown'),
         Markov_forward('rm'),
-        Markov_forward('format'),
-        Markov_forward('kill'),
-        Markov_forward('select'),
+        Markov_forward('dd'),
+        Markov_forward('su'),
+        Markov_forward('format c:'),
+        Markov_forward('kill -9'),
+        Markov_forward('/quit'),
+        Markov_forward('!list')
     )
 ),
 (r'\b(sudo )?rm \-?rf\b', 1, R('\001ACTION deletes himself\001')),
