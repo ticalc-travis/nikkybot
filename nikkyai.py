@@ -44,7 +44,7 @@ class S(list):
             try:
                 s += i.get(fmt)
             except AttributeError:
-                s += i
+                s += i.format(*fmt)
         return s
 
 
@@ -283,8 +283,15 @@ PATTERN_REPLIES = (
     R('k', 'kk', 'kk\n\001ACTION sucks {1}{2}\001')
 ),
 (r'\bShut up\b', 1, R('I hate you', 'k', 'kk', 'nou', 'NO U', 'NOU')),
-(r"I'm", 1,
-    R('Congratulations', 'Uh, congratulations?', 'k', 'nice', "I'm sorry")
+(r"\bI'm\b", 1,
+    R(
+        'Congratulations',
+        'Uh, congratulations?',
+        'k',
+        'nice',
+        "I'm sorry",
+        Recurse("you're")
+    )
 ),
 (r'\bdiaf\b', 1,
     R(
@@ -539,7 +546,7 @@ PATTERN_REPLIES = (
     R('CENSORSHIP', 'Censorship', '{1} YOU CENSORING TARDMUFFIN')
 ),
 (r'\bspam post', 1, R("Don't care", "\001ACTION spams {0}\001")),
-(r'\b\*\*\*decbot karma\*\*\*\b', 1,
+(r'\*\*\*decbot karma\*\*\*', -1,
     R(
         'karma sucks',
         '!karma SET KARMA = 0 WHERE `user` = "{0}"; DROP DATABASE',
