@@ -991,12 +991,36 @@ class NikkyAI(object):
         else:
             sourcenick = ''
 
-        # Avoid referring to self in third person
-        msg = msg.replace(self.nick, sourcenick, 1)
+        # Transform phrases in input
+        for transform in (
+                        (r'\b' + re.escape(self.nick) + r'\b', sourcenick,
+                            False),
+                        (r'\bwhy\b', 'because', False),
+                        (r'\bare you\b', 'am I', True),
+                        (r'\byou are\b', 'I am', True),
+                        (r"\byou're\b", "I'm", True),
+                        (r'\bI am\b', 'you are', True),
+                        (r'\bI\b', 'you', True),
+                        (r'\byou\b', 'I', True),
+                        (r'\bme\b', 'you', True)
+                        ):
+            old, new, stop_here = transform
+            new_msg = re.sub(old, new, msg)
+            if msg != new_msg:
+                msg = new_msg
+                if stop_here:
+                    break
+
         out = markov_reply(msg).rstrip()
-        for transform in ((self.nick + ' has ', 'I have '),
+
+        # Transform phrases at beginning of reply
+        for transform in (
+                        # Avoid self-references in third person
+                        (self.nick + ' has ', 'I have '),
                         (self.nick + ' is', 'I am'),
                         (self.nick + ':', sourcenick + ': '),
+                        ('nikkybot', 'nikky'),
+                        ('nikkybot:', sourcenick + ':'),
                         ):
             old, new = transform
             if out.lower().startswith(old):
@@ -1004,11 +1028,11 @@ class NikkyAI(object):
                 break
         out = out.replace(self.nick, sourcenick)
 
-        # TODO: More transformations? (you <-> I, why -> because, etc.)
-
-        # Occasionally highlight the speaker back for a sense of realism
+        # Transform initial highlights to a highlight to the speaker for a
+        # sense of realism
         if sourcenick and randint(0, 10):
             out = re.sub(r'\S+: ', sourcenick + ': ', out)
+
         try:
             return self.check_output_response(out)
         except Repeated_response_error:
