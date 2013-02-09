@@ -387,11 +387,14 @@ PATTERN_REPLIES = (
         Markov_forward('more than you')
     )
 ),
-(r'\btroll', 0,
-    R('Need a troll fix?\nTry TrollMix(TM)\nbrought to you by yours truly')
-),
 (r'\bmore like\b', 0, E('markov_reply("\\n more like \\n")')),
-(r'(.*) more like\b', -1, E('manual_markov(4, "{1} \\n more like")'), True),
+(r'(.*) more like\b', -1,
+    S(
+        '{1}\n',
+        Markov_forward('more like \n')
+    ),
+    #E('"{1}" + markov_forward("\\n more like \\n")'),
+True),
 
 # Meta
 (r'\b((how much|how many lines (of)?|how much) (code|coding|programming)|how long .* to (make|program|code|design|write) you)', -2,
