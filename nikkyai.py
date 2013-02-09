@@ -784,7 +784,20 @@ def memory_cleanup():
         pass
 
 
+def random_markov():
+    """Pick any random Markov-chained sentence and output it"""
+    while True:
+        out = markov5.sentence_from_chain(
+            choice(tuple(markov5.chain_forward.keys()))
+        )
+        if out.strip():
+            return out
+
+
 def markov_reply(msg):
+    """Generate a Markov-chained reply for msg"""
+    if not msg.strip():
+        return random_markov()
     words = msg.split(' ')
     for order in (5, 4, 3, 2):
         avail_replies = []
@@ -801,9 +814,7 @@ def markov_reply(msg):
         response = markov5.sentence_from_word(word)
         if response.strip():
             return response
-    return markov5.sentence_from_chain(
-        choice(tuple(markov5.chain_forward.keys()))
-    )
+    return random_markov()
 
 
 def manual_markov(order, msg, _recurse_level=0):
@@ -970,8 +981,7 @@ class NikkyAI(object):
         """Generate a reply using Markov chaining. Check and avoid repeated
         responses."""
         if _recurse_level > RECURSE_LIMIT:
-            # FIXME: Output a random Markov response
-            return markov_reply('')
+            return random_markov()
 
         # Split speaker nick and rest of message
         m = re.match(r'<(.*?)> (.*)', msg)
