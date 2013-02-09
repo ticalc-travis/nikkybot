@@ -1063,7 +1063,15 @@ class NikkyAI(object):
                 c = int(c/2)
             r = randint(0, c)
             if not r:
-                return choice((self.remark(msg),)*5 + (self.markov_reply(msg),))
+                if randint(0, 4):
+                    return self.remark(msg)
+                else:
+                    for i in xrange(RECURSE_LIMIT):
+                        out = self.markov_reply(msg)
+                        # Try not to get too talkative with random responses
+                        if out.count('\n') <= 2:
+                            return out
+                    return self.remark(msg)
             else:
                 return None
         else:
