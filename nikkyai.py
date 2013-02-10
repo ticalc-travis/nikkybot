@@ -501,6 +501,9 @@ True),
 (r"^(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -1,
     R(Markov_forward('{6}'))
 ),
+(r"^(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?me\W?$", -2,
+    R(Markov_forward('you'))
+),
 (r"^(how is|how's|do you like|you like) (.*?)\W?$", -1,
     Recurse('what do you think of {2}')
 ),
