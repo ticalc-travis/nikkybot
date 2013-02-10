@@ -121,24 +121,34 @@ class Markov:
             return ()
         return self.from_chain_backward(chain)
         
-    def sentence_from_word(self, word):
+    def sentence_from_word(self, word, max_left_line_breaks=None,
+            max_right_line_breaks=None):
         """Generate a full saying from the given word.  Search for a
         chain going forward and then complete the sentence by also searching
         backward and combining the pieces."""
         left = ' '.join(self.from_word_backward(word)[:-1])
         right = ' '.join(self.from_word_forward(word)[1:])
+        if max_left_line_breaks is not None:
+            left = '\n'.join((left.split('\n')[-max_left_line_breaks-1:]))
+        if max_right_line_breaks is not None:
+            right = '\n'.join((right.split('\n')[0:max_right_line_breaks+1]))
         if not left and not right:
             return ''
             # Omit first element, which is a duplicate of the word
         return (left + ' ' + word + ' ' + right).replace(' \n ', '\n').strip()
         
-    def sentence_from_chain(self, forward_chain):
+    def sentence_from_chain(self, forward_chain, max_left_line_breaks=None,
+            max_right_line_breaks=None):
         """Generate a full saying from the given chain (in forward order). 
         Search for a chain going forward and then complete the sentence by also
         searching backward and combining the pieces."""
         reverse_chain = tuple(reversed(forward_chain))
         left = ' '.join(self.from_chain_backward(reverse_chain))
         right = ' '.join(self.from_chain_forward(forward_chain)[self._order:])
+        if max_left_line_breaks is not None:
+            left = '\n'.join((left.split('\n')[-max_left_line_breaks-1:]))
+        if max_right_line_breaks is not None:
+            right = '\n'.join((right.split('\n')[0:max_right_line_breaks+1]))
         if not left and not right:
             return ''
             # Omit first element, which is a duplicate of the word
