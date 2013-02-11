@@ -111,16 +111,17 @@ class NikkyBot(irc.IRCClient):
 
         if channel == self.nickname:
             # Private message
-            print('privmsg from {}: {}'.format(user, repr(msg)))
             if self.any_hostmask_match(self.factory.admin_hostmasks, user):
                 try:
                     self.do_command(msg.strip(), nick)
                 except UnrecognizedCommandError:
-                    self.do_AI_reply(formatted_msg, nick, no_delay=True)
+                    self.do_AI_reply(formatted_msg, nick, no_delay=True,
+                        log_response=False)
                 else:
                     print('Executed: {}'.format(msg.strip()))
             else:
-                self.do_AI_reply(formatted_msg, nick)
+                print('privmsg from {}: {}'.format(user, repr(msg)))
+                self.do_AI_reply(formatted_msg, nick, no_delay=True)
         else:
             # Public message
             if self.hostmask_match('*!~saxjax@*', user):
