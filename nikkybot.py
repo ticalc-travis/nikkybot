@@ -90,6 +90,7 @@ class NikkyBot(irc.IRCClient):
         self.lineRate = self.factory.min_send_time
         self.versionName = self.factory.client_version
         self.nikkies = self.factory.nikkies
+        self.pending_responses = []
 
         irc.IRCClient.connectionMade(self)
 
@@ -267,18 +268,27 @@ class NikkyBot(irc.IRCClient):
         else:
             delay = self.factory.initial_reply_delay
             rate = self.factory.simulated_typing_speed
-        last_time = 0
+
         if isinstance(msg, str) or isinstance(msg, unicode):
             msg = [msg]
-        
         for item in msg:
             for line in item.split('\n'):
                 if line:
-                    this_time = delay + len(line)*rate
-                    reactor.callLater(
-                        last_time + this_time, self.msg, target,
-                        self.escape_message(line), length=256)
-                    last_time += this_time
+                    self.pending_responses.append(
+                        (delay + len(line)*rate, target, line)
+                    )
+        self.schedule_next_msg()
+
+    def schedule_next_msg(self, _lastTime=0):
+        """Kick off timed event for next queued line to be output"""
+        try:
+            time, target, msg = self.pending_responses.pop(0)
+        except IndexError:
+            pass
+        else:
+            reactor.callLater(_lastTime + time, self.msg, target,
+                            self.escape_message(msg), length=256)
+            reactor.callLater(_lastTime + time + 1, self.schedule_next_msg)
                     
     def escape_message(self, msg):
         """'Escape' a message by inserting an invisible control character
