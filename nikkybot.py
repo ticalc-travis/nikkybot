@@ -135,9 +135,9 @@ class NikkyBot(irc.IRCClient):
                         nick = m.group(1)
                         formatted_msg = '<{}> {}'.format(nick, m.group(2))
             if self.is_highlight(msg):
-                self.do_AI_reply(formatted_msg, channel)
+                self.do_AI_reply(formatted_msg, channel, log_response=False)
             else:
-                self.do_AI_maybe_reply(formatted_msg, channel)
+                self.do_AI_maybe_reply(formatted_msg, channel, log_response=False)
 
     def action(self, user, channel, msg):
         """Pass actions to AI like normal lines"""
