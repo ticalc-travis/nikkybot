@@ -806,7 +806,7 @@ def markov_reply(msg, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
     if not msg.strip():
         return random_markov()
     words = msg.split(' ')
-    for order in (5, 4, 3):
+    for order in (5, 4, 3, 2):
         avail_replies = []
         for i in xrange(len(words) - (order-1)):
             response = \
