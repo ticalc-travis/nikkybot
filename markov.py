@@ -22,9 +22,13 @@ from random import choice
 class Markov:
     """tev's Markov chain implementation"""
     
-    def __init__(self, order=2, case_sensitive=True):
+    def __init__(self, order=2, case_sensitive=True,
+            default_max_left_line_breaks=None, default_max_right_line_breaks=None):
         self._order = order
         self._case_sensitive = case_sensitive
+        self.default_max_left_line_breaks = None
+        self.default_max_right_line_breaks = None
+        
         self.word_forward = defaultdict(list)
         self.chain_forward = defaultdict(list)
         self.word_backward = defaultdict(list)
@@ -39,6 +43,22 @@ class Markov:
             return s.lower()
         except AttributeError:
             return [x.lower() for x in s]
+
+    def adjust_left_line_breaks(self, string, max):
+        """Limit newline characters in string to 'max' total, counting from end of
+        string backward; truncate any additional newlines and everything before
+        them. None for 'max' means unlimited (return string unchanged)."""
+        if max is not None:
+            return '\n'.join(string.split('\n')[-max-1:])
+        return string
+
+    def adjust_right_line_breaks(self, string, max):
+        """Limit newline characters in string to 'max' total, counting from start of
+        string forward; truncate any additional newlines and everything after
+        them. None for 'max' means unlimited (return string unchanged)."""
+        if max is not None:
+            return '\n'.join(string.split('\n')[0:max+1])
+        return string
         
     def _add(self, words, word_dict, chain_dict):
         for i, word in enumerate(words):
@@ -121,13 +141,22 @@ class Markov:
             return ()
         return self.from_chain_backward(chain)
         
-    def sentence_from_word(self, word, max_left_line_breaks=None,
-            max_right_line_breaks=None):
+    def sentence_from_word(self, word, max_left_line_breaks=-1,
+            max_right_line_breaks=-1):
         """Generate a full saying from the given word.  Search for a
         chain going forward and then complete the sentence by also searching
         backward and combining the pieces."""
+
+        if max_left_line_breaks == -1:
+            max_left_line_breaks = self.default_max_left_line_breaks
+        if max_right_line_breaks == -1:
+            max_right_line_breaks = self.default_max_right_line_breaks
+        
         left = ' '.join(self.from_word_backward(word)[:-1])
+        left = self.adjust_left_line_breaks(left, max_left_line_breaks)
         right = ' '.join(self.from_word_forward(word)[1:])
+        right = self.adjust_right_line_breaks(right, max_right_line_breaks)
+        
         if max_left_line_breaks is not None:
             left = '\n'.join((left.split('\n')[-max_left_line_breaks-1:]))
         if max_right_line_breaks is not None:
@@ -137,18 +166,22 @@ class Markov:
             # Omit first element, which is a duplicate of the word
         return (left + ' ' + word + ' ' + right).replace(' \n ', '\n').strip()
         
-    def sentence_from_chain(self, forward_chain, max_left_line_breaks=None,
-            max_right_line_breaks=None):
+    def sentence_from_chain(self, forward_chain, max_left_line_breaks=-1,
+            max_right_line_breaks=-1):
         """Generate a full saying from the given chain (in forward order). 
         Search for a chain going forward and then complete the sentence by also
         searching backward and combining the pieces."""
+
+        if max_left_line_breaks == -1:
+            max_left_line_breaks = self.default_max_left_line_breaks
+        if max_right_line_breaks == -1:
+            max_right_line_breaks = self.default_max_right_line_breaks
+        
         reverse_chain = tuple(reversed(forward_chain))
         left = ' '.join(self.from_chain_backward(reverse_chain))
+        left = self.adjust_left_line_breaks(left, max_left_line_breaks)
         right = ' '.join(self.from_chain_forward(forward_chain)[self._order:])
-        if max_left_line_breaks is not None:
-            left = '\n'.join((left.split('\n')[-max_left_line_breaks-1:]))
-        if max_right_line_breaks is not None:
-            right = '\n'.join((right.split('\n')[0:max_right_line_breaks+1]))
+        right = self.adjust_right_line_breaks(right, max_right_line_breaks)
         if not left and not right:
             return ''
             # Omit first element, which is a duplicate of the word

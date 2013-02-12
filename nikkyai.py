@@ -29,6 +29,8 @@ import markov
 
 
 RECURSE_LIMIT = 333
+MAX_LF_L = 0
+MAX_LF_R = 1
 
 
 class S(list):
@@ -97,7 +99,7 @@ class Recurse(str):
         try:
             return pattern_reply(self.format(*fmt))[0]
         except Dont_know_how_to_respond_error:
-            return markov_reply(self.format(*fmt), 0, randint(1,2))
+            return markov_reply(self.format(*fmt))
 
 
 # === DATA SECTION ============================================================
@@ -766,6 +768,9 @@ f4.close()
 f3.close()
 f2.close()
 markovs = {5: markov5, 4: markov4, 3: markov3, 2: markov2}
+for m in markovs.values():
+    m.default_max_left_line_breaks = MAX_LF_L
+    m.default_max_right_line_breaks = MAX_LF_R
 
 
 def markov_pickles_changed():
@@ -790,13 +795,13 @@ def random_markov():
     """Pick any random Markov-chained sentence and output it"""
     while True:
         out = markov5.sentence_from_chain(
-            choice(tuple(markov5.chain_forward.keys())), 0, randint(1,2)
+            choice(tuple(markov5.chain_forward.keys()))
         )
         if out.strip():
             return out
 
 
-def markov_reply(msg, left_line_limit=0, right_line_limit=2):
+def markov_reply(msg, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
     """Generate a Markov-chained reply for msg"""
     if not msg.strip():
         return random_markov()
@@ -806,8 +811,8 @@ def markov_reply(msg, left_line_limit=0, right_line_limit=2):
         for i in xrange(len(words) - (order-1)):
             response = \
                 markovs[order].sentence_from_chain(
-                    tuple(words[i:i+order]), left_line_limit,
-                    right_line_limit)
+                    tuple(words[i:i+order]), max_lf_l, max_lf_r
+                )
             if response.strip():
                 avail_replies.append(response)
         if avail_replies:
@@ -815,8 +820,7 @@ def markov_reply(msg, left_line_limit=0, right_line_limit=2):
     words.sort(key=len)
     words.reverse()
     for word in words:
-        response = markov5.sentence_from_word(
-            word, left_line_limit, right_line_limit)
+        response = markov5.sentence_from_word(word, max_lf_l, max_lf_r)
         if response.strip():
             return response
     return random_markov()
@@ -826,9 +830,9 @@ def manual_markov(order, msg, _recurse_level=0):
     m = markovs[order]
     chain = tuple(msg.split(' '))
     if len(chain) == 1:
-        response = m.sentence_from_word(chain[0], 0, randint(1,2))
+        response = m.sentence_from_word(chain[0])
     else:
-        response = m.sentence_from_chain(chain, 0, randint(1,2))
+        response = m.sentence_from_chain(chain)
     if response:
         return response
     else:
@@ -838,16 +842,17 @@ def manual_markov(order, msg, _recurse_level=0):
             return '{}: Markov chain not found'.format(repr(' '.join(chain)))
 
 
-def markov_forward(chain):
+def markov_forward(chain, max_lf=MAX_LF_R):
     """Generate sentence from the current chain forward only and not
     backward"""
 
     if len(chain) == 1:
         m = choice(markovs.values())
-        return ' '.join(m.from_word_forward(chain[0])).replace(' \n ', '\n')
+        out = ' '.join(m.from_word_forward(chain[0])).replace(' \n ', '\n')
     else:
         m = markovs[len(chain)]
-        return ' '.join(m.from_chain_forward(chain)).replace(' \n ', '\n')
+        out = ' '.join(m.from_chain_forward(chain)).replace(' \n ', '\n')
+    return m.adjust_right_line_breaks(out, max_lf)
 
 
 def pattern_reply(msg, last_used_reply='', nick='nikkybot', _recurse_level=0):
@@ -1016,7 +1021,7 @@ class NikkyAI(object):
                 if stop_here:
                     break
 
-        out = markov_reply(msg, 0, randint(1,2)).rstrip()
+        out = markov_reply(msg).rstrip()
 
         # Transform phrases at beginning of reply
         for transform in (
