@@ -190,11 +190,3 @@ class Markov:
             return result.replace(' \n ', '\n')
         return ''
 
-
-
-#m = Markov(order=4, case_sensitive=False)
-#m.train('test.trn')
-#import pickle
-#f = open('nikky-markov.4.pickle', 'rb')
-#m = pickle.load(f)
-#f.close()

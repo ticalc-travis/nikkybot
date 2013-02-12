@@ -686,10 +686,10 @@ True),
 
 # Special functions
 (r'\b(random (quote|saying)|nikkysim)\b', -2,
-    E('nikkysim(stripNumber=False)[0]')
+    E('nikkysim(strip_number=False)[0]')
 ),
 (r'\b(tell|tell us|tell me|say) (something|anything) (.*)(smart|intelligent|funny|interesting|cool|awesome|bright|thoughtful|entertaining|amusing|exciting|confusing|sensical|inspiring|random|wise)\b', 1,
-    E('choice(["","","","","","Okay\\n","k\\n","kk\\n","Fine\\n"])+nikkysim(stripNumber=True)[0]')
+    E('choice(["","","","","","Okay\\n","k\\n","kk\\n","Fine\\n"])+nikkysim(strip_number=True)[0]')
 ),
 (r'#([A-Za-z]-)?([0-9]+)(-([0-9]+))?', -2,
     E('nikkysim_parse_saying_no("{1}", "{2}", "{3}")'),
@@ -722,13 +722,13 @@ class Repeated_response_error(Nikky_error):
     pass
 
 
-def nikkysim(stripNumber=True, saying=None):
+def nikkysim(strip_number=True, saying=None):
     if saying is None:
         x, y = randint(0, 4294967295), randint(0, 9999)
     else:
         x, y = saying
     out = subprocess.check_output(['nikky', '{}-{}'.format(x, y)])
-    if stripNumber:
+    if strip_number:
         return (out.split(': ')[1].rstrip(), (x, y))
     else:
         return (out.rstrip(), (x, y))
@@ -969,8 +969,9 @@ class NikkyAI(object):
         NikkySim remark, avoiding repeats in short succession"""
         for i in xrange(RECURSE_LIMIT):
             try:
-                return self.check_output_response(choice(
-                    (self.nikkysim_remark(), self.generic_remark(msg))))
+                return self.check_output_response(
+                    choice((self.nikkysim_remark(), self.generic_remark(msg)))
+                )
             except Repeated_response_error:
                 pass
         return ['']
