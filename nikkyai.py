@@ -70,13 +70,17 @@ class E(str):
 
 class Markov_forward(object):
     """Return a Markov chain from word or chain forward"""
-    def __init__(self, string):
+    def __init__(self, string, failmsglist=None):
         self.chain = string.split(' ')
+        if failmsglist is None:
+            failmsglist = ['']
+        self.failmsglist = failmsglist
 
     def get(self, fmt=None):
         if fmt is None:
             fmt = []
-        return markov_forward([x.format(*fmt) for x in self.chain])
+        return markov_forward([x.format(*fmt) for x in self.chain],
+            choice(self.failmsglist))
 
 
 class Manual_markov(object):
@@ -203,12 +207,13 @@ PATTERN_REPLIES = (
         'HI {0}',
         'Go away',
         'No\ngo away',
-        Markov_forward('hi {0}'),
-        Markov_forward('hello {0}'),
-        Markov_forward('hey {0}'),
-        Markov_forward('sup {0}'),
-        Markov_forward('shut the')
-    )
+        Markov_forward('hi {0}', ('hi',)),
+        Markov_forward('hello {0}', ('hello',)),
+        Markov_forward('hey {0}', ('hey',)),
+        Markov_forward('sup {0}', ('sup',)),
+        Markov_forward('shut the', ('shut the hell up',))
+    ),
+    True
 ),
 (r"\b(how are you|how's your|how is your)\b", 1,
     R('Super', 'Awesome', 'Better than your face',
@@ -240,8 +245,9 @@ PATTERN_REPLIES = (
         "Loser\nWe don't need you anyway",
         'bye lamers',
         'Good riddance',
-        Markov_forward('bye {0}')
-    )
+        Markov_forward('bye {0}', ('bye',))
+    ),
+    True
 ),
 (r"\b(congratulations|congrats)", 1, R('Thanks', 'thx')),
 (r'\b(brb|be right back)\b', 1, R('k', 'kk')),
@@ -267,7 +273,12 @@ PATTERN_REPLIES = (
 
 # General
 (r"^(who is|who's|what is|what's|how's|how is) (.*?)\W?$", -1,
-    R(Markov_forward('{1} is')),
+    R(
+        Markov_forward('{1} is',
+            ("Never heard of 'em", 'Beats me', "Don't ask me")
+        )
+    ),
+    True
 ),
 (r'\b(you suck|your .* sucks)\b', 1,
     R(
@@ -501,7 +512,12 @@ True),
 ),
 (r'\bsorry\b', 1, R('you should be')),
 (r"^(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -1,
-    R(Markov_forward('{6}'))
+    R(
+        Markov_forward('{6}',
+            ('Dunno', 'No idea', "Don't know", 'Never heard of that')
+        )
+    ),
+    True
 ),
 (r"^(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?me\W?$", -2,
     R(Markov_forward('you'))
@@ -574,7 +590,7 @@ True),
     R(
         'Thanks',
         'Thanks {0}',
-        Markov_forward('thanks {0}'),
+        Markov_forward('thanks {0}', ('thanks',)),
         'Thanks {0}\n<3',
         '{0}++',
         'karma sucks',
@@ -584,7 +600,8 @@ True),
         'yourmom++',
         'yourface++',
         Recurse('***decbot karma***')
-    )
+    ),
+    True
 ),
 (r'\b(.*)\+\+', 1,
     R(
@@ -656,10 +673,8 @@ True),
         Markov_forward('sudo'),
         Markov_forward('chown'),
         Markov_forward('rm'),
-        Markov_forward('dd'),
         Markov_forward('su'),
         Markov_forward('format c:'),
-        Markov_forward('kill -9'),
         Markov_forward('/quit'),
         Markov_forward('!list')
     )
@@ -842,7 +857,7 @@ def manual_markov(order, msg, _recurse_level=0):
             return '{}: Markov chain not found'.format(repr(' '.join(chain)))
 
 
-def markov_forward(chain, max_lf=MAX_LF_R):
+def markov_forward(chain, failmsg='', max_lf=MAX_LF_R):
     """Generate sentence from the current chain forward only and not
     backward"""
 
@@ -852,6 +867,8 @@ def markov_forward(chain, max_lf=MAX_LF_R):
     else:
         m = markovs[len(chain)]
         out = ' '.join(m.from_chain_forward(chain)).replace(' \n ', '\n')
+    if not out.strip():
+        return failmsg
     return m.adjust_right_line_breaks(out, max_lf)
 
 
