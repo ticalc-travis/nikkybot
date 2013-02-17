@@ -272,9 +272,9 @@ PATTERN_REPLIES = (
 ),
 
 # General
-(r"^(who is|who's|what is|what's|how's|how is) (.*?)\W?$", -1,
+(r"^(who is|who's|what is|what's|how's|how is) (.*?)\?*$", 0,
     R(
-        Markov_forward('{1} is',
+        Markov_forward('{2} is',
             ("Never heard of 'em", 'Beats me', "Don't ask me")
         )
     ),
@@ -371,6 +371,7 @@ PATTERN_REPLIES = (
 (r'\bwhat does it mean\b', 1,
     R('Communism.', Recurse('it means'))
 ),
+(r'\b(who|what) should \S+ (.*?)\?*$', -1, Recurse('what do you think about {2}')),
 (r'\bcontest\b', 1,
     R(
         Recurse("You'll lose"),
@@ -839,9 +840,13 @@ def markov_forward(chain, failmsg='', max_lf=MAX_LF_R):
 
     if len(chain) == 1:
         m = choice(markovs.values())
+        if not m.word_forward.has_key(chain[0]):
+            return failmsg
         out = ' '.join(m.from_word_forward(chain[0])).replace(' \n ', '\n')
     else:
         m = markovs[len(chain)]
+        if not m.chain_forward.has_key(tuple(chain)):
+            return failmsg
         out = ' '.join(m.from_chain_forward(chain)).replace(' \n ', '\n')
     if not out.strip():
         return failmsg
