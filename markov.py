@@ -34,6 +34,10 @@ class Markov(object):
         self.chain_forward = defaultdict(list)
         self.word_backward = defaultdict(list)
         self.chain_backward = defaultdict(list)
+
+    def get_order(self):
+        """Retrieve order of Markov chain"""
+        return self._order
         
     def conv_case(self, s):
         """Convert a string or sequence of strings to lowercase if case
