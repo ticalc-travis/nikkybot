@@ -768,42 +768,18 @@ def nikkysim_parse_saying_no(w, x, y):
 
 
 # Markov chain initialization
-f5 = open('nikky-markov.5.pickle', 'rb')
-markov5 = cPickle.load(f5)
-f4 = open('nikky-markov.4.pickle', 'rb')
-markov4 = cPickle.load(f4)
-f3 = open('nikky-markov.3.pickle', 'rb')
-markov3 = cPickle.load(f3)
-f2 = open('nikky-markov.2.pickle', 'rb')
-markov2 = cPickle.load(f2)
-last_mtime = (fstat(f2.fileno()).st_mtime, fstat(f3.fileno()).st_mtime,
-    fstat(f4.fileno()).st_mtime, fstat(f5.fileno()).st_mtime)
-f5.close()
-f4.close()
-f3.close()
-f2.close()
+markov5 = markov.Markov_Shelved('markov/nikky-markov.5', order=5, readonly=True,
+    case_sensitive=False)
+markov4 = markov.Markov_Shelved('markov/nikky-markov.4', order=4, readonly=True,
+    case_sensitive=False)
+markov3 = markov.Markov_Shelved('markov/nikky-markov.3', order=3, readonly=True,
+    case_sensitive=False)
+markov2 = markov.Markov_Shelved('markov/nikky-markov.2', order=2, readonly=True,
+    case_sensitive=False)
 markovs = {5: markov5, 4: markov4, 3: markov3, 2: markov2}
 for m in markovs.values():
     m.default_max_left_line_breaks = MAX_LF_L
     m.default_max_right_line_breaks = MAX_LF_R
-
-
-def markov_pickles_changed():
-    new_mtime = (stat('nikky-markov.2.pickle').st_mtime,
-        stat('nikky-markov.3.pickle').st_mtime,
-        stat('nikky-markov.4.pickle').st_mtime,
-        stat('nikky-markov.5.pickle').st_mtime,)
-    return new_mtime != last_mtime
-
-
-def memory_cleanup():
-    """Workaround to allow avoiding excessive memory consumption when
-    reloading module (these variables can consume an enormous amount)"""
-    global markovs, markov2, markov3, markov4, markov5
-    try:
-        del markovs, markov2, markov3, markov4, markov5
-    except:
-        pass
 
 
 def random_markov():

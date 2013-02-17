@@ -36,7 +36,7 @@ from config import *
 from nikkyai import NikkyAI
 
 
-RELOAD_CHECK_INTERVAL = 60 * 60
+RELOAD_INTERVAL = 60 * 60 * 24
 
 
 class BotError(Exception):
@@ -94,7 +94,8 @@ class NikkyBot(irc.IRCClient):
 
         irc.IRCClient.connectionMade(self)
 
-        reactor.callLater(RELOAD_CHECK_INTERVAL, self.check_markov_reload)
+        if RELOAD_INTERVAL is not None:
+            reactor.callLater(RELOAD_INTERVAL, self.auto_reload)
 
     def connectionLost(self, reason):
         print('Connection lost: {}'.format(reason))
@@ -309,8 +310,6 @@ class NikkyBot(irc.IRCClient):
             return msg
 
     def reload_ai(self):
-        from nikkyai import memory_cleanup
-        memory_cleanup()
         reload(sys.modules['nikkyai'])
         from nikkyai import NikkyAI
         for k in self.nikkies:
@@ -319,14 +318,11 @@ class NikkyBot(irc.IRCClient):
             self.nikkies[k].last_replies = last_replies
             self.nikkies[k].nick = self.nickname
 
-    def check_markov_reload(self):
-        """See if Markov chain pickles have been updated and reload the
-        nikkyai module to reread them if so"""
-        from nikkyai import markov_pickles_changed
-        if markov_pickles_changed():
-            print('Automatically reloading due to Markov pickle change')
-            self.reload_ai()
-        reactor.callLater(RELOAD_CHECK_INTERVAL, self.check_markov_reload)
+    def auto_reload(self):
+        """Automatically reload AI module on intervals (to update regularly-updated
+        Markov data by another process, for instance)"""
+        self.reload_ai()
+        reactor.callLater(RELOAD_CHECK_INTERVAL, self.auto_reload)
 
 
 class NikkyBotFactory(protocol.ReconnectingClientFactory):

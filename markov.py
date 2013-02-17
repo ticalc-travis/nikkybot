@@ -75,9 +75,13 @@ class Markov(object):
             chain_value = chain[1:order+1]
             chain_key = tuple(self.conv_case(chain[:order]))
             if not word_value in word_dict[word_key]:
-                word_dict[word_key].append(word_value)
+                l = word_dict[word_key]
+                l.append(word_value)
+                word_dict[word_key] = l
             if not chain_value in chain_dict[chain_key]:
-                chain_dict[chain_key].append(chain_value)
+                l = chain_dict[chain_key]
+                l.append(chain_value)
+                chain_dict[chain_key] = l
         
     def add(self, sentence):
         """Parse and add a string of words to the chain"""
@@ -194,4 +198,63 @@ class Markov(object):
         if result != ' '.join(forward_chain):
             return result.replace(' \n ', '\n')
         return ''
+
+
+class Markov_Shelf(shelve.DbfilenameShelf):
+    """Compatibility layer for Markov classes' use of dicts"""
+
+    def __getitem__(self, key):
+        try:
+            return shelve.Shelf.__getitem__(self, repr(key))
+        except KeyError:
+            return []
+
+    def __setitem__(self, key, value):
+        shelve.Shelf.__setitem__(self, repr(key), value)
+
+    def has_key(self, key):
+        return shelve.Shelf.has_key(self, repr(key))
+
+    def keys(self):
+        return [eval(x) for x in shelve.Shelf.keys(self)]
+
+
+class Markov_Shelved(Markov):
+    """Markov chain using shelf module for less RAM usage"""
+
+    def __init__(self, file_prefix, readonly=False, order=2, case_sensitive=True,
+            default_max_left_line_breaks=None, default_max_right_line_breaks=None):
+        self._order = order
+        self._case_sensitive = case_sensitive
+        self.default_max_left_line_breaks = None
+        self.default_max_right_line_breaks = None
+
+        flag = 'c'
+        if readonly:
+            flag = 'r'
+
+        self.word_forward = \
+            Markov_Shelf(file_prefix + '.wf', protocol=2, flag=flag,
+                writeback=False)
+        self.chain_forward = \
+            Markov_Shelf(file_prefix + '.cf', protocol=2, flag=flag,
+                writeback=False)
+        self.word_backward = \
+            Markov_Shelf(file_prefix + '.wb', protocol=2, flag=flag,
+                writeback=False)
+        self.chain_backward = \
+            Markov_Shelf(file_prefix + '.cb', protocol=2, flag=flag,
+                writeback=False)
+
+    def sync(self):
+        self.word_forward.sync()
+        self.chain_forward.sync()
+        self.word_backward.sync()
+        self.chain_backward.sync()
+
+    def close(self):
+        self.word_forward.close()
+        self.chain_forward.close()
+        self.word_backward.close()
+        self.chain_backward.close()
 

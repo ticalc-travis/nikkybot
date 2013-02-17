@@ -7,16 +7,17 @@
 # normally be necessary.)  They will be saved to 'nikkybot.trn' and then fed to
 # the Markov generator.
 
-import cPickle
 import os
 import re
-from sys import stdout
+from sys import stdout, argv
 
 import markov
 
+order = int(argv[1])
 home = os.environ['HOME']
 training_glob = []
 
+stdout.write('Starting Markov{} generation.\n'.format(order))
 stdout.write('Parsing logs...\n')
 
 # Old Konversation logs
@@ -108,20 +109,31 @@ with open('misc_irc_lines.txt', 'r') as f:
 # There, that's all I have
 #   ...I think...
 
-# Update pickle dumps
-for order in (2, 3, 4, 5):
-    items = len(training_glob)
-    stdout.write('Markov{} pickle:\n'.format(order))
-    fn = 'nikky-markov.{}.pickle.new'.format(order)
-    with open(fn, 'wb') as f:
-        m = markov.Markov(order, case_sensitive=False)
-        for i, l in enumerate(training_glob):
-            if not (i+1) % 1000 or i+1 == items:
-                stdout.write('    Training {}/{}...\r'.format(i+1, items))
-                stdout.flush()
-            m.add(l)
-        stdout.write('\n    Writing...\n')
-        cPickle.dump(m, f, protocol=2)
-        del m
+items = len(training_glob)
+m = markov.Markov(order, case_sensitive=False)
+for i, l in enumerate(training_glob):
+    if not (i+1) % 100 or i+1 == items:
+        stdout.write('Training {}/{}...\r'.format(i+1, items))
+        stdout.flush()
+    m.add(l)
 
-stdout.write('Finished!\n')
+stdout.write('\nWriting shelves...\n')
+s = markov.Markov_Shelved('markov/new.nikky-markov.{}'.format(order), readonly=False,
+    order=order, case_sensitive=False)
+for src, dst in ((m.word_forward, s.word_forward),
+             (m.word_backward, s.word_backward),
+             (m.chain_forward, s.chain_forward),
+             (m.chain_backward, s.chain_backward)):
+    keys = src.keys()
+    n = len(keys)
+    for i, k in enumerate(keys):
+        if not (i+1) % 100 or i+1 == n:
+            stdout.write('Key {}/{}...\r'.format(i+1, n))
+            stdout.flush()
+        dst[k] = src[k]
+    stdout.write('\n')
+
+stdout.write('Closing...\n')
+s.sync()
+s.close()
+stdout.write('Finished!\n\n')
