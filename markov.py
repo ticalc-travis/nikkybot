@@ -18,8 +18,9 @@
 
 from collections import defaultdict
 from random import choice
+import shelve
 
-class Markov:
+class Markov(object):
     """tev's Markov chain implementation"""
     
     def __init__(self, order=2, case_sensitive=True,
