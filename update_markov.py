@@ -41,7 +41,7 @@ log_path = os.path.join(home, os.path.join('log_irc_new'))
 for dn in [os.path.join(log_path, x) for x in os.listdir(log_path)]:
     try:
         for fn in os.listdir(dn):
-            if fn.split('_')[0] in ('#calcgames', '#cemetech', '#flood', '#hp48',
+            if fn.split('_2')[0] in ('#calcgames', '#cemetech', '#flood', '#hp48',
                     '#inspired', '#nspire-lua', '#prizm', '#tcpa', '#ti'):
                 with open(os.path.join(log_path, os.path.join(dn, fn)), 'r') as f:
                     line_group = []
