@@ -371,7 +371,7 @@ PATTERN_REPLIES = (
 (r'\bwhat does it mean\b', 1,
     R('Communism.', Recurse('it means'))
 ),
-(r'\b(who|what) should \S+ (.*?)\?*$', -1, Recurse('what do you think about {2}')),
+(r'\b(who|what) (does|do|did|should|will|is) \S+ (.*?)\?*$', -1, Recurse('what do you think about {3}')),
 (r'\bcontest\b', 1,
     R(
         Recurse("You'll lose"),
@@ -487,7 +487,7 @@ True),
         'maybe',
         'dunno',
         'Are *you* {1}{2}?',
-        'Describe exactly what you mean by {2}',
+        'Describe exactly what you mean by {3}',
         Recurse('***yes/no***')
     )
 ),
