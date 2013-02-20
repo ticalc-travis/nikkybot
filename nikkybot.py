@@ -322,7 +322,7 @@ class NikkyBot(irc.IRCClient):
         """Automatically reload AI module on intervals (to update regularly-updated
         Markov data by another process, for instance)"""
         self.reload_ai()
-        reactor.callLater(RELOAD_CHECK_INTERVAL, self.auto_reload)
+        reactor.callLater(RELOAD_INTERVAL, self.auto_reload)
 
 
 class NikkyBotFactory(protocol.ReconnectingClientFactory):
