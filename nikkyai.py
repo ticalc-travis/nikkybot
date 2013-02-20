@@ -797,7 +797,7 @@ def markov_reply(msg, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
     """Generate a Markov-chained reply for msg"""
     if not msg.strip():
         return random_markov()
-    words = msg.split(' ')
+    words = [x for x in msg.split(' ') if x]
     for order in (5, 4, 3, 2):
         avail_replies = []
         for i in xrange(len(words) - (order-1)):

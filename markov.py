@@ -113,6 +113,8 @@ class Markov(object):
 
     def from_chain_forward(self, chain):
         """Generate a chain from the given chain forward in context"""
+        if not self.get_chain_forward(chain):
+            return ()
         out = list(chain)
         while chain:
             chain = self.get_chain_forward(chain)
@@ -124,6 +126,8 @@ class Markov(object):
 
     def from_chain_backward(self, chain):
         """Generate a chain from the given chain backward in context"""
+        if not self.get_chain_backward(chain):
+            return ()
         out = list(chain)
         while chain:
             chain = self.get_chain_backward(chain)
@@ -177,7 +181,7 @@ class Markov(object):
 
     def sentence_from_chain(self, forward_chain, max_left_line_breaks=-1,
             max_right_line_breaks=-1):
-        """Generate a full saying from the given chain (in forward order). 
+        """Generate a full saying from the given chain (in forward order).
         Search for a chain going forward and then complete the sentence by also
         searching backward and combining the pieces."""
 
