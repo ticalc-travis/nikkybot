@@ -222,6 +222,9 @@ class Markov_Shelf(shelve.DbfilenameShelf):
     def keys(self):
         return [eval(x) for x in shelve.Shelf.keys(self)]
 
+    def random_key(self):
+        return eval(choice(shelve.Shelf.keys(self)))
+
 
 class Markov_Shelved(Markov):
     """Markov chain using shelf module for less RAM usage"""

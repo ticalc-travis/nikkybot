@@ -1020,7 +1020,7 @@ class NikkyAI(object):
                 if stop_here:
                     break
 
-        out = markov_reply(msg).rstrip()
+        out = markov_reply(msg.rstrip()).rstrip()
 
         # Transform phrases at beginning of reply
         for transform in (
