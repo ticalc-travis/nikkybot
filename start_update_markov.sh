@@ -2,6 +2,11 @@
 
 set -e
 
+if [ -z $1 ]; then
+    echo "Usage: $0 order"
+    exit 1
+fi
+
 rm -f markov/new.nikky-markov.$1.{wf,wb,cf,cb}
 ./update_markov.py $1
 cd markov

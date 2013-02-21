@@ -9,9 +9,13 @@
 
 import os
 import re
-from sys import stdout, argv
+from sys import stdout, argv, exit
 
 import markov
+
+if len(argv) < 2:
+    print "Usage: {} order".format(argv[0])
+    exit(1)
 
 order = int(argv[1])
 home = os.environ['HOME']
