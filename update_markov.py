@@ -51,9 +51,9 @@ for dn in [os.path.join(log_path, x) for x in os.listdir(log_path)]:
                     line_group = []
                     for line in f:
                         line = line.strip()
-                        m = re.match(r'[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <.(nikky.*|allyn.*)> (.*)', line, re.I)
+                        m = re.match(r'[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} (<[ @+](nikky.*|allyn.*)>|<[ @+]saxjax> \(.\) \[allynfolksjr\]) (.*)', line, re.I)
                         if m:
-                            line_group.append(m.group(2))
+                            line_group.append(m.group(3))
                         else:
                             if line_group:
                                 training_glob.append('\n'.join(line_group))
