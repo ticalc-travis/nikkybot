@@ -844,12 +844,13 @@ def markov_forward(chain, failmsg='', max_lf=MAX_LF_R):
 
     if len(chain) == 1:
         m = choice(markovs.values())
-        if not m.word_forward.has_key(chain[0]):
+        if not m.word_forward.has_key(m.conv_key(chain[0])):
             return failmsg
-        out = ' '.join(m.from_word_forward(chain[0])).replace(' \n ', '\n')
+        out = ' '.join(m.from_word_forward(m.conv_key(chain[0]))).replace(' \n ',
+            '\n')
     else:
         m = markovs[len(chain)]
-        if not m.chain_forward.has_key(tuple(chain)):
+        if not m.chain_forward.has_key(tuple(m.conv_key(chain))):
             return failmsg
         out = ' '.join(m.from_chain_forward(chain)).replace(' \n ', '\n')
     if not out.strip():
