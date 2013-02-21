@@ -24,9 +24,11 @@ class Markov(object):
     """tev's Markov chain implementation"""
 
     def __init__(self, order=2, case_sensitive=True,
+            ignore_chars='!"&\`()*,./:;<=>?[\]^=\'{|}~',
             default_max_left_line_breaks=None, default_max_right_line_breaks=None):
         self._order = order
         self._case_sensitive = case_sensitive
+        self._ignore_chars = ignore_chars
         self.default_max_left_line_breaks = None
         self.default_max_right_line_breaks = None
 
@@ -39,9 +41,15 @@ class Markov(object):
         """Retrieve order of Markov chain"""
         return self._order
 
-    def conv_case(self, s):
+    def conv_key(self, s):
         """Convert a string or sequence of strings to lowercase if case
-        sensitivity is disabled"""
+        sensitivity is disabled, and strip characters contained in
+        self._ignore_chars"""
+        for c in self._ignore_chars:
+            try:
+                s = s.replace(c, '')
+            except AttributeError:
+                s = [x.replace(c, '') for x in s]
         if self._case_sensitive:
             return s
         try:
@@ -71,9 +79,9 @@ class Markov(object):
             chain = words[i:i+self._order+1]
             chain = tuple(chain)
             word_value = chain[:order]
-            word_key = self.conv_case(word)
+            word_key = self.conv_key(word)
             chain_value = chain[1:order+1]
-            chain_key = tuple(self.conv_case(chain[:order]))
+            chain_key = tuple(self.conv_key(chain[:order]))
             if not word_value in word_dict[word_key]:
                 l = word_dict[word_key]
                 l.append(word_value)
@@ -100,22 +108,33 @@ class Markov(object):
     def get_chain_forward(self, chain):
         """Select and return a chain from the given chain forward in context"""
         try:
-            return choice(self.chain_forward[tuple(self.conv_case(chain))])
+            return choice(self.chain_forward[tuple(self.conv_key(chain))])
         except IndexError:
             return ()
 
     def get_chain_backward(self, chain):
         """Select and return a chain from the given chain backward in context"""
         try:
-            return choice(self.chain_backward[tuple(self.conv_case(chain))])
+            return choice(self.chain_backward[tuple(self.conv_key(chain))])
         except IndexError:
             return ()
 
     def from_chain_forward(self, chain):
         """Generate a chain from the given chain forward in context"""
-        if not self.get_chain_forward(chain):
+
+        # Get original case/punctuation
+        orig_chain = list(self.get_chain_forward(chain))
+        if not orig_chain:
             return ()
-        out = list(chain)
+        l = self.get_chain_backward(tuple(reversed(chain)))
+        r = list(orig_chain[:self._order-1])
+        if len(l) == self._order and len(r) == self._order-1:
+            orig_chain = [l[-2]] + r
+        else:
+            orig_chain = chain
+        out = list(orig_chain)
+
+        # Complete forward
         while chain:
             chain = self.get_chain_forward(chain)
             try:
@@ -126,9 +145,20 @@ class Markov(object):
 
     def from_chain_backward(self, chain):
         """Generate a chain from the given chain backward in context"""
-        if not self.get_chain_backward(chain):
+
+        # Get original case
+        orig_chain = list(self.get_chain_backward(chain))
+        if not orig_chain:
             return ()
-        out = list(chain)
+        l = self.get_chain_forward(tuple(reversed(chain)))
+        r = list(orig_chain[:self._order-1])
+        if len(l) == self._order and len(r) == self._order-1:
+            orig_chain = [l[-2]] + r
+        else:
+            orig_chain = list(chain)
+        out = orig_chain
+
+        # Complete backward
         while chain:
             chain = self.get_chain_backward(chain)
             try:
@@ -141,7 +171,7 @@ class Markov(object):
     def from_word_forward(self, word):
         """Generate a chain from the given word forward in context"""
         try:
-            chain = choice(self.word_forward[self.conv_case(word)])
+            chain = choice(self.word_forward[self.conv_key(word)])
         except IndexError:
             return ()
         return self.from_chain_forward(chain)
@@ -149,7 +179,7 @@ class Markov(object):
     def from_word_backward(self, word):
         """Generate a chain from the given word backward in context"""
         try:
-            chain = choice(self.word_backward[self.conv_case(word)])
+            chain = choice(self.word_backward[self.conv_key(word)])
         except IndexError:
             return ()
         return self.from_chain_backward(chain)
@@ -165,10 +195,18 @@ class Markov(object):
         if max_right_line_breaks == -1:
             max_right_line_breaks = self.default_max_right_line_breaks
 
-        left = ' '.join(self.from_word_backward(word)[:-1])
+        fwb = self.from_word_backward(word)
+        left = ' '.join(fwb[:-1])
         left = self.adjust_left_line_breaks(left, max_left_line_breaks)
-        right = ' '.join(self.from_word_forward(word)[1:])
+        fwf = self.from_word_forward(word)
+        right = ' '.join(fwf[1:])
         right = self.adjust_right_line_breaks(right, max_right_line_breaks)
+
+        # Retain original case/punctuation
+        if fwf and self.conv_key(fwf[0]) == self.conv_key(word):
+            word = fwf[0]
+        elif fwb and self.conv_key(fwb[-1]) == self.conv_key(word):
+            word = fwb[-1]
 
         if max_left_line_breaks is not None:
             left = '\n'.join((left.split('\n')[-max_left_line_breaks-1:]))
@@ -177,7 +215,8 @@ class Markov(object):
         if not left and not right:
             return ''
             # Omit first element, which is a duplicate of the word
-        return (left + ' ' + word + ' ' + right).replace(' \n ', '\n').strip()
+        return (left + ' ' + word + ' ' + right).replace(' \n ',
+            '\n').strip()
 
     def sentence_from_chain(self, forward_chain, max_left_line_breaks=-1,
             max_right_line_breaks=-1):
@@ -190,6 +229,7 @@ class Markov(object):
         if max_right_line_breaks == -1:
             max_right_line_breaks = self.default_max_right_line_breaks
 
+        forward_chain = self.conv_key(forward_chain)
         reverse_chain = tuple(reversed(forward_chain))
         left = ' '.join(self.from_chain_backward(reverse_chain))
         left = self.adjust_left_line_breaks(left, max_left_line_breaks)
@@ -230,9 +270,11 @@ class Markov_Shelved(Markov):
     """Markov chain using shelf module for less RAM usage"""
 
     def __init__(self, file_prefix, readonly=False, order=2, case_sensitive=True,
+            ignore_chars='!"#&\`()*,./:;<=>?[\]^=\'{|}~',
             default_max_left_line_breaks=None, default_max_right_line_breaks=None):
         self._order = order
         self._case_sensitive = case_sensitive
+        self._ignore_chars = ignore_chars
         self.default_max_left_line_breaks = None
         self.default_max_right_line_breaks = None
 
