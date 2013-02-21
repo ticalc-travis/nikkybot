@@ -132,7 +132,7 @@ for src, dst in ((m.word_forward, s.word_forward),
     n = len(keys)
     for i, k in enumerate(keys):
         if not (i+1) % 100 or i+1 == n:
-            stdout.write('Key {}/{}...\r'.format(i+1, n))
+            stdout.write('    Key {}/{}...\r'.format(i+1, n))
             stdout.flush()
         dst[k] = src[k]
     stdout.write('\n')
