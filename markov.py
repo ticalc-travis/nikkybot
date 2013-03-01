@@ -20,11 +20,13 @@ from collections import defaultdict
 from random import choice
 import shelve
 
+DEFAULT_IGNORE_CHARS = '!"&`()*,./:;<=>?[\\]^=\'{|}~',
+
 class Markov(object):
     """tev's Markov chain implementation"""
 
     def __init__(self, order=2, case_sensitive=True,
-            ignore_chars='!"&\`()*,./:;<=>?[\]^=\'{|}~',
+            ignore_chars=DEFAULT_IGNORE_CHARS,
             default_max_left_line_breaks=None, default_max_right_line_breaks=None):
         self._order = order
         self._case_sensitive = case_sensitive
@@ -270,7 +272,7 @@ class Markov_Shelved(Markov):
     """Markov chain using shelf module for less RAM usage"""
 
     def __init__(self, file_prefix, readonly=False, order=2, case_sensitive=True,
-            ignore_chars='!"#&\`()*,./:;<=>?[\]^=\'{|}~',
+            ignore_chars=DEFAULT_IGNORE_CHARS,
             default_max_left_line_breaks=None, default_max_right_line_breaks=None):
         self._order = order
         self._case_sensitive = case_sensitive
