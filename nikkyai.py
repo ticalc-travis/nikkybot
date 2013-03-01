@@ -198,7 +198,7 @@ PATTERN_REPLIES = (
 # pattern regexp, last reply, priority, action, allow repeat?
 
 # Basics
-(r'\b(hi|hello|hey)\b', 1,
+(r'\b(hi|hello|hey)\b', 0,
     R(
         S(
             R('Sup ', "What's up "),
@@ -219,7 +219,7 @@ PATTERN_REPLIES = (
     ),
     True
 ),
-(r"\b(how are you|how's your|how is your)\b", 1,
+(r"\b(how are you|how's your|how is your)\b", 0,
     R('Super', 'Awesome', 'Better than your face',
         Markov_forward('better than'),
         Markov_forward('better than your'),
@@ -227,7 +227,7 @@ PATTERN_REPLIES = (
         Markov_forward('worse than your')
     ),
 ),
-(r"\b(good night|goodnight|g'?night)\b", 1,
+(r"\b(good night|goodnight|g'?night)\b", 0,
     R(
         'Sweet dreams.\nBitch',
         'night',
@@ -239,7 +239,7 @@ PATTERN_REPLIES = (
     )
 ),
 (r"\b(bye|bye bye|goodbye|good bye|see you later|night|good night|g'night)\b",
-1,
+0,
     R(
         'Bye forever',
         'I hope I never see you again',
@@ -574,7 +574,7 @@ True),
     R('CENSORSHIP', 'Censorship', '{1} YOU CENSORING TARDMUFFIN')
 ),
 (r'\bspam post', 1, R("Don't care", "\001ACTION spams {0}\001")),
-(r'\*\*\*decbot karma\*\*\*', -1,
+(r'\*\*\*decbot karma\*\*\*', -99,
     R(
         'karma sucks',
         '!karma SET KARMA = 0 WHERE `user` = "{0}"; DROP DATABASE',
@@ -673,7 +673,7 @@ True),
 ),
 
 # Computers
-(r'\b(what command|which command|what do I enter|what should I enter|what do I type|what should I type)\b', 1,
+(r'\b(what command|which command|what (command )?do .* enter|what (command )?should .* enter|what (command )?do .* type|what (command )?should .* type)\b', 1,
     R(
         Markov_forward('sudo'),
         Markov_forward('chown'),
