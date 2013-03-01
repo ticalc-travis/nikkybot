@@ -272,7 +272,8 @@ PATTERN_REPLIES = (
         Markov_forward('maybe'),
         Markov_forward('dunno'),
         Markov_forward('yeah')
-    )
+    ),
+    True
 ),
 
 # General
@@ -412,6 +413,18 @@ PATTERN_REPLIES = (
         Markov_forward('more like \n')
     ),
 True),
+(r'^(is|are|am|does|should|can|do)\b', 2, R(Recurse('***yes/no***')), True),
+(r'^(is|are|am|should|can|do|does) \S+ (.*?)\W+or (.*)\b', 1,
+    R(
+        '{2}',
+        '{3}',
+        'both',
+        'neither',
+        "I don't know",
+        'beats me',
+        'dunno'
+    )
+),
 
 # Meta
 (r'\b((how much|how many lines (of)?|how much) (code|coding|programming)|how long .* to (make|program|code|design|write) you)', -2,
@@ -459,17 +472,33 @@ True),
     R('{2}')
 ),
 (r'\b(nicky|niccy|nicci|nikki)\b', 0, R('Who the hell is "{1}"?')),
-(r'\b(you|nikkybot) did\b', 1,
+(r'\b(you|nikkybot) (did|does|do)\b', 1,
     R('I did?', 'I what?', 'Someone talking about me?')
 ),
-(r'\b(you|nikkybot) does\b', 1,
-    R('I do?', 'I what?', 'Someone talking about me?')
-),
-(r'\byou are (a |an |)\b(.*)\b', 1,
+(r'\b(nikkybot is|you are) (a |an |)(.*)', 1,
     R(
         R(
             "That's what you think",
             "Yes, I'm totally {1}{2}",
+            'Am not',
+            'Why thank you pumpkin',
+            'Thanks',
+            'Damn straight',
+            'Where did you hear that?'
+        ),
+        Markov_forward('I am'),
+        Markov_forward("I'm"),
+        Markov_forward('I am really'),
+        Markov_forward("I'm really"),
+        Markov_forward('I am actually'),
+        Markov_forward("I'm actually"),
+    )
+),
+(r'\b(nikkybot is|you are) (.*)', 1,
+    R(
+        R(
+            "That's what you think",
+            "Yes, I'm totally {2}",
             'Am not',
             'Why thank you pumpkin',
             'Thanks',
@@ -520,7 +549,9 @@ True),
     R(
         Markov_forward('{6}',
             ('Dunno', 'No idea', "Don't know", 'Never heard of that')
-        )
+        ),
+        Markov_forward('better than'),
+        Markov_forward('worse than'),
     ),
     True
 ),
@@ -530,6 +561,7 @@ True),
 (r"^(how is|how's|do you like|you like) (.*?)\W?$", -1,
     Recurse('what do you think of {2}')
 ),
+(r"\btell me about (.*)", -2, R(Recurse('{1}'))),
 
 # Memes
 (r'\b(fail|epic fail)\b', 1, R('Yeah, you suck', 'HAW HAW', 'Lame')),
