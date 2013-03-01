@@ -743,7 +743,7 @@ True),
 (r'\b(tell|tell us|tell me|say) (something|anything) (.*)(smart|intelligent|funny|interesting|cool|awesome|bright|thoughtful|entertaining|amusing|exciting|confusing|sensical|inspiring|random|wise)\b', 1,
     E('choice(["","","","","","Okay\\n","k\\n","kk\\n","Fine\\n"])+nikkysim(strip_number=True)[0]')
 ),
-(r'#([A-Za-z]-)?([0-9]+)(-([0-9]+))?', -2,
+(r'(?<![0-9])#([A-Za-z]-)?([0-9]+)(-([0-9]+))?', -2,
     E('nikkysim_parse_saying_no("{1}", "{2}", "{3}")'),
     True
 ),
