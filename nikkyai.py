@@ -263,7 +263,7 @@ PATTERN_REPLIES = (
 ),
 (r'\bno\W*thanks\b', 1, R('DIAF then')),
 (r'\b(wb|welcome back|welcoem back)\b', 1, R('Thanks', 'No\nGo away')),
-(r"\b\*\*\*yes/no\*\*\*\b", 1,
+(r"\*\*\*yes/no\*\*\*", -99,
     R(
         'yes', 'no', 'maybe', 'probably', 'who knows', 'dunno', "don't know",
         'yeah',
