@@ -779,7 +779,7 @@ def nikkysim(strip_number=True, saying=None):
         x, y = randint(0, 4294967295), randint(0, 9999)
     else:
         x, y = saying
-    out = subprocess.check_output(['nikky', '{}-{}'.format(x, y)])
+    out = subprocess.check_output(['./nikky', '{}-{}'.format(x, y)])
     if strip_number:
         return (out.split(': ')[1].rstrip(), (x, y))
     else:
