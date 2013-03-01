@@ -32,7 +32,7 @@ for fn in [os.path.join('log_irc_old', x) for x in
         line_group = []
         for line in f:
             line = line.strip()
-            m = re.match(r'\[.*\] \[.*\] <(nikky|allyn).*>\t(.*)', line, re.I)
+            m = re.match(r'^\[.*\] \[.*\] <(nikky|allyn).*?>\t(.*)', line, re.I)
             if m:
                 line_group.append(m.group(2))
             else:
@@ -72,7 +72,7 @@ for dn in [os.path.join(log_path, x) for x in os.listdir(log_path)]:
             line_group = []
             for line in f:
                 line = line.strip()
-                m = re.match(r'\[[0-9]{2}:[0-9]{2}:[0-9]{2}\] <.?(nikky|allyn).*> (.*)', line, re.I)
+                m = re.match(r'^\[[0-9]{2}:[0-9]{2}:[0-9]{2}\] <.?(nikky|allyn).*?> (.*)', line, re.I)
                 if m:
                     line_group.append(m.group(2))
                 else:
@@ -87,7 +87,7 @@ for fn in os.listdir(log_path):
         line_group = []
         for line in f:
             line = line.strip()
-            m = re.match(r'[0-9]{2}:[0-9]{2}:[0-9]{2} <.?(nikky|allyn).*> (.*)', line, re.I)
+            m = re.match(r'^[0-9]{2}:[0-9]{2}:[0-9]{2} <.?(nikky|allyn).*?> (.*)', line, re.I)
             if m:
                 line_group.append(m.group(2))
             else:
@@ -101,7 +101,7 @@ with open('misc_irc_lines.txt', 'r') as f:
     line_group = []
     for line in f:
         line = line.strip()
-        m = re.match(r'\[?[0-9]{2}:[0-9]{2}(:[0-9]{2})?\]? <.?(nikky|allyn).*> (.*)', line, re.I)
+        m = re.match(r'^\[?[0-9]{2}:[0-9]{2}(:[0-9]{2})?\]? <.?(nikky|allyn).*?> (.*)', line, re.I)
         if m:
             line_group.append(m.group(3))
         else:
