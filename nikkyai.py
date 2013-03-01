@@ -823,7 +823,7 @@ def random_markov():
     """Pick any random Markov-chained sentence and output it"""
     while True:
         out = markov5.sentence_from_chain(
-            choice(tuple(markov5.chain_forward.keys()))
+            tuple(m.chain_forward.random_key())
         )
         if out.strip():
             return out
