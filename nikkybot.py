@@ -256,7 +256,7 @@ class NikkyBot(irc.IRCClient):
         trapping for exceptions"""
         try:
             reply = self.nikkies[target].reply(msg)
-        except:
+        except Exception:
             self.report_error(target, silent_errors)
         else:
             if reply and log_response:
@@ -269,7 +269,7 @@ class NikkyBot(irc.IRCClient):
         """Occasionally reply to the msg given, or say a random remark"""
         try:
             reply = self.nikkies[target].decide_remark(msg)
-        except:
+        except Exception:
             self.report_error(target, silent_errors)
         else:
             if reply and log_response:
