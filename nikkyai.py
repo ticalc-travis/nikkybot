@@ -180,7 +180,7 @@ GENERIC_REMARKS = (
 '\o/',
 'DIAF',
 "Oh hey, it's a tard parade",
-'\001SUCK IT\001',
+'\001SUCK_IT\001',
 'Care-o-meter: 0%',
 'Care-o-meter: 2%\nno, wait\n0%',
 '{0} rules',
@@ -321,7 +321,7 @@ PATTERN_REPLIES = (
         'kk'
     )
 ),
-(r"\b(would you like|want to|you want to|wanna|you wanna) hear\b", 1,
+(r"\b(would you like|want to|you want to|wanna|you wanna) (see|hear|read)\b", 1,
     R("Yes, please bore us to death.")
 ),
 (r'\bwho am i\b', -1, R('You are {0}', Markov_forward('you are'))),
@@ -414,17 +414,18 @@ PATTERN_REPLIES = (
     ),
 True),
 (r'^(is|are|am|does|should|can|do)\b', 2, R(Recurse('***yes/no***')), True),
-(r'^(is|are|am|should|can|do|does) \S+ (.*?)\W+or (.*)\b', 1,
+(r"^(is|are|am|should|can|do|does|which|what|what's|who|who's)(?: \S+)+[ -](.*?)\W+or (.*)\b", -1,
     R(
-        '{2}',
-        '{3}',
+        S('{2}', R(' by far', ', of course', ', naturally', '\nduh')),
+        S('{3}', R(' by far', ', of course', ', naturally', '\nduh')),
         'both',
         'neither',
-        "I don't know",
-        'beats me',
-        'dunno'
+        'dunno',
+        S('{2}', R('--', '? ', ': ', '\n'), Recurse('what do you think of {2}')),
+        S('{3}', R('--', '? ', ': ', '\n'), Recurse('what do you think of {3}'))
     )
 ),
+(r'\bpi\b', 0, S("I don't usually do this, but...\n3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282306647093844609550582231725359408128481117450284102701938521105559644622948954930381964428810975665933446128475648233786783165271201909145648566923460348610454326648213393607260249141273724587006606315588174881520920962829254091715364367892590360011330530548820466521384146...")),
 
 # Meta
 (r'\b((how much|how many lines (of)?|how much) (code|coding|programming)|how long .* to (make|program|code|design|write) you)', -2,
@@ -449,6 +450,11 @@ True),
 ),
 (r'\b(who (made|wrote|programmed) you|(who\'s|whose) are you)\b', -1,
     R('tev')
+),
+(r"\b((nikkybot's|your) source code|the source code (to|of|for) (you|nikkybot))\b", 0,
+    R(
+        '{0}: https://github.com/ticalc-travis/nikkybot',
+    ),
 ),
 (r"\bthat ((made|makes|is making) no sense|does not .* make (any |no )?sense|doesn't .* make (any |no )?sense|.* sense make)\b", 1,
     R(
@@ -545,7 +551,7 @@ True),
     R('"Your" retarded', "*You're")
 ),
 (r'\bsorry\b', 1, R('you should be')),
-(r"^(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -1,
+(r"\b(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -1,
     R(
         Markov_forward('{6}',
             ('Dunno', 'No idea', "Don't know", 'Never heard of that')
@@ -555,13 +561,28 @@ True),
     ),
     True
 ),
-(r"^(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?me\W?$", -2,
+(r"^(what do you think|what do you know|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )me\W?$", -2,
     R(Markov_forward('you'))
 ),
 (r"^(how is|how's|do you like|you like) (.*?)\W?$", -1,
     Recurse('what do you think of {2}')
 ),
-(r"\btell me about (.*)", -2, R(Recurse('{1}'))),
+(r"\btell (me|us) about (.*)", -2, R(Recurse('{2}'))),
+(r'(.*)\bnikkybutt\b(.*)', -2,
+    R(
+        '{0}butt',
+        'I HEARD THAT',
+        'I HEARD THAT\n{0}butt',
+        S(
+            Recurse('{1}nikkybot{2}'),
+            R(
+                '\nThought you could avoid highlighting me, huh?',
+                '\nThought you could avoid highlighting me, did you?\nHAW HAW',
+                '\n{0}butt'
+            )
+        )
+    )
+),
 
 # Memes
 (r'\b(fail|epic fail)\b', 1, R('Yeah, you suck', 'HAW HAW', 'Lame')),
