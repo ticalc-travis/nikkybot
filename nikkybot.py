@@ -37,6 +37,7 @@ from nikkyai import NikkyAI
 
 
 RELOAD_INTERVAL = 60 * 60 * 24
+CHANNEL_CHECK_INTERVAL = 300
 
 
 class BotError(Exception):
@@ -91,11 +92,14 @@ class NikkyBot(irc.IRCClient):
         self.versionName = self.factory.client_version
         self.nikkies = self.factory.nikkies
         self.pending_responses = []
+        self.joined_channels = set()
 
         irc.IRCClient.connectionMade(self)
 
         if RELOAD_INTERVAL is not None:
             reactor.callLater(RELOAD_INTERVAL, self.auto_reload)
+        if CHANNEL_CHECK_INTERVAL is not None:
+            reactor.callLater(CHANNEL_CHECK_INTERVAL, self.channel_check)
 
     def connectionLost(self, reason):
         print('Connection lost: {}'.format(reason))
@@ -105,6 +109,9 @@ class NikkyBot(irc.IRCClient):
         for channel in self.factory.channels:
             self.join(channel)
             self.nikkies[channel].nick = self.nickname
+
+    def joined(self, channel):
+        self.joined_channels.add(channel)
 
     def privmsg(self, user, channel, msg):
         nick, host = user.split('!', 1)
@@ -315,6 +322,13 @@ class NikkyBot(irc.IRCClient):
         Markov data by another process, for instance)"""
         self.reload_ai()
         reactor.callLater(RELOAD_INTERVAL, self.auto_reload)
+
+    def channel_check(self):
+        """Retry any channels that we apparently didn't successfully join for
+        some reason."""
+        for c in self.factory.channels:
+            if c not in self.joined_channels:
+                self.join(c)
 
 
 class NikkyBotFactory(protocol.ReconnectingClientFactory):
