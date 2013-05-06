@@ -203,7 +203,7 @@ class NikkyBot(irc.IRCClient):
     def is_highlight(self, msg):
         """Check if msg contains an instance of one of bot's nicknames"""
         for nick in self.factory.nicks:
-            if re.search(r'\b{}\b'.format(re.escape(self.nickname)),
+            if re.search(r'\b{}\b'.format(re.escape(nick)),
                          msg, flags=re.I):
                 return True
         return False
