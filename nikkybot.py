@@ -168,6 +168,15 @@ class NikkyBot(irc.IRCClient):
         """On kick, automatically try to rejoin after a bit"""
         reactor.callLater(random.randint(5, 300), self.join, channel)
 
+    def irc_unknown(self, prefix, command, parms):
+        if command == "INVITE" and parms[1] in CHANNELS:
+            self.join(parms[1])
+            print('Received invite to {}; trying to join'.format(parms[1]))
+        elif command == "PONG":
+            pass
+        else:
+            print('unknown: {0}, {1}, {2}'.format(prefix, command, parms))
+
     ## Custom methods ##
         
     def reclaim_nick(self):
