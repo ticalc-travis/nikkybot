@@ -88,8 +88,9 @@ class NikkyBot(irc.IRCClient):
         self.factory.resetDelay()
         self.factory.shut_down = False
         self.nickname = self.factory.nicks[0]
-        self.lineRate = self.factory.min_send_time
         self.versionName = self.factory.client_version
+        self.realname = self.factory.real_name
+        self.lineRate = self.factory.min_send_time
         self.nikkies = self.factory.nikkies
         self.pending_responses = []
         self.joined_channels = set()
