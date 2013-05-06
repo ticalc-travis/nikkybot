@@ -381,8 +381,6 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
             reactor.stop()
         else:
             self.clientConnectionFailed(connector, reason)
-            #protocol.ReconnectingClientFactory.clientConnectionLost(
-            #    self, connector, reason)
 
 
 if __name__ == '__main__':
