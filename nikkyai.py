@@ -1132,7 +1132,7 @@ class NikkyAI(object):
                 c = int(c/2)
             r = randint(0, c)
             if not r:
-                if randint(0, 4):
+                if not randint(0, 4):
                     return self.remark(msg)
                 else:
                     for i in xrange(RECURSE_LIMIT):
