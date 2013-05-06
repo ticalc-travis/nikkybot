@@ -999,6 +999,8 @@ class NikkyAI(object):
                     self.last_replies[response.lower()] <
                         PATTERN_RESPONSE_RECYCLE_TIME):
                     raise Repeated_response_error
+                else:
+                    self.last_replies[response.lower()] = datetime.now()
             except KeyError:
                 self.last_replies[response.lower()] = datetime.now()
 
