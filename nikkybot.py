@@ -221,14 +221,14 @@ class NikkyBot(irc.IRCClient):
         
     def do_command(self, cmd, nick):
         """Execute a special/admin command"""
-        if cmd.startswith('?quit'):
+        if cmd.lower().startswith('?quit'):
             try:
                 msg = cmd.split(' ', 1)[1]
             except IndexError:
                 msg = 'Shutdown initiated'
             self.quit(msg)
             self.factory.shut_down = True
-        elif cmd.startswith('?reload'):
+        elif cmd.lower().startswith('?reload'):
             try:
                 self.reload_ai()
             except Exception as e:
@@ -239,7 +239,7 @@ class NikkyBot(irc.IRCClient):
             else:
                 self.notice(nick, 'Reloaded nikkyai')
 
-        elif cmd.startswith('?code '):
+        elif cmd.lower().startswith('?code '):
             try:
                 exec(cmd.split(' ', 1))[1]
             except Exception as e:
