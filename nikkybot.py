@@ -75,11 +75,11 @@ class NikkyBot(irc.IRCClient):
     def alterCollidedNick(self, nickname):
         """Resolve nick conflicts and set up automatic preferred nick
         reclaim task"""
+        reactor.callLater(self.factory.nick_retry_wait, self.reclaim_nick)
         try:
             return self.factory.nicks[self.factory.nicks.index(nickname) + 1]
         except IndexError:
             return self.factory.nicks[0] + '_'
-        reactor.callLater(self.nick_retry_wait, self.reclaim_nick)
 
     ## Callbacks ##
 
