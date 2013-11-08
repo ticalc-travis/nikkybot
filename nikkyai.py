@@ -1013,7 +1013,7 @@ def pattern_reply(msg, last_used_reply='', nick='nikkybot', _recurse_level=0):
         sourcenick = ''
 
     # Remove highlight at beginning of line, if it exists
-    m = re.match(re.escape(nick) + r'\W *(.*)', msg)
+    m = re.match(re.escape(nick) + r'\W *(.*)', msg, re.I)
     if m:
         msg = m.group(1)
 
