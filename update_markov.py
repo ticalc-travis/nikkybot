@@ -109,6 +109,17 @@ with open('misc_irc_lines.txt', 'r') as f:
                 training_glob.append('\n'.join(line_group))
             line_group = []
 
+# And some stuff from elsewhere, too!
+with open('manually-added.txt', 'r') as f:
+    line_group = []
+    for line in f:
+        line = line.strip()
+        if re.match(r'(.+)', line, re.I):
+            line_group.append(line)
+        else:
+            if line_group:
+                training_glob.append('\n'.join(line_group))
+            line_group = []
 
 # There, that's all I have
 #   ...I think...

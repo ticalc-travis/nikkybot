@@ -7,7 +7,7 @@ if [ -z $1 ]; then
     exit 1
 fi
 
-rm -f markov/new.nikky-markov.$1.{wf,wb,cf,cb}
+rm -f markov/new.nikky-markov.$1.{wf,wb,cf,cb} markov/__db.new.*-markov.*
 ./update_markov.py $1
 cd markov
 for s in wf wb cf cb; do
