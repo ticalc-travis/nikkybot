@@ -27,11 +27,9 @@ from pytz import timezone
 
 import markov
 
-
 RECURSE_LIMIT = 333
 MAX_LF_L = 0
 MAX_LF_R = 1
-
 
 class S(list):
     """Sequence table"""
@@ -70,8 +68,9 @@ class E(str):
 
 class Markov_forward(object):
     """Return a Markov chain from word or chain forward"""
-    def __init__(self, string, failmsglist=None):
+    def __init__(self, string, failmsglist=None, max_lf_r=MAX_LF_R):
         self.chain = string.split(' ')
+        self.max_lf_r = max_lf_r
         if failmsglist is None:
             failmsglist = ['']
         self.failmsglist = failmsglist
@@ -79,8 +78,13 @@ class Markov_forward(object):
     def get(self, fmt=None):
         if fmt is None:
             fmt = []
+        failmsg = choice(self.failmsglist)
+        try:
+            failmsg = failmsg.get(fmt)
+        except AttributeError:
+            pass
         return markov_forward([x.format(*fmt) for x in self.chain],
-            choice(self.failmsglist))
+            failmsg, self.max_lf_r)
 
 
 class Manual_markov(object):
@@ -102,7 +106,7 @@ class Recurse(str):
             fmt = []
         try:
             return pattern_reply(self.format(*fmt))[0]
-        except Dont_know_how_to_respond_error:
+        except (Dont_know_how_to_respond_error, RuntimeError):
             for i in xrange(RECURSE_LIMIT):
                 reply = markov_reply(self.format(*fmt))
                 if reply.strip():
@@ -115,7 +119,7 @@ class Recurse(str):
 # (has pattern response & awake, has pattern response & asleep,
 #  random remark & awake, random remark & asleep)
 REMARK_CHANCE = (100, 400, 700, 2100)
-PATTERN_RESPONSE_RECYCLE_TIME = timedelta(7)
+PATTERN_RESPONSE_RECYCLE_TIME = timedelta(30)
 
 GENERIC_REMARKS = (
 'BORING',
@@ -219,7 +223,7 @@ PATTERN_REPLIES = (
     ),
     True
 ),
-(r"\b(how are you|how's your|how is your)\b", 0,
+(r"\b(how are you|how are we|how's your|how is your)\b", 0,
     R('Super', 'Awesome', 'Better than your face',
         Markov_forward('better than'),
         Markov_forward('better than your'),
@@ -277,13 +281,78 @@ PATTERN_REPLIES = (
 ),
 
 # General
+(r"^what (.*)", 1, Recurse('{1}')),
 (r"^(who is|who's|what is|what's|how's|how is) (.*?)\?*$", 0,
     R(
         Markov_forward('{2} is',
             ("Never heard of 'em", 'Beats me', "Don't ask me")
+        ),
+#        Markov_forward("It's",
+#            ("Never heard of 'em", 'Beats me', "Don't ask me")
+#        )
+    ),
+    True
+),
+(r"^(who are|who're|what are|what're|how're|how are) (.*?)\?*$", 0,
+    R(
+        Markov_forward('{2} are',
+            ("Never heard of 'em", 'Beats me', "Don't ask me")
+        ),
+        Markov_forward("They're",
+            ("Never heard of 'em", 'Beats me', "Don't ask me")
         )
     ),
     True
+),
+(r'^where\b', 1,
+    R(
+        Markov_forward('in'),
+        Markov_forward('on'),
+        Markov_forward('on top of'),
+        Markov_forward('inside of'),
+        Markov_forward('inside'),
+        Markov_forward('under'),
+        Markov_forward('behind'),
+        Markov_forward('outside'),
+        Markov_forward('over'),
+        Markov_forward('up'),
+        Markov_forward('beyond'),
+    )
+),
+#(r'^when (can|would|should|will|are|is|am|have|was|were|do|does)\b', 1,
+(r'^when\b', 1,
+    R(
+        'never',
+        'forever',
+        'right now',
+        'tomorrow',
+        'now',
+        Markov_forward('never'),
+        Markov_forward('tomorrow'),
+        Markov_forward('as soon as'),
+        Markov_forward('whenever'),
+        Markov_forward('after'),
+        Markov_forward('before'),
+        Markov_forward('yesterday'),
+        Markov_forward('last'),
+        Markov_forward('next'),
+    )
+),
+(r'^how (long|much longer|much more time)\b', -2,
+    R(
+        'never',
+        'forever',
+        Markov_forward('until'),
+        Markov_forward('as soon as'),
+        Markov_forward('whenever'),
+    )
+),
+(r'^how\b', -1,
+    R(
+        Markov_forward('by'),
+        Markov_forward('via'),
+        Markov_forward('using'),
+    )
 ),
 (r'\b(you suck|your .* sucks)\b', 1,
     R(
@@ -379,6 +448,7 @@ PATTERN_REPLIES = (
 (r'\b(who|what) (does|do|did|should|will|is) \S+ (.*?)\?*$', -1, Recurse('what do you think about {3}')),
 (r'\bcontest\b', 1,
     R(
+        Recurse("I'm entering"),
         Recurse("You'll lose"),
         Recurse('My entry'),
         Markov_forward('Contests')
@@ -399,7 +469,7 @@ PATTERN_REPLIES = (
     )
 ),
 (r'\brules\b', 1, R("\001ACTION rules {0}\001")),
-(r'\b(how much|how many|what amount)\b', -1,
+(r'\b(how much|how many|what amount)\b', -2,
     R(
         Markov_forward('enough'),
         Markov_forward('too many'),
@@ -407,23 +477,26 @@ PATTERN_REPLIES = (
     )
 ),
 (r'\bmore like\b', 0, E('markov_reply("\\n more like \\n", 2)')),
-(r'(.*) more like\b', -1,
-    S(
-        '{1}\n',
-        Markov_forward('more like \n')
+(r'(.*) (more|moer|mroe) (like|liek)\b', -1,
+    R(
+        Markov_forward('{1} \n more like', [S('{1}\n', Markov_forward('more like \n', max_lf_r=2))], max_lf_r=2)
     ),
 True),
 (r'^(is|are|am|does|should|can|do)\b', 2, R(Recurse('***yes/no***')), True),
 (r"^(is|are|am|should|can|do|does|which|what|what's|who|who's)(?: \S+)+[ -](.*?)\W+or (.*)\b", -1,
-    R(
-        S('{2}', R(' by far', ', of course', ', naturally', '\nduh')),
-        S('{3}', R(' by far', ', of course', ', naturally', '\nduh')),
-        'both',
-        'neither',
-        'dunno',
-        S('{2}', R('--', '? ', ': ', '\n'), Recurse('what do you think of {2}')),
-        S('{3}', R('--', '? ', ': ', '\n'), Recurse('what do you think of {3}'))
-    )
+    S(
+        R(
+            S('{2}', R(' by far', ', of course', ', naturally', '\nduh')),
+            S('{3}', R(' by far', ', of course', ', naturally', '\nduh')),
+            'both',
+            'neither',
+            'dunno',
+            S('{2}', R('--', '? ', ': ', '\n'), Recurse('what do you think of {2}')),
+            S('{3}', R('--', '? ', ': ', '\n'), Recurse('what do you think of {3}'))
+        ),
+        '\n',
+        R('', Markov_forward('because', [' ']), Markov_forward('since', [' '])),
+    ),
 ),
 (r'\bpi\b', 0, S("I don't usually do this, but...\n3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282306647093844609550582231725359408128481117450284102701938521105559644622948954930381964428810975665933446128475648233786783165271201909145648566923460348610454326648213393607260249141273724587006606315588174881520920962829254091715364367892590360011330530548820466521384146...")),
 
@@ -451,10 +524,10 @@ True),
 (r'\b(who (made|wrote|programmed) you|(who\'s|whose) are you)\b', -1,
     R('tev')
 ),
-(r"\b((nikkybot's|your) source code|the source code (to|of|for) (you|nikkybot))\b", 0,
+(r"\b((nikkybot's|your) source code|the source code (to|of|for) (you|nikkybot))\b", -1,
     R(
         '{0}: https://github.com/ticalc-travis/nikkybot',
-    ),
+    ), True
 ),
 (r"\bthat ((made|makes|is making) no sense|does not .* make (any |no )?sense|doesn't .* make (any |no )?sense|.* sense make)\b", 1,
     R(
@@ -477,7 +550,7 @@ True),
 (r"\bcue (nikky's |nikkybot's |nikky |nikkybot )?[\"']?([^\"']*)[\"']?", -1,
     R('{2}')
 ),
-(r'\b(nicky|niccy|nicci|nikki)\b', 0, R('Who the hell is "{1}"?')),
+(r'\b(nicky|niccy|nicci|nikki|nikkbot|nikbot|nikkbott|nikkbott|nikybot|nikkybott)\b', 0, R('Who the hell is "{1}"?')),
 (r'\b(you|nikkybot) (did|does|do)\b', 1,
     R('I did?', 'I what?', 'Someone talking about me?')
 ),
@@ -611,7 +684,7 @@ True),
         Recurse('disallowed word')
     )
 ),
-(r'\bdisallowed word\b', -10,
+(r'\bdisallowed word\b', -3,
     R(
         'Shut up {0}',
         'SHUT UP {0}',
@@ -621,7 +694,7 @@ True),
         Recurse('tardmuffin'),
         Recurse('saxjax'),
         'This channel sucks\ntoo much censorship'
-    )
+    ),
 ),
 (r'\*(\S+) deleted a post in', 1,
     R('CENSORSHIP', 'Censorship', '{1} YOU CENSORING TARDMUFFIN')
@@ -757,11 +830,22 @@ True),
     )
 ),
 
+# Synonyms
+(r'\b(forum|moderator|admin|post)', -2,
+    R(
+        Recurse('post'),
+        Recurse('forum'),
+        Recurse('moderator'),
+        Recurse('admin'),
+        Recurse('ban'),
+    )
+),
+
 # Special functions
 (r'\b(random (quote|saying)|nikkysim)\b', -2,
     E('nikkysim(strip_number=False)[0]')
 ),
-(r'\b(tell|tell us|tell me|say) (something|anything) (.*)(smart|intelligent|funny|interesting|cool|awesome|bright|thoughtful|entertaining|amusing|exciting|confusing|sensical|inspiring|random|wise)\b', 1,
+(r'\b(tell|tell us|tell me|say) (something|anything) (.*)(smart|intelligent|funny|interesting|cool|awesome|bright|thoughtful|entertaining|amusing|exciting|confusing|sensical|inspiring|inspirational|random|wise)\b', 1,
     E('choice(["","","","","","Okay\\n","k\\n","kk\\n","Fine\\n"])+nikkysim(strip_number=True)[0]')
 ),
 (r'(?<![0-9])#([A-Za-z]-)?([0-9]+)(-([0-9]+))?', -2,
@@ -776,6 +860,11 @@ True),
     ),
     True
 ),
+(r'^\?markov +(\S+)\s*$', -99, Manual_markov(5, '{1}'), True),
+(r'^\?markov +(\S+\s+\S+\s+\S+\s+\S+\s+\S+\s*)$', -99, Manual_markov(5, '{1}'), True),
+(r'^\?markov +(\S+\s+\S+\s+\S+\s+\S+\s*)$', -99, Manual_markov(4, '{1}'), True),
+(r'^\?markov +(\S+\s+\S+\s+\S+\s*)$', -99, Manual_markov(3, '{1}'), True),
+(r'^\?markov +(\S+\s+\S+\s*)$', -99, Manual_markov(2, '{1}'), True),
 (r'^markov5 (.*)', -99, Manual_markov(5, '{1}'), True),
 (r'^markov4 (.*)', -99, Manual_markov(4, '{1}'), True),
 (r'^markov3 (.*)', -99, Manual_markov(3, '{1}'), True),
