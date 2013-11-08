@@ -20,7 +20,7 @@ from collections import defaultdict
 from random import choice
 import shelve
 
-DEFAULT_IGNORE_CHARS = '!"&`()*,./:;<=>?[\\]^=\'{|}~',
+DEFAULT_IGNORE_CHARS = '!"&`()*,./:;<=>?[\\]^=\'{|}~'
 
 class Markov(object):
     """tev's Markov chain implementation"""
