@@ -348,6 +348,7 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
     def __init__(self, servers, channels, nicks, real_name=REAL_NAME,
                  admin_hostmasks=ADMIN_HOSTMASKS,
                  client_version=CLIENT_VERSION,
+                 reconnect_wait=RECONNECT_WAIT,
                  min_send_time=MIN_SEND_TIME,
                  nick_retry_wait=NICK_RETRY_WAIT,
                  initial_reply_delay=INITIAL_REPLY_DELAY,
@@ -359,6 +360,7 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
         self.admin_hostmasks = admin_hostmasks
         self.client_version = client_version
         self.initial_reply_delay = initial_reply_delay
+        self.reconnect_wait = reconnect_wait
         self.min_send_time = min_send_time
         self.nick_retry_wait = nick_retry_wait
         self.simulated_typing_speed = simulated_typing_speed
@@ -370,6 +372,8 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
     def clientConnectionFailed(self, connector, reason):
         print('Connection failed: {}'.format(reason))
         url, port = random.choice(self.servers)
+        print('Waiting {} seconds'.format(self.reconnect_wait))
+        time.sleep(self.reconnect_wait)
         print('Connecting to {}:{}'.format(url, port))
         reactor.connectTCP(url, port,
             NikkyBotFactory(self.servers, self.channels, self.nicks,

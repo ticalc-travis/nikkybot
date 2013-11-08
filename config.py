@@ -17,6 +17,7 @@ CLIENT_VERSION = \
 ADMIN_HOSTMASKS = ('*!ijel@ip68-102-86-156.ks.ok.cox.net',
                    '*!travise@nvm2u.com',
                    '*!travise@64.13.172.47')
+RECONNECT_WAIT = 30    # seconds
 MAX_LINE_LENGTH = 256    # characters
 MIN_SEND_TIME = 1   # seconds
 NICK_RETRY_WAIT = 300    # seconds
