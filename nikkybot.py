@@ -21,6 +21,7 @@ from __future__ import print_function
 
 from collections import defaultdict
 
+import cPickle
 import random
 import re
 import time
@@ -37,6 +38,7 @@ from nikkyai import NikkyAI
 
 
 RELOAD_INTERVAL = 60 * 60 * 24
+STATE_SAVE_INTERVAL = 900
 CHANNEL_CHECK_INTERVAL = 300
 
 
@@ -101,6 +103,8 @@ class NikkyBot(irc.IRCClient):
             reactor.callLater(RELOAD_INTERVAL, self.auto_reload)
         if CHANNEL_CHECK_INTERVAL is not None:
             reactor.callLater(CHANNEL_CHECK_INTERVAL, self.channel_check)
+        if STATE_SAVE_INTERVAL is not None:
+            reactor.callLater(STATE_SAVE_INTERVAL, self.save_state)
 
     def connectionLost(self, reason):
         print('Connection lost: {}'.format(reason))
@@ -328,8 +332,8 @@ class NikkyBot(irc.IRCClient):
             self.nikkies[k].nick = self.nickname
 
     def auto_reload(self):
-        """Automatically reload AI module on intervals (to update regularly-updated
-        Markov data by another process, for instance)"""
+        """Automatically reload AI module on intervals (to update regularly
+        updated Markov data by another process, for instance)"""
         self.reload_ai()
         reactor.callLater(RELOAD_INTERVAL, self.auto_reload)
 
@@ -339,6 +343,10 @@ class NikkyBot(irc.IRCClient):
         for c in self.factory.channels:
             if c not in self.joined_channels:
                 self.join(c)
+                
+    def save_state(self):
+        """Save nikkyAI state to disk file"""
+        self.factory.save_state()
 
 
 class NikkyBotFactory(protocol.ReconnectingClientFactory):
@@ -352,7 +360,8 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
                  min_send_time=MIN_SEND_TIME,
                  nick_retry_wait=NICK_RETRY_WAIT,
                  initial_reply_delay=INITIAL_REPLY_DELAY,
-                 simulated_typing_speed=SIMULATED_TYPING_SPEED):
+                 simulated_typing_speed=SIMULATED_TYPING_SPEED,
+                 state_filename=STATE_FILE):
         self.servers = servers
         self.channels = channels
         self.nicks = nicks
@@ -364,10 +373,41 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
         self.min_send_time = min_send_time
         self.nick_retry_wait = nick_retry_wait
         self.simulated_typing_speed = simulated_typing_speed
+        self.state_filename = state_filename
         
         self.shut_down = False
         
         self.nikkies = defaultdict(NikkyAI)
+        self.load_state()
+        
+    def load_state(self):
+        """Attempt to load persistent state data; else start with new
+        defaults"""
+        try:
+            f = open(self.state_filename, 'rb')
+        except IOError as e:
+            print("Couldn't open state data file for reading: {}".format(e))
+        else:
+            try:
+                self.nikkies = cPickle.load(f)
+            except Exception as e:
+                print("Couldn't load state data: {}".format(e))
+            else:
+                print("Loaded state data")
+                
+    def save_state(self):
+        """Save persistent state data"""
+        try:
+            f = open(self.state_filename, 'wb')
+        except IOError as e:
+            print("Couldn't open state data file for writing: {}".format(e))
+        else:
+            try:
+                cPickle.dump(self.nikkies, f)
+            except Exception as e:
+                print("Couldn't save state data: {}".format(e))
+            else:
+                print("Saved state data")
 
     def clientConnectionFailed(self, connector, reason):
         print('Connection failed: {}'.format(reason))
@@ -381,6 +421,7 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
                 self.nick_retry_wait, self.simulated_typing_speed))
                 
     def clientConnectionLost(self, connector, reason):
+        self.save_state()
         if self.shut_down:
             reactor.stop()
         else:
