@@ -550,7 +550,7 @@ True),
 (r"\bcue (nikky's |nikkybot's |nikky |nikkybot )?[\"']?([^\"']*)[\"']?", -1,
     R('{2}')
 ),
-(r'\b(nicky|niccy|nicci|nikki|nikkbot|nikbot|nikkbott|nikkbott|nikybot|nikkybott)\b', 0, R('Who the hell is "{1}"?')),
+(r'\b((nicky|niccy|nicci|nikki|nikk|nik|niky)(bot|bott)?)\b', 0, R('Who the hell is "{1}"?')),
 (r'\b(you|nikkybot) (did|does|do)\b', 1,
     R('I did?', 'I what?', 'Someone talking about me?')
 ),
