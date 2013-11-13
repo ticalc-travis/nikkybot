@@ -868,7 +868,8 @@ True),
 (r'^markov5 (.*)', -99, Manual_markov(5, '{1}'), True),
 (r'^markov4 (.*)', -99, Manual_markov(4, '{1}'), True),
 (r'^markov3 (.*)', -99, Manual_markov(3, '{1}'), True),
-(r'^markov2 (.*)', -99, Manual_markov(2, '{1}'), True)
+(r'^markov2 (.*)', -99, Manual_markov(2, '{1}'), True),
+(r'^\?repeat_test', -99, S('This message should appear in this channel/query just once'), False),
 )
 
 # === END OF DATA SECTION =====================================================
@@ -1095,6 +1096,20 @@ class NikkyAI(object):
 
         self.last_reply = response
         return response.split('\n')
+    
+    def clean_up_last_replies(self):
+        """Remove stale (no longer applicable) entries from self.last_replies
+        dictionary"""
+        num_removed = 0
+        orig_size = len(self.last_replies)
+        for k, d in self.last_replies.items():
+            if (datetime.now() - d > PATTERN_RESPONSE_RECYCLE_TIME):
+                print("Removed stale last_replies entry {}, {} ({})".format(
+                    self, k, d))
+                del self.last_replies[k]
+                num_removed += 1
+        print("Removed {} items (size {} -> {})".format(
+            num_removed, orig_size, len(self.last_replies)))
 
     def nikkysim_remark(self, msg='', strip_number=True):
         """Generate a NikkySim remark.  If not strip_number, include the

@@ -347,6 +347,7 @@ class NikkyBot(irc.IRCClient):
     def save_state(self):
         """Save nikkyAI state to disk file"""
         self.factory.save_state()
+        reactor.callLater(STATE_SAVE_INTERVAL, self.save_state)
 
 
 class NikkyBotFactory(protocol.ReconnectingClientFactory):
@@ -389,11 +390,18 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
             print("Couldn't open state data file for reading: {}".format(e))
         else:
             try:
-                self.nikkies = cPickle.load(f)
+                state = cPickle.load(f)
             except Exception as e:
                 print("Couldn't load state data: {}".format(e))
             else:
-                print("Loaded state data")
+                for k in state:
+                    try:
+                        nikky = self.nikkies[k]
+                    except KeyError:
+                        pass
+                    else:
+                        nikky.last_replies = state[k]['last_replies']
+                #print("Loaded state data")
                 
     def save_state(self):
         """Save persistent state data"""
@@ -402,12 +410,15 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
         except IOError as e:
             print("Couldn't open state data file for writing: {}".format(e))
         else:
+            state = {}
+            for k in self.nikkies:
+                state[k] = {'last_replies': self.nikkies[k].last_replies}
             try:
-                cPickle.dump(self.nikkies, f)
+                cPickle.dump(state, f)
             except Exception as e:
                 print("Couldn't save state data: {}".format(e))
             else:
-                print("Saved state data")
+                #print("Saved state data")
 
     def clientConnectionFailed(self, connector, reason):
         print('Connection failed: {}'.format(reason))
