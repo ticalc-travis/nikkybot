@@ -156,11 +156,11 @@ class NikkyBot(irc.IRCClient):
                 if m:
                     nick = m.group(1)
                     formatted_msg = '<{}> {}'.format(nick, m.group(2))
-            else:
-                m = re.match(r'\(.\) \*(.*?) (.*)', msg)
-                if m:
-                    nick = m.group(1)
-                    formatted_msg = '<{}> {}'.format(nick, m.group(2))
+                else:
+                    m = re.match(r'\(.\) \*(.*?) (.*)', msg)
+                    if m:
+                        nick = m.group(1)
+                        formatted_msg = '<{}> {}'.format(nick, m.group(2))
             if self.is_highlight(msg):
                 raw_msg = msg
                 for n in self.factory.nicks:
