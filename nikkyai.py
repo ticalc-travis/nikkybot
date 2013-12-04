@@ -499,6 +499,12 @@ True),
     ),
 ),
 (r'\bpi\b', 0, S("I don't usually do this, but...\n3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282306647093844609550582231725359408128481117450284102701938521105559644622948954930381964428810975665933446128475648233786783165271201909145648566923460348610454326648213393607260249141273724587006606315588174881520920962829254091715364367892590360011330530548820466521384146...")),
+(r'\b(weather|rain|snow|wind|thunder|storm|wet|cloudy|sunny|forecast|precipitation|tornado|hurricane)\b', 0,
+    S(
+        R('{0}: ', ''),
+        "Weather where I'm at: http://forecast.weather.gov/MapClick.php?zoneid=KSZ083&zflg=1"
+    ),
+),
 
 # Meta
 (r'\b((how much|how many lines (of)?|how much) (code|coding|programming)|how long .* to (make|program|code|design|write) you)', -2,
@@ -550,7 +556,7 @@ True),
 (r"\bcue (nikky's |nikkybot's |nikky |nikkybot )?[\"']?([^\"']*)[\"']?", -1,
     R('{2}')
 ),
-(r'\b((nicky|niccy|nicci|nikki|nikk|nik|niky)(bot|bott)?)\b', 0, R('Who the hell is "{1}"?')),
+(r'\b((nicky|niccy|nicci|nikki|nikk|nik|niky)(boy|bot|bott)?)\b', 0, R('Who the hell is "{1}"?')),
 (r'\b(you|nikkybot) (did|does|do)\b', 1,
     R('I did?', 'I what?', 'Someone talking about me?')
 ),
@@ -655,6 +661,9 @@ True),
             )
         )
     )
+),
+(r'\bYou should introduce yourself in this thread\b', 0,
+    R("I wasn't programmed to post in forums, silly")
 ),
 
 # Memes
@@ -869,7 +878,6 @@ True),
 (r'^markov4 (.*)', -99, Manual_markov(4, '{1}'), True),
 (r'^markov3 (.*)', -99, Manual_markov(3, '{1}'), True),
 (r'^markov2 (.*)', -99, Manual_markov(2, '{1}'), True),
-(r'^\?repeat_test', -99, S('This message should appear in this channel/query just once'), False),
 )
 
 # === END OF DATA SECTION =====================================================
