@@ -24,12 +24,13 @@ from collections import defaultdict
 import cPickle
 import random
 import re
+import subprocess
 import time
 import traceback
 import sys
 
 from twisted.words.protocols import irc
-from twisted.internet import reactor, protocol
+from twisted.internet import reactor, protocol, threads
 from twisted.internet.error import ConnectionDone
 from twisted.python import log
 
@@ -40,7 +41,7 @@ from nikkyai import NikkyAI
 RELOAD_INTERVAL = 60 * 60 * 24
 STATE_SAVE_INTERVAL = 900
 CHANNEL_CHECK_INTERVAL = 300
-
+MAX_USER_THREADS = 4
 
 class BotError(Exception):
     pass
@@ -96,6 +97,7 @@ class NikkyBot(irc.IRCClient):
         self.nikkies = self.factory.nikkies
         self.pending_responses = []
         self.joined_channels = set()
+        self.user_threads = 0
 
         irc.IRCClient.connectionMade(self)
 
@@ -121,6 +123,8 @@ class NikkyBot(irc.IRCClient):
     def privmsg(self, user, channel, msg):
         nick, host = user.split('!', 1)
         formatted_msg = '<{}> {}'.format(nick, msg)
+        
+        # !TODO! Clean up this mess. This is getting ridiculous.
 
         if channel == self.nickname:
             # Private message
@@ -128,13 +132,23 @@ class NikkyBot(irc.IRCClient):
                 try:
                     self.do_command(msg.strip(), nick)
                 except UnrecognizedCommandError:
-                    self.do_AI_reply(formatted_msg, nick, no_delay=True,
-                        log_response=False)
+                    try:
+                        self.do_guest_command(msg.strip(), nick)
+                    except UnrecognizedCommandError:
+                        self.do_AI_reply(formatted_msg, nick, no_delay=True,
+                                         log_response=False)
+                    else:
+                        print('Executed: {}'.format(msg.strip()))
                 else:
                     print('Executed: {}'.format(msg.strip()))
             else:
                 print('privmsg from {}: {}'.format(user, repr(msg)))
-                self.do_AI_reply(formatted_msg, nick, no_delay=True)
+                try:
+                    self.do_guest_command(msg.strip(), nick)
+                except UnrecognizedCommandError:
+                    self.do_AI_reply(formatted_msg, nick, no_delay=True)
+                else:
+                    print('Executed: {}'.format(msg.strip()))
         else:
             # Public message
             if self.hostmask_match('*!~saxjax@*', user):
@@ -142,13 +156,31 @@ class NikkyBot(irc.IRCClient):
                 if m:
                     nick = m.group(1)
                     formatted_msg = '<{}> {}'.format(nick, m.group(2))
-                else:
-                    m = re.match(r'\(.\) \*(.*?) (.*)', msg)
-                    if m:
-                        nick = m.group(1)
-                        formatted_msg = '<{}> {}'.format(nick, m.group(2))
+            else:
+                m = re.match(r'\(.\) \*(.*?) (.*)', msg)
+                if m:
+                    nick = m.group(1)
+                    formatted_msg = '<{}> {}'.format(nick, m.group(2))
             if self.is_highlight(msg):
-                self.do_AI_reply(formatted_msg, channel, log_response=False)
+                raw_msg = msg
+                for n in self.factory.nicks:
+                    m = re.match(r'^{}[:,]? (.*)'.format(re.escape(n)),
+                                 msg, flags=re.I)
+                    if m:
+                        raw_msg = m.group(1).strip()
+                        try:
+                            self.do_guest_command(raw_msg, nick,
+                                                  channel=channel)
+                        except UnrecognizedCommandError:
+                            self.do_AI_reply(formatted_msg, channel,
+                                             log_response=False)
+                        else:
+                            print('Executed: {}'.format(raw_msg.strip()))
+                        break
+                    else:
+                        self.do_AI_reply(formatted_msg, channel,
+                                         log_response=False)
+                        break
             else:
                 self.do_AI_maybe_reply(formatted_msg, channel, log_response=False)
 
@@ -251,6 +283,56 @@ class NikkyBot(irc.IRCClient):
                 traceback.print_exc()
                 print()
                 self.notice(nick, 'Error: {}'.format(e))
+        else:
+            raise UnrecognizedCommandError
+        
+    def return_bot_chat(self, t):
+        nick, channel, output = t
+        if channel is not None:
+            self.output_timed_msg(channel,
+                                  '{}: Botchat result: {}'.format(nick, output))
+        else:
+            self.output_timed_msg(nick, 'Botchat result: {}'.format(output))
+        self.user_threads -= 1
+        assert(self.user_threads >= 0)
+    
+    def exec_bot_chat(self, nick, channel, nick1, nick2):
+        self.user_threads += 1
+        out = subprocess.check_output(['./bot-chat', nick1, nick2])
+        assert(out.count('\n') <= 2)
+        return nick, channel, out
+    
+    def bot_chat_error(self, failure, nick):
+        reactor.callLater(2, self.notice, nick,
+                          'Sorry, something went wrong. Tell tev!')
+        self.user_threads -= 1
+        assert(self.user_threads >= 0)
+        return failure
+        
+    def do_guest_command(self, cmd, nick, channel=None):
+        """Execute a special/non-admin command"""
+        if cmd.lower().startswith('?botchat'):
+            from markovmixai import get_personalities
+            personalities = ['nikkybot'] + get_personalities()
+            usage_msg1 = 'Usage: ?botchat personality1 personality2'
+            usage_msg2 = 'Personalities: {}'.format(
+                            ', '.join(sorted(personalities)))
+            parms = cmd.split(' ')[1:]  #Excluding '?botchat' itself
+            if (len(parms) != 2 or parms[0] not in personalities or
+                    parms[1] not in personalities):
+                reactor.callLater(2, self.notice, nick, usage_msg1)
+                reactor.callLater(4, self.notice, nick, usage_msg2)
+            else:
+                if self.user_threads >= MAX_USER_THREADS:
+                    reactor.callLater(2, self.notice, nick,
+                                      "Sorry, I'm too busy at the moment. Please try again later!")
+                else:
+                    reactor.callLater(2, self.notice, nick,
+                                    "Generating the bot chat may take a while... I'll let you know when it's done!")
+                    d = threads.deferToThread(self.exec_bot_chat, nick, channel,
+                                            parms[0], parms[1])
+                    d.addErrback(self.bot_chat_error, nick)
+                    d.addCallback(self.return_bot_chat)
         else:
             raise UnrecognizedCommandError
     

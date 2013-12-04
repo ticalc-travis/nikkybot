@@ -1,0 +1,1 @@
+../bot2/nikkyai.py
