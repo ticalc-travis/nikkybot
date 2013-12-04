@@ -483,7 +483,7 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
                         pass
                     else:
                         nikky.last_replies = state[k]['last_replies']
-                #print("Loaded state data")
+                print("Loaded state data")
                 
     def save_state(self):
         """Save persistent state data"""
@@ -500,7 +500,7 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
             except Exception as e:
                 print("Couldn't save state data: {}".format(e))
             else:
-                #print("Saved state data")
+                print("Saved state data")
 
     def clientConnectionFailed(self, connector, reason):
         print('Connection failed: {}'.format(reason))
