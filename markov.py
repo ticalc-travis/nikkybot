@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from collections import defaultdict
-from random import choice
+from collections import defaultdict, Counter
+from random import choice, randint
 import shelve
 
 DEFAULT_IGNORE_CHARS = '!"&`()*,./:;<=>?[\\]^=\'{|}~'
@@ -34,10 +34,10 @@ class Markov(object):
         self.default_max_left_line_breaks = None
         self.default_max_right_line_breaks = None
 
-        self.word_forward = defaultdict(list)
-        self.chain_forward = defaultdict(list)
-        self.word_backward = defaultdict(list)
-        self.chain_backward = defaultdict(list)
+        self.word_forward = defaultdict(Counter)
+        self.chain_forward = defaultdict(Counter)
+        self.word_backward = defaultdict(Counter)
+        self.chain_backward = defaultdict(Counter)
 
     def get_order(self):
         """Retrieve order of Markov chain"""
@@ -84,14 +84,22 @@ class Markov(object):
             word_key = self.conv_key(word)
             chain_value = chain[1:order+1]
             chain_key = tuple(self.conv_key(chain[:order]))
-            if not word_value in word_dict[word_key]:
-                l = word_dict[word_key]
-                l.append(word_value)
-                word_dict[word_key] = l
+            
+            # The explicit retrieval and storing of the dictionary (rather
+            # than operating on it in-place) is required in case the object
+            # is shelved
+            d = word_dict[word_key]
+            if not word_value in d:
+                d[word_value] = 1
+            else:
+                d[word_value] += 1
+            word_dict[word_key] = d
+            d = chain_dict[chain_key]
             if not chain_value in chain_dict[chain_key]:
-                l = chain_dict[chain_key]
-                l.append(chain_value)
-                chain_dict[chain_key] = l
+                d[chain_value] = 1
+            else:
+                d[chain_value] += 1
+            chain_dict[chain_key] = d
 
     def add(self, sentence):
         """Parse and add a string of words to the chain"""
@@ -106,18 +114,33 @@ class Markov(object):
         f = open(filename, 'r')
         for line in f:
             self.add(line)
+            
+    def choice(self, counter):
+        """Select a random element from Counter 'counter', weighted by the
+        elements' counts"""
+        if not counter:
+            raise IndexError('Counter object is empty')
+        total = sum(counter.values())
+        targetidx = randint(0, total)
+        currentidx = 0
+        for k in counter.keys():
+            currentidx += counter[k]
+            if currentidx >= targetidx:
+                return k
 
     def get_chain_forward(self, chain):
         """Select and return a chain from the given chain forward in context"""
         try:
-            return choice(self.chain_forward[tuple(self.conv_key(chain))])
+            return self.choice(
+                self.chain_forward[tuple(self.conv_key(chain))])
         except IndexError:
             return ()
 
     def get_chain_backward(self, chain):
         """Select and return a chain from the given chain backward in context"""
         try:
-            return choice(self.chain_backward[tuple(self.conv_key(chain))])
+            return self.choice(
+                self.chain_backward[tuple(self.conv_key(chain))])
         except IndexError:
             return ()
 
@@ -173,7 +196,7 @@ class Markov(object):
     def from_word_forward(self, word):
         """Generate a chain from the given word forward in context"""
         try:
-            chain = choice(self.word_forward[self.conv_key(word)])
+            chain = self.choice(self.word_forward[self.conv_key(word)])
         except IndexError:
             return ()
         return self.from_chain_forward(chain)
@@ -181,7 +204,7 @@ class Markov(object):
     def from_word_backward(self, word):
         """Generate a chain from the given word backward in context"""
         try:
-            chain = choice(self.word_backward[self.conv_key(word)])
+            chain = self.choice(self.word_backward[self.conv_key(word)])
         except IndexError:
             return ()
         return self.from_chain_backward(chain)
@@ -253,7 +276,7 @@ class Markov_Shelf(shelve.DbfilenameShelf):
         try:
             return shelve.Shelf.__getitem__(self, repr(key))
         except KeyError:
-            return []
+            return Counter()
 
     def __setitem__(self, key, value):
         shelve.Shelf.__setitem__(self, repr(key), value)
