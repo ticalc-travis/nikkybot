@@ -632,6 +632,9 @@ True),
 (r'\bsorry\b', 1, R('you should be')),
 (r"\b(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -1,
     R(
+        Markov_forward('{6} is',
+            ('Dunno', 'No idea', "Don't know", 'Never heard of that')
+        ),
         Markov_forward('{6}',
             ('Dunno', 'No idea', "Don't know", 'Never heard of that')
         ),
@@ -641,7 +644,10 @@ True),
     True
 ),
 (r"^(what do you think|what do you know|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )me\W?$", -2,
-    R(Markov_forward('you'))
+    R(
+        Markov_forward('you'),
+        Recurse('what do you think of {0}')
+    )
 ),
 (r"^(how is|how's|do you like|you like) (.*?)\W?$", -1,
     Recurse('what do you think of {2}')
