@@ -956,6 +956,10 @@ def random_markov():
 
 def markov_reply(msg, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
     """Generate a Markov-chained reply for msg"""
+    
+    # !TODO! Idea: filter out common English words/phrases to increase
+    # chance of it responding to a more interesting keyword more often?
+    
     if not msg.strip():
         return random_markov()
     words = [x for x in msg.split(' ') if x]
