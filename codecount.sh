@@ -1,5 +1,5 @@
 #!/bin/bash
-cd ~/bot
+cd ~nikkybot/bot
 py=$(cat $(find -name \*.py) | wc -l | cut -d ' ' -f 1)
 c=$(cat $(find -name \*.c -or -name \*.h) | wc -l | cut -d ' ' -f 1)
 sh=$(cat $(find -name \*.sh) | wc -l | cut -d ' ' -f 1)
