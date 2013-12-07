@@ -3,7 +3,7 @@
 ### IMPORTANT:
 # This script will need to be modified to grab the desired lines from whatever
 # IRC logs are on hand.  (Mine are all disorganized and in several different
-# formats, so this script is longer and more convulted than would probably
+# formats, so this script is longer and more convoluted than would probably
 # normally be necessary.)  They will be saved to 'nikkybot.trn' and then fed to
 # the Markov generator.
 
