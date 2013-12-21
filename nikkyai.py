@@ -118,7 +118,7 @@ class Markov(object):
             failmsg = failmsg.get(fmt)
         except AttributeError:
             pass
-        return markov_reply(self.text.format(*fmt))
+        return markov_reply(self.text.format(*fmt), failmsg)
 
 
 class Recurse(str):
@@ -1062,7 +1062,7 @@ def random_markov():
             return out
 
 
-def markov_reply(msg, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
+def markov_reply(msg, failmsg=None, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
     """Generate a Markov-chained reply for msg"""
     if not msg.strip():
         return random_markov()
@@ -1084,7 +1084,10 @@ def markov_reply(msg, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
         response = markov5.sentence_from_word(word, max_lf_l, max_lf_r)
         if response.strip():
             return response
-    return random_markov()
+    if failmsg is None:
+        return random_markov()
+    else:
+        return failmsg
 
 
 def manual_markov(order, msg, _recurse_level=0):
