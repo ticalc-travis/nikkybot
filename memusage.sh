@@ -7,4 +7,4 @@ ramuse=$(($(echo $ramuse | cut -d ' ' -f 1) / 1024))
 ramtot=$(($(echo $ramtot | cut -d ' ' -f 1) / 1024))
 swaptot=$(($(echo $swaptot | cut -d ' ' -f 1) / 1024))
 
-echo I\'m consuming $ramuse MiB out of $ramtot MiB RAM and $swaptot MiB swap
+echo I\'m consuming $ramuse MiB out of $ramtot MiB RAM / $swaptot MiB swap
