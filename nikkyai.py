@@ -278,11 +278,13 @@ PATTERN_REPLIES = (
         Markov('omnidrama'),
     )
 ),
-(r'\bmudkip', 98,
+(r'\b(mudkip|herd|liek|like)', 98,
     R(
         Markov('mudkip'),
         Markov('mudkipz'),
         Markov('mudkips'),
+        Markov('here u liek'),
+        Markov('herd u liek'),
     ),
 ),
 
@@ -366,11 +368,19 @@ PATTERN_REPLIES = (
 ),
 
 # General
-(r"^what (.*)", 1, Recurse('{1}')),
-(r"^(who is|who's|what is|what's|how's|how is) (.*?)\?*$", 0,
+(r"^(what|what's|whats)", 1,
+    R(
+        Markov_forward('a'),
+        Markov_forward('an'),
+        Markov_forward('the'),
+        Recurse('how many'),
+    ),
+),
+(r"^(who is|who's|what is|what's|how's|how is) (the |a |an |your |my )?(.*?)\?*$", 0,
     R(
         Markov_forward('{2} is'),
-        Markov_forward('{2}')
+        Markov_forward('{2}'),
+        Recurse("what's"),
     ),
     False
 ),
@@ -583,11 +593,17 @@ True),
         R('', Markov_forward('because', [' ']), Markov_forward('since', [' '])),
     ),
 ),
-(r'\b(weather|rain|snow|wind|thunder|storm|wet|cloudy|sunny|forecast|precipitation|tornado|hurricane)', 0,
+(r'\b(weather|rain|snow|wind|thunder|storm|wet|cloudy|sunny|forecast|precipitation|tornado|hurricane|sleet|fog|drizzle|hail)', 0,
     S(
         R('{0}: ', ''),
         "Weather where I'm at: http://forecast.weather.gov/MapClick.php?zoneid=KSZ083&zflg=1"
     )
+),
+(r'\bwhat time\b', 0,
+    R(
+        Markov_forward('time for'),
+        Markov_forward("it's time"),
+    ),
 ),
 
 # Meta
