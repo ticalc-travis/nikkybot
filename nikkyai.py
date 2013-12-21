@@ -454,7 +454,7 @@ PATTERN_REPLIES = (
         Markov_forward('Contests')
     )
 ),
-(r'\b(fever|cold|sick|ill|vomit|throw up|mucus|infection|injury|under the weather|a cold)\b', 1,
+(r'\b(fever|cold|sick|ill|vomit|throw up|mucus|infection|injury|under the weather|a cold|flu)\b', 1,
     R('I HOPE YOU STAY SICK FOREVER', 'Will a hug make it better?')
 ),
 (r'\bfault\b', 1, S("No, it's your ", R("mom's", "face's"), " fault")),
@@ -476,8 +476,8 @@ PATTERN_REPLIES = (
         Markov_forward('more than you')
     )
 ),
-(r'\bmore like\b', 0, E('markov_reply("\\n more like \\n", 2)')),
-(r'(.*) (more|moer|mroe) (like|liek)\b', -1,
+(r'\bmore like$', -10, E('markov_reply("\\n more like \\n", 2)')),
+(r'(.*) (more|moer|mroe) (like|liek)$', -15,
     R(
         Markov_forward('{1} \n more like', [S('{1}\n', Markov_forward('more like \n', max_lf_r=2))], max_lf_r=2)
     ),
@@ -498,12 +498,11 @@ True),
         R('', Markov_forward('because', [' ']), Markov_forward('since', [' '])),
     ),
 ),
-(r'\bpi\b', 0, S("I don't usually do this, but...\n3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282306647093844609550582231725359408128481117450284102701938521105559644622948954930381964428810975665933446128475648233786783165271201909145648566923460348610454326648213393607260249141273724587006606315588174881520920962829254091715364367892590360011330530548820466521384146...")),
-(r'\b(weather|rain|snow|wind|thunder|storm|wet|cloudy|sunny|forecast|precipitation|tornado|hurricane)\b', 0,
+(r'\b(weather|rain|snow|wind|thunder|storm|wet|cloudy|sunny|forecast|precipitation|tornado|hurricane)', 0,
     S(
         R('{0}: ', ''),
         "Weather where I'm at: http://forecast.weather.gov/MapClick.php?zoneid=KSZ083&zflg=1"
-    ),
+    )
 ),
 
 # Meta
@@ -598,13 +597,14 @@ True),
         Markov_forward("I'm actually"),
     )
 ),
-(r'\b(are you|is nikkybot) (a |an )\b(.*)\b', 1,
+(r'\b(are you|is nikkybot) (a |an |)\b(.*)\b', 1,
     R(
         'yes',
         'no',
         'maybe',
         'dunno',
-        'Are *you* {1}{2}?',
+        'Are *you* {2}{3}?',
+        '{0}: Are *you* {2}{3}?',
         'Describe exactly what you mean by {3}',
         Recurse('***yes/no***')
     )
@@ -711,10 +711,42 @@ True),
         'This channel sucks\ntoo much censorship'
     ),
 ),
-(r'\*(\S+) deleted a post in', 1,
-    R('CENSORSHIP', 'Censorship', '{1} YOU CENSORING TARDMUFFIN')
+(r'^\*(\S+) deleted a post in', 1,
+    R('CENSORSHIP', 'Censorship', '{1} YOU CENSORING TARDMUFFIN',
+      'CENSOR', 'CENSORING', 'spam')
 ),
-(r'\bspam post', 1, R("Don't care", "\001ACTION spams {0}\001")),
+(r'^\*(\S+) ((added|edited) a post in|created a new topic:) \[(.*)\]', 1,
+    R(
+        Recurse('{4}'),
+    )
+),
+(r'^\*(\S+) has entered the room', 1,
+    R(
+        S(
+            R('Sup ', "What's up "),
+            R('homies', 'losers', 'whores', 'G', 'hookers')
+        ),
+        'Suppppppppp',
+        "Shut up",
+        "Flood your face!",
+        "FLOOD YOUR FACE",
+        'HI {1}',
+        'Go away',
+        'No\ngo away',
+        Markov_forward('hi {1}', ('hi',)),
+        Markov_forward('hello {1}', ('hello',)),
+        Markov_forward('hey {1}', ('hey',)),
+        Markov_forward('sup {1}', ('sup',)),
+        Markov_forward('shut the', ('shut the hell up',))
+    ),
+),
+(r'\bspam post', 1,
+    R("Don't care",
+      'So what',
+      'Who cares about spam',
+      'Nobody cares about spam posts',
+      "\001ACTION spams {0}\001")
+),
 (r'\*\*\*decbot karma\*\*\*', -99,
     R(
         'karma sucks',
