@@ -1253,7 +1253,7 @@ class NikkyAI(object):
 
     def pattern_reply(self, msg):
         """Generate a reply using predefined pattern/response patterns.
-        Check for and avoids repeated responses."""
+        Check for and avoid repeated responses."""
         for i in xrange(RECURSE_LIMIT):
             response, allow_repeat = \
                 pattern_reply(msg, self.last_reply, self.nick)
