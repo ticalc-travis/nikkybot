@@ -99,6 +99,26 @@ class Manual_markov(object):
         return manual_markov(self.order, self.text.format(*fmt))
 
 
+class Markov(object):
+    """Force standard Markov processing on the given message and return
+    result, even if message would otherwise match another regexp pattern"""
+    def __init__(self, text, failmsglist=None):
+        if failmsglist is None:
+            failmsglist = ['']
+        self.failmsglist = failmsglist
+        self.text = text
+
+    def get(self, fmt=None):
+        if fmt is None:
+            fmt = []
+        failmsg = choice(self.failmsglist)
+        try:
+            failmsg = failmsg.get(fmt)
+        except AttributeError:
+            pass
+        return markov_reply(self.text.format(*fmt))
+
+
 class Recurse(str):
     """Recursively find a response"""
     def get(self, fmt=None):
@@ -200,6 +220,56 @@ PATTERN_REPLIES = (
 # pattern regexp, priority, action
 # pattern regexp, priority, action, allow repeat?
 # pattern regexp, last reply, priority, action, allow repeat?
+
+# Priority keywords (force standard Markov processing on these keywords/phrases
+# if they appear anywhere in the message and the message doesn't match any
+# other pattern below)
+(r'\b((hcwp|kerm|disallow|backup|tape|markov|tev|apple|flash|iphone|cpu|celeron|opera|firefox|netscape|explorer|flash|decbot|cbl|ti|hp|50g|48|49|calc|nspire|cx|cse|doors|computer|kde|troll|sleep|contest|gcn|globalcalc|global calc|sourcecoder|bug|delete|kill|drama|font|winme|win98|impersonate|nick|status nick|marry|rickroll|bot)\w*)', 99,
+    R(
+        Markov('{1}'),
+        Markov('{2}'),
+    )
+),
+
+# Synonyms
+(r'\b(saxjax|tardmuffin|censor)', 98,
+    R(
+        Markov('saxjax'),
+        Markov('tardmuffin'),
+        Markov('censor'),
+    ),
+),
+(r'\b(forum|moderator|admin)', 98,
+    R(
+        Markov('post'),
+        Markov('forum'),
+        Markov('moderator'),
+        Markov('admin'),
+        Markov('ban'),
+    )
+),
+(r'\b(ping|pong)', 98,
+    R(
+        Markov('ping'),
+        Markov('pong'),
+    )
+),
+(r'\b(kerm|kermm|kerm martian|christopher)', 98,
+    R(
+        Markov('kerm'),
+        Markov('kermm'),
+        Markov('kerm martian'),
+        Markov('christopher'),
+        Markov('christopher mitchell'),
+    )
+),
+(r'\b(djomni|dj.omni|dj.o|kevin_o)', 98,
+    R(
+        Markov('DJ_Omni'),
+        Markov('DJ_O'),
+        Markov('Kevin_O'),
+    )
+),
 
 # Basics
 (r'\b(hi|hello|hey)\b', 0,
@@ -874,17 +944,6 @@ True),
         'anyone with more than one monitor\nis a loser',
         Recurse('more than one monitor'),
         Markov_forward('big monitors')
-    )
-),
-
-# Synonyms
-(r'\b(forum|moderator|admin|post)', -2,
-    R(
-        Recurse('post'),
-        Recurse('forum'),
-        Recurse('moderator'),
-        Recurse('admin'),
-        Recurse('ban'),
     )
 ),
 
