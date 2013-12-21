@@ -278,6 +278,13 @@ PATTERN_REPLIES = (
         Markov('omnidrama'),
     )
 ),
+(r'\bmudkip', 98,
+    R(
+        Markov('mudkip'),
+        Markov('mudkipz'),
+        Markov('mudkips'),
+    ),
+),
 
 # Basics
 (r'\b(hi|hello|hey)\b', 0,
