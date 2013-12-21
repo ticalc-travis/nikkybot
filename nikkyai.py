@@ -19,7 +19,7 @@
 from datetime import datetime, timedelta
 from random import randint, choice
 import cPickle
-from os import fstat, stat
+from os import fstat, stat, getpid
 import re
 import subprocess
 
@@ -872,6 +872,12 @@ True),
         E('randint(0,9999)'),
         E('randint(0,999999999999)'),
         E('str(randint(0,int(\'9\'*100))) + "\\nLong enough for you?"')
+    ),
+    True
+),
+(r'(\b(memory|ram)\b.*\b(you|your|nikkybot)\b|\b(you|your|nikkybot)\b.*\b(memory|ram)\b)', -99,
+    E(
+        "subprocess.check_output(['./memusage.sh', str(getpid())])"
     ),
     True
 ),
