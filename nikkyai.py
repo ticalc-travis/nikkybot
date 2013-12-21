@@ -1141,7 +1141,7 @@ def pattern_reply(msg, last_used_reply='', nick='nikkybot', _recurse_level=0):
         try:
             m = re.search(pattern, msg, flags=re.I)
         except Exception as e:
-            print('Regex: {}'.format(pattern))
+            print('Regex: {}, {}'.format(pattern, e))
             raise e
         if m:
             # Input matches, what about last_reply?
