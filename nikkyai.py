@@ -27,6 +27,8 @@ from pytz import timezone
 
 import markov
 
+DEBUG = True
+
 RECURSE_LIMIT = 333
 MAX_LF_L = 0
 MAX_LF_R = 1
@@ -1158,7 +1160,12 @@ def pattern_reply(msg, last_used_reply='', nick='nikkybot', _recurse_level=0):
     try:
         match, reply, allow_repeat = choice(matches)
     except IndexError:
+        if DEBUG:
+            print("DEBUG: pattern_reply: recurse {}; sourcenick {}, msg {}: No pattern match found".format(_recurse_level, repr(sourcenick), repr(msg)))
         raise Dont_know_how_to_respond_error
+    else:
+        if DEBUG:
+            print("DEBUG: pattern_reply: recurse {}; sourcenick {}, msg {}: Chose match {}".format(_recurse_level, repr(sourcenick), repr(msg), repr(match.re.pattern)))
     fmt_list = (sourcenick,) + match.groups()
     try:
         return (reply.get(fmt_list), allow_repeat)
