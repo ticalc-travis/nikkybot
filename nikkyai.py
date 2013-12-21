@@ -354,25 +354,18 @@ PATTERN_REPLIES = (
 (r"^what (.*)", 1, Recurse('{1}')),
 (r"^(who is|who's|what is|what's|how's|how is) (.*?)\?*$", 0,
     R(
-        Markov_forward('{2} is',
-            ("Never heard of 'em", 'Beats me', "Don't ask me")
-        ),
-#        Markov_forward("It's",
-#            ("Never heard of 'em", 'Beats me', "Don't ask me")
-#        )
+        Markov_forward('{2} is'),
+        Markov_forward('{2}')
     ),
-    True
+    False
 ),
 (r"^(who are|who're|what are|what're|how're|how are) (.*?)\?*$", 0,
     R(
-        Markov_forward('{2} are',
-            ("Never heard of 'em", 'Beats me', "Don't ask me")
-        ),
-        Markov_forward("They're",
-            ("Never heard of 'em", 'Beats me', "Don't ask me")
-        )
+        Markov_forward('{2} are'),
+        Markov_forward("They're"),
+        Markov_forward('They are'),
     ),
-    True
+    False
 ),
 (r'^where\b', 1,
     R(
@@ -702,16 +695,12 @@ True),
 (r'\bsorry\b', 1, R('you should be')),
 (r"\b(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -1,
     R(
-        Markov_forward('{6} is',
-            ('Dunno', 'No idea', "Don't know", 'Never heard of that')
-        ),
-        Markov_forward('{6}',
-            ('Dunno', 'No idea', "Don't know", 'Never heard of that')
-        ),
+        Markov_forward('{6} is'),
+        Markov_forward('{6}'),
         Markov_forward('better than'),
         Markov_forward('worse than'),
     ),
-    True
+    False
 ),
 (r"^(what do you think|what do you know|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )me\W?$", -2,
     R(
