@@ -1254,11 +1254,14 @@ class NikkyAI(object):
         self.nick = 'nikkybot'
 
     def check_output_response(self, response, allow_repeat=False):
-        """If not allow_repeat, check if the response was already output
-        not too long ago; do exception if so, else record when this response
-        was last used.  Also set response as last-used response if accepted.
-        If accepted, return response list, split by newlines."""
-
+        """Disallow null responses.  Also, if not allow_repeat, check if the
+        response was already output not too long ago; do exception if so, else
+        record when this response was last used.  Also set response as last-
+        used response if accepted.  If accepted, return response list, split
+        by newlines."""
+        
+        if not [line for line in response if response.strip()]:
+            raise Repeated_response_error
         if not allow_repeat:
             try:
                 if (datetime.now() -
@@ -1398,9 +1401,17 @@ class NikkyAI(object):
         found, fall back to markov_reply"""
 
         try:
-            return self.pattern_reply(msg)
+            out = self.pattern_reply(msg)
         except Dont_know_how_to_respond_error:
-            return self.markov_reply(msg)
+            out = self.markov_reply(msg)
+        # This should be guaranteed to give a non-null output
+        out_okay = False
+        for line in out:
+            if line.strip():
+                out_okay = True
+                break
+        assert(out_okay)
+        return out
 
     def decide_remark(self, msg):
         """Determine whether a random response to a line not directed to
