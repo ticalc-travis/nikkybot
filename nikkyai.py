@@ -89,6 +89,9 @@ class Markov_forward(object):
         if fmt is None:
             fmt = []
         failmsg = choice(self.failmsglist)
+        if DEBUG:
+            print("DEBUG: Markov_forward.get: {}: {}".format(
+                repr(self.chain), repr(fmt)))
         try:
             failmsg = failmsg.get(fmt)
         except AttributeError:
@@ -1208,11 +1211,11 @@ def pattern_reply(msg, last_used_reply='', nick='nikkybot', _recurse_level=0):
         match, reply, allow_repeat = choice(matches)
     except IndexError:
         if DEBUG:
-            print("DEBUG: pattern_reply: recurse {}; sourcenick {}, msg {}: No pattern match found".format(_recurse_level, repr(sourcenick), repr(msg)))
+            print("DEBUG: pattern_reply: sourcenick {}, msg {}: No pattern match found".format(repr(sourcenick), repr(msg)))
         raise Dont_know_how_to_respond_error
     else:
         if DEBUG:
-            print("DEBUG: pattern_reply: recurse {}; sourcenick {}, msg {}: Chose match {}".format(_recurse_level, repr(sourcenick), repr(msg), repr(match.re.pattern)))
+            print("DEBUG: pattern_reply: sourcenick {}, msg {}: Chose match {}".format(repr(sourcenick), repr(msg), repr(match.re.pattern)))
     fmt_list = [sourcenick,] + [sanitize(s) for s in match.groups()]
     try:
         return (reply.get(fmt_list), allow_repeat)
