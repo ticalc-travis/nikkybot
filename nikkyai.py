@@ -34,9 +34,11 @@ MAX_LF_L = 0
 MAX_LF_R = 1
 
 def sanitize(s):
-    """Remove control characters from string 's'"""
-    for cn in xrange(0, 32):
-        s = s.replace(chr(cn), '')
+    """Remove control characters from 's' if it's a string; return it as is
+    if it's None"""
+    if s is not None:
+        for cn in xrange(0, 32):
+            s = s.replace(chr(cn), '')
     return s
 
 class S(list):
