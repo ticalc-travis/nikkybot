@@ -68,9 +68,10 @@ class Markov(object):
         return string
 
     def adjust_right_line_breaks(self, string, max):
-        """Limit newline characters in string to 'max' total, counting from start of
-        string forward; truncate any additional newlines and everything after
-        them. None for 'max' means unlimited (return string unchanged)."""
+        """Limit newline characters in string to 'max' total, counting from
+        start of string forward; truncate any additional newlines and
+        everything after them. None for 'max' means unlimited (return string
+        unchanged)."""
         if max is not None:
             return '\n'.join(string.split('\n')[0:max+1])
         return string
