@@ -389,8 +389,8 @@ PATTERN_REPLIES = (
 ),
 (r"^(who is|who's|what is|what's|how's|how is) (the |a |an |your |my )?(.*?)\?*$", 0,
     R(
-        Markov_forward('{2} is'),
-        Markov_forward('{2}'),
+        Markov_forward('{3} is'),
+        Markov_forward('{3}'),
         Recurse("what's"),
     ),
     False
@@ -544,7 +544,9 @@ PATTERN_REPLIES = (
 (r'\bwhat does it mean\b', 1,
     R('Communism.', Recurse('it means'))
 ),
-(r'\b(who|what) (does|do|did|should|will|is) \S+ (.*?)\?*$', -1, Recurse('what do you think about {3}')),
+(r'\b(who|what) (does|do|did|should|will|is) \S+ (.*?)\?*$', -1,
+    Recurse('what do you think about {3}')
+),
 (r'\bcontest\b', 1,
     R(
         Recurse("I'm entering"),
@@ -585,9 +587,13 @@ PATTERN_REPLIES = (
 (r'\bmore like\W*$', -10, E('markov_reply("\\n more like \\n", 2)')),
 (r'(.*) (more|moer|mroe) (like|liek)\W*$', -15,
     R(
-        Markov_forward('{1} \n more like', [S('{1}\n', Markov_forward('more like \n', max_lf_r=2))], max_lf_r=2)
+        Markov_forward('{1} \n more like'),
+        S(
+            '{1}\n',
+            Markov_forward('more like \n', max_lf_r=2)
+        ),
     ),
-True),
+),
 (r'^(is|are|am|does|should|can|do)\b', 2, R(Recurse('***yes/no***')), True),
 (r"^(is|are|am|should|can|do|does|which|what|what's|who|who's)(?: \S+)+[ -](.*?)\W+or (.*)\b", -1,
     S(
@@ -638,8 +644,17 @@ True),
         'of course'
     )
 ),
-(r'\b(who (made|wrote|programmed) you|(who\'s|whose) are you)\b', -1,
-    R('tev')
+(r'\b(who (made|wrote|programmed) you|(who\'s|whose) are you|who (runs|operates) you)\b', -1,
+    R(
+        'tev does',
+        'tev',
+        Recurse('tev')
+    )
+),
+(r"\b(why did you (restart|disconnect|quit|cycle)|(where did|where'd) you go)", -1,
+    R(
+        'tev told me to\nProbably code change or even reboot\nwho knows'
+    ),
 ),
 (r"\b((nikkybot's|your) source code|the source code (to|of|for) (you|nikkybot))\b", -1,
     R(
@@ -800,13 +815,6 @@ True),
         'Join #ti\nYou know you want to'
     )
 ),
-(r'\bdelete.*\bpost\b', 1,
-    R(
-        'CENSORSHIP',
-        Recurse('censorship'),
-        Recurse('disallowed word')
-    )
-),
 (r'\bdisallowed word\b', -3,
     R(
         'Shut up {0}',
@@ -819,16 +827,27 @@ True),
         'This channel sucks\ntoo much censorship'
     ),
 ),
-(r'^\*(\S+) deleted a post in', 1,
-    R('CENSORSHIP', 'Censorship', '{1} YOU CENSORING TARDMUFFIN',
-      'CENSOR', 'CENSORING', 'spam')
-),
-(r'^\*(\S+) ((added|edited) a post in|created a new topic:) \[(.*)\]', 1,
+(r'^deleted a post in', 1,
     R(
-        Recurse('{4}'),
+        'CENSORSHIP',
+        'Censorship',
+        '{0} YOU CENSORING TARDMUFFIN',
+        'CENSOR',
+        'CENSORING',
+        'spam',
+        Recurse('censorship'),
+        Recurse('censoring'),
+        Recurse('censoring tardmuffin'),
+        Recurse('tardmuffin'),
+        Recurse('spam post'),
     )
 ),
-(r'^\*(\S+) has entered the room', 1,
+(r'^((added|edited) a post in|created a new topic:) \[(.*)\]', 1,
+    R(
+        Recurse('{3}'),
+    )
+),
+(r'^has entered the room\.$', 1,
     R(
         S(
             R('Sup ', "What's up "),
@@ -838,22 +857,25 @@ True),
         "Shut up",
         "Flood your face!",
         "FLOOD YOUR FACE",
-        'HI {1}',
+        'HI {0}',
         'Go away',
         'No\ngo away',
-        Markov_forward('hi {1}', ('hi',)),
-        Markov_forward('hello {1}', ('hello',)),
-        Markov_forward('hey {1}', ('hey',)),
-        Markov_forward('sup {1}', ('sup',)),
+        Markov_forward('hi {0}', ('hi',)),
+        Markov_forward('hello {0}', ('hello',)),
+        Markov_forward('hey {0}', ('hey',)),
+        Markov_forward('sup {0}', ('sup',)),
         Markov_forward('shut the', ('shut the hell up',))
     ),
 ),
 (r'\bspam post', 1,
-    R("Don't care",
-      'So what',
-      'Who cares about spam',
-      'Nobody cares about spam posts',
-      "\001ACTION spams {0}\001")
+    R(
+        "Don't care",
+        'So what',
+        'Who cares about spam',
+        'Nobody cares about spam posts',
+        "\001ACTION spams {0}\001",
+        "\001ACTION spam posts {0}\001",
+    )
 ),
 (r'\*\*\*decbot karma\*\*\*', -99,
     R(
@@ -903,8 +925,8 @@ True),
         '{1} sucks balls',
         '!karma SET KARMA = 0 WHERE `user` = "{1}"; DROP DATABASE',
         Recurse('***decbot karma***'),
-        Recurse('what do you think of {0}'),
-        Recurse('what do you think of {1}')
+        Markov_forward('{0} is'),
+        Markov_forward('{1} is')
     )
 ),
 
