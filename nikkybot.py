@@ -40,6 +40,7 @@ from nikkyai import NikkyAI
 
 RELOAD_INTERVAL = 60 * 60 * 24
 STATE_SAVE_INTERVAL = 900
+STATE_CLEANUP_INTERVAL = 60 * 60 * 24
 CHANNEL_CHECK_INTERVAL = 300
 MAX_USER_THREADS = 4
 
@@ -107,6 +108,8 @@ class NikkyBot(irc.IRCClient):
             reactor.callLater(CHANNEL_CHECK_INTERVAL, self.channel_check)
         if STATE_SAVE_INTERVAL is not None:
             reactor.callLater(STATE_SAVE_INTERVAL, self.save_state)
+        if STATE_CLEANUP_INTERVAL is not None:
+            reactor.callLater(STATE_CLEANUP_INTERVAL, self.cleanup_state)
 
     def connectionLost(self, reason):
         print('Connection lost: {}'.format(reason))
@@ -430,6 +433,11 @@ class NikkyBot(irc.IRCClient):
         """Save nikkyAI state to disk file"""
         self.factory.save_state()
         reactor.callLater(STATE_SAVE_INTERVAL, self.save_state)
+        
+    def cleanup_state(self):
+        """Clean up any stale state data to reduce memory and disk usage"""
+        self.factory.cleanup_state()
+        reactor.callLater(STATE_CLEANUP_INTERVAL, self.cleanup_state)
 
 
 class NikkyBotFactory(protocol.ReconnectingClientFactory):
@@ -501,6 +509,12 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
                 print("Couldn't save state data: {}".format(e))
             else:
                 print("Saved state data")
+                
+    def cleanup_state(self):
+        """Clean up any stale state data to reduce memory and disk usage"""
+        for k in self.nikkies:
+            print('Starting state cleanup for {}'.format(repr(k)))
+            self.nikkies[k].clean_up_last_replies()
 
     def clientConnectionFailed(self, connector, reason):
         print('Connection failed: {}'.format(reason))

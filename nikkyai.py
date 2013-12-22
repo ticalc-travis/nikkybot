@@ -1280,12 +1280,18 @@ class NikkyAI(object):
         orig_size = len(self.last_replies)
         for k, d in self.last_replies.items():
             if (datetime.now() - d > PATTERN_RESPONSE_RECYCLE_TIME):
-                print("Removed stale last_replies entry {}, {} ({})".format(
-                    self, k, d))
+                print(
+                    "clean_up_last_replies: "
+                    "Removed stale last_replies entry {} ({})".format(
+                        repr(k), d)
+                )
                 del self.last_replies[k]
                 num_removed += 1
-        print("Removed {} items (size {} -> {})".format(
-            num_removed, orig_size, len(self.last_replies)))
+        print(
+            "clean_up_last_replies: "
+            "Removed {} items (len {} -> {})".format(
+                num_removed, orig_size, len(self.last_replies))
+        )
 
     def nikkysim_remark(self, msg='', strip_number=True):
         """Generate a NikkySim remark.  If not strip_number, include the
