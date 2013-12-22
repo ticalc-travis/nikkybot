@@ -1052,7 +1052,7 @@ class Nikky_error(Exception):
 class Dont_know_how_to_respond_error(Nikky_error):
     pass
 
-class Repeated_response_error(Nikky_error):
+class Bad_response_error(Nikky_error):
     pass
 
 
@@ -1261,13 +1261,13 @@ class NikkyAI(object):
         by newlines."""
         
         if not [line for line in response if response.strip()]:
-            raise Repeated_response_error
+            raise Bad_response_error
         if not allow_repeat:
             try:
                 if (datetime.now() -
                     self.last_replies[response.lower()] <
                         PATTERN_RESPONSE_RECYCLE_TIME):
-                    raise Repeated_response_error
+                    raise Bad_response_error
                 else:
                     self.last_replies[response.lower()] = datetime.now()
             except KeyError:
@@ -1319,7 +1319,7 @@ class NikkyAI(object):
                 return self.check_output_response(
                     choice((self.nikkysim_remark(), self.generic_remark(msg)))
                 )
-            except Repeated_response_error:
+            except Bad_response_error:
                 pass
         return ['']
 
@@ -1331,7 +1331,7 @@ class NikkyAI(object):
                 pattern_reply(msg, self.last_reply, self.nick)
             try:
                 return self.check_output_response(response, allow_repeat)
-            except Repeated_response_error:
+            except Bad_response_error:
                 pass
         return self.markov_reply(msg)
 
@@ -1393,7 +1393,7 @@ class NikkyAI(object):
 
         try:
             return self.check_output_response(out)
-        except Repeated_response_error:
+        except Bad_response_error:
             return self.markov_reply(msg, _recurse_level + 1)
 
     def reply(self, msg):
@@ -1404,7 +1404,7 @@ class NikkyAI(object):
             out = self.pattern_reply(msg)
         except Dont_know_how_to_respond_error:
             out = self.markov_reply(msg)
-        # This should be guaranteed to give a non-null output
+        # This function should be guaranteed to give a non-null output
         out_okay = False
         for line in out:
             if line.strip():
