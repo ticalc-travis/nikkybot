@@ -1174,10 +1174,8 @@ def markov_forward(chain, failmsg='', max_lf=MAX_LF_R):
     return m.adjust_right_line_breaks(out, max_lf)
 
 
-def pattern_reply(msg, last_used_reply='', nick='nikkybot', _recurse_level=0):
-    if _recurse_level > RECURSE_LIMIT:
-        raise Dont_know_how_to_respond_error
-    
+def pattern_reply(msg, last_used_reply='', nick='nikkybot'):
+
     # Separate out speaker's nick if known
     m = re.match(r'<(.*?)> (.*)', msg)
     if m:
