@@ -33,6 +33,12 @@ RECURSE_LIMIT = 333
 MAX_LF_L = 0
 MAX_LF_R = 1
 
+def sanitize(s):
+    """Remove control characters from string 's'"""
+    for cn in xrange(0, 32):
+        s = s.replace(chr(cn), '')
+    return s
+
 class S(list):
     """Sequence table"""
     def __init__(self, *args):
@@ -1205,7 +1211,7 @@ def pattern_reply(msg, last_used_reply='', nick='nikkybot', _recurse_level=0):
     else:
         if DEBUG:
             print("DEBUG: pattern_reply: recurse {}; sourcenick {}, msg {}: Chose match {}".format(_recurse_level, repr(sourcenick), repr(msg), repr(match.re.pattern)))
-    fmt_list = (sourcenick,) + match.groups()
+    fmt_list = [sourcenick,] + [sanitize(s) for s in match.groups()]
     try:
         return (reply.get(fmt_list), allow_repeat)
     except AttributeError as e:
