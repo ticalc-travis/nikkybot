@@ -1136,13 +1136,12 @@ def manual_markov(order, msg, _recurse_level=0):
 def markov_forward(chain, failmsg='', max_lf=MAX_LF_R):
     """Generate sentence from the current chain forward only and not
     backward"""
-
     if len(chain) == 1:
         m = choice(markovs.values())
         if not m.word_forward.has_key(m.conv_key(chain[0])):
             return failmsg
-        out = ' '.join(m.from_word_forward(m.conv_key(chain[0]))).replace(' \n ',
-            '\n')
+        out = ' '.join(m.from_word_forward(m.conv_key(chain[0]))).replace(
+            ' \n ', '\n')
     else:
         m = markovs[len(chain)]
         if not m.chain_forward.has_key(tuple(m.conv_key(chain))):
