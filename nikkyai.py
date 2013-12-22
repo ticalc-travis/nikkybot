@@ -1004,10 +1004,10 @@ True),
 (r'^\?markov +(\S+\s+\S+\s+\S+\s+\S+\s*)$', -99, Manual_markov(4, '{1}'), True),
 (r'^\?markov +(\S+\s+\S+\s+\S+\s*)$', -99, Manual_markov(3, '{1}'), True),
 (r'^\?markov +(\S+\s+\S+\s*)$', -99, Manual_markov(2, '{1}'), True),
-(r'^markov5 (.*)', -99, Manual_markov(5, '{1}'), True),
-(r'^markov4 (.*)', -99, Manual_markov(4, '{1}'), True),
-(r'^markov3 (.*)', -99, Manual_markov(3, '{1}'), True),
-(r'^markov2 (.*)', -99, Manual_markov(2, '{1}'), True),
+(r'^\?markov5 (.*)', -99, Manual_markov(5, '{1}'), True),
+(r'^\?markov4 (.*)', -99, Manual_markov(4, '{1}'), True),
+(r'^\?markov3 (.*)', -99, Manual_markov(3, '{1}'), True),
+(r'^\?markov2 (.*)', -99, Manual_markov(2, '{1}'), True),
 )
 
 # === END OF DATA SECTION =====================================================
