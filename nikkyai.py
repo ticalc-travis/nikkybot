@@ -564,15 +564,15 @@ PATTERN_REPLIES = (
         Markov_forward('more than you')
     )
 ),
-(r'\bnikkybot.*more like$', -20,
+(r'\bnikkybot.*more like\W*$', -20,
     R(
         'nikkybot\nmore like\nchamp',
         "nikkybot\nmore like\nI'm always the best",
         'nikkybot\nmore like\nawesome',
     ), True
 ),
-(r'\bmore like$', -10, E('markov_reply("\\n more like \\n", 2)')),
-(r'(.*) (more|moer|mroe) (like|liek)$', -15,
+(r'\bmore like\W*$', -10, E('markov_reply("\\n more like \\n", 2)')),
+(r'(.*) (more|moer|mroe) (like|liek)\W*$', -15,
     R(
         Markov_forward('{1} \n more like', [S('{1}\n', Markov_forward('more like \n', max_lf_r=2))], max_lf_r=2)
     ),
