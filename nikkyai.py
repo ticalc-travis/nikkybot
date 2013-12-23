@@ -237,7 +237,7 @@ PATTERN_REPLIES = (
 # Priority keywords (force standard Markov processing on these keywords/phrases
 # if they appear anywhere in the message and the message doesn't match any
 # other pattern below)
-(r'\b((hcwp|kerm|disallow|backup|tape|markov|tev|apple|flash|iphone|cpu|celeron|opera|firefox|netscape|explorer|flash|decbot|cbl|ti|hp|50g|48|49|calc|nspire|cx|cse|doors|computer|kde|troll|sleep|contest|gcn|globalcalc|global calc|sourcecoder|bug|delete|kill|drama|font|winme|win98|impersonate|nick|status nick|marry|rickroll|bot|ban|admin)\w*)', 99,
+(r'\b((hcwp|poty|ticalc|kerm|disallow|backup|tape|markov|tev|apple|flash|iphone|cpu|celeron|opera|firefox|netscape|explorer|flash|decbot|cbl|ti|hp|50g|48|49|calc|nspire|cx|cse|doors|computer|kde|troll|sleep|contest|gcn|globalcalc|global calc|sourcecoder|bug|delete|kill|drama|font|winme|win98|impersonate|nick|status nick|marry|rickroll|bot|ban|admin)\w*)', 99,
     R(
         Markov('{1}'),
         Markov('{2}'),
