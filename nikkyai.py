@@ -1252,13 +1252,21 @@ class NikkyAI(object):
         self.last_reply = ''
         self.last_replies = {}
         self.nick = 'nikkybot'
+        
+    def add_last_reply(self, reply, datetime_=None):
+        """Convenience function to add a reply string to the last replies
+        memory (used by check_output_response). datetime_ defaults to
+        datetime.now()."""
+        if datetime_ is None:
+            datetime_ = datetime.now()
+        self.last_replies[reply.lower()] = datetime.now()
 
-    def check_output_response(self, response, allow_repeat=False):
-        """Disallow null responses.  Also, if not allow_repeat, check if the
-        response was already output not too long ago; do exception if so, else
-        record when this response was last used.  Also set response as last-
-        used response if accepted.  If accepted, return response list, split
-        by newlines."""
+    def check_output_response(self, response, allow_repeat=False,
+                              add_response=True):
+        """Throw Bad_response_error on null responses, and, if not
+        allow_repeat, if the response was already output not too long ago.
+        Otherwise, set response as last-used response if add_response is True,
+        and return response list, split by newlines."""
         
         if not [line for line in response if response.strip()]:
             raise Bad_response_error
@@ -1268,10 +1276,11 @@ class NikkyAI(object):
                     self.last_replies[response.lower()] <
                         PATTERN_RESPONSE_RECYCLE_TIME):
                     raise Bad_response_error
-                else:
-                    self.last_replies[response.lower()] = datetime.now()
+                elif add_response:
+                    self.add_last_reply(response)
             except KeyError:
-                self.last_replies[response.lower()] = datetime.now()
+                if add_response:
+                    self.add_last_reply(response)
 
         self.last_reply = response
         return response.split('\n')
@@ -1311,33 +1320,37 @@ class NikkyAI(object):
             nick = m.group(1)
         return choice(GENERIC_REMARKS).format(nick)
 
-    def remark(self, msg=''):
+    def remark(self, msg='', add_response=True):
         """Choose between a context-less predefined generic remark or a
-        NikkySim remark, avoiding repeats in short succession"""
+        NikkySim remark, avoiding repeats in short succession.  Add new
+        response to self.last_replies if add_response."""
         for i in xrange(RECURSE_LIMIT):
             try:
                 return self.check_output_response(
-                    choice((self.nikkysim_remark(), self.generic_remark(msg)))
+                    choice((self.nikkysim_remark(), self.generic_remark(msg))),
+                    add_response=add_response
                 )
             except Bad_response_error:
                 pass
         return ['']
 
-    def pattern_reply(self, msg):
+    def pattern_reply(self, msg, add_response=True):
         """Generate a reply using predefined pattern/response patterns.
-        Check for and avoid repeated responses."""
+        Check for and avoid repeated responses.  Add new response to
+        add_response to self.last_replies if add_response."""
         for i in xrange(RECURSE_LIMIT):
             response, allow_repeat = \
                 pattern_reply(msg, self.last_reply, self.nick)
             try:
-                return self.check_output_response(response, allow_repeat)
+                return self.check_output_response(
+                    response, allow_repeat, add_response=add_response)
             except Bad_response_error:
                 pass
         return self.markov_reply(msg)
 
-    def markov_reply(self, msg, _recurse_level=0):
+    def markov_reply(self, msg, add_response=True, _recurse_level=0):
         """Generate a reply using Markov chaining. Check and avoid repeated
-        responses."""
+        responses.  Add new response to self.last_replies if add_response."""
         if _recurse_level > RECURSE_LIMIT:
             return random_markov()
 
@@ -1392,7 +1405,7 @@ class NikkyAI(object):
             out = re.sub(r'\S+: ', sourcenick + ': ', out)
 
         try:
-            return self.check_output_response(out)
+            return self.check_output_response(out, add_response=add_response)
         except Bad_response_error:
             return self.markov_reply(msg, _recurse_level + 1)
 
@@ -1422,7 +1435,7 @@ class NikkyAI(object):
         i = int(hour >= 2 and hour <= 12)   # 0 = awake; more activity
                                             # 1 = usually asleep; less activity
         try:
-            potential_response = self.pattern_reply(msg)
+            potential_response = self.pattern_reply(msg, add_response=False)
         except Dont_know_how_to_respond_error:
             c = REMARK_CHANCE[2 + i]
             if re.search(r'\bnikky\b', msg, re.I):
@@ -1430,14 +1443,15 @@ class NikkyAI(object):
             r = randint(0, c)
             if not r:
                 if not randint(0, 4):
-                    return self.remark(msg)
+                    return self.remark(msg, add_response=True)
                 else:
                     for i in xrange(RECURSE_LIMIT):
-                        out = self.markov_reply(msg)
+                        out = self.markov_reply(msg, add_response=False)
                         # Try not to get too talkative with random responses
                         if out.count('\n') <= 2:
+                            self.add_last_reply(out)
                             return out
-                    return self.remark(msg)
+                    return self.remark(msg, add_response=True)
             else:
                 return None
         else:
@@ -1446,6 +1460,7 @@ class NikkyAI(object):
                 c=int(c/2)
             r = randint(0, c)
             if not r:
+                self.add_last_reply(potential_response)
                 return potential_response
             else:
                 return None
