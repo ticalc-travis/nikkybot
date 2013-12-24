@@ -1449,7 +1449,7 @@ class NikkyAI(object):
                         out = self.markov_reply(msg, add_response=False)
                         # Try not to get too talkative with random responses
                         if out.count('\n') <= 2:
-                            self.add_last_reply(out)
+                            self.add_last_reply('\n'.join(out))
                             return out
                     return self.remark(msg, add_response=True)
             else:
@@ -1460,7 +1460,7 @@ class NikkyAI(object):
                 c=int(c/2)
             r = randint(0, c)
             if not r:
-                self.add_last_reply(potential_response)
+                self.add_last_reply('\n'.join(potential_response))
                 return potential_response
             else:
                 return None
