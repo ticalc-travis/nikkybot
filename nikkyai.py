@@ -1407,7 +1407,7 @@ class NikkyAI(object):
         try:
             return self.check_output_response(out, add_response=add_response)
         except Bad_response_error:
-            return self.markov_reply(msg, _recurse_level + 1)
+            return self.markov_reply(msg, _recurse_level=_recurse_level+1)
 
     def reply(self, msg):
         """Generic reply method.  Try to use pattern_reply; if no response
