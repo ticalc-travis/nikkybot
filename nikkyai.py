@@ -367,19 +367,41 @@ PATTERN_REPLIES = (
 (r'\b(wb|welcome back|welcoem back)\b', 1, R('Thanks', 'No\nGo away')),
 (r"\*\*\*yes/no\*\*\*", -99,
     R(
-        'yes', 'no', 'maybe', 'probably', 'who knows', 'dunno', "don't know",
-        'yeah',
+        'yes', 'no', 'maybe', 'probably', 'yeah',
         Markov_forward('yes'),
         Markov_forward('no'),
         Markov_forward('maybe'),
-        Markov_forward('dunno'),
-        Markov_forward('yeah')
+        Markov_forward('yeah'),
+        Markov_forward('yes'),
+        Markov_forward('only if'),
+        Markov_forward('only when'),
+        Markov_forward('as long as'),
+        Markov_forward('whenever'),
+        Markov_forward('of course')
     ),
     True
 ),
 
 # General
-(r"^(what|what's|whats)", 1,
+(r"which", 1,
+    R(
+        Markov_forward('this'),
+        Markov_forward('that'),
+        Markov_forward('the'),
+        Markov_forward('those'),
+        Markov_forward('these'),
+        Markov_forward('all of'),
+        Markov_forward('all the'),
+    ),
+),
+(r"^anything else", 1,
+    S(
+        R('', Recurse('***yes/no***')),
+        '\n',
+        Recurse("what's"),
+    ),
+),
+(r"(^(what|what's|whats)|for what|for which)", 1,
     R(
         Markov_forward('a'),
         Markov_forward('an'),
@@ -393,7 +415,6 @@ PATTERN_REPLIES = (
         Markov_forward('{3}'),
         Recurse("what's"),
     ),
-    False
 ),
 (r"^(who are|who're|what are|what're|how're|how are) (.*?)\?*$", 0,
     R(
@@ -401,7 +422,9 @@ PATTERN_REPLIES = (
         Markov_forward("They're"),
         Markov_forward('They are'),
     ),
-    False
+),
+(r"^(what are|what're) .*ing\b", -1,
+    Recurse("what's"),
 ),
 (r'^where\b', 1,
     R(
@@ -595,6 +618,7 @@ PATTERN_REPLIES = (
     ),
 ),
 (r'^(is|are|am|does|should|can|do)\b', 2, R(Recurse('***yes/no***')), True),
+(r'^(do you think|what about|really)\b', 0, R(Recurse('***yes/no***')), True),
 (r"^(is|are|am|should|can|do|does|which|what|what's|who|who's)(?: \S+)+[ -](.*?)\W+or (.*)\b", -1,
     S(
         R(
@@ -635,10 +659,14 @@ PATTERN_REPLIES = (
         'I started out as lines of Perl\nbut then tev had to be a tard and convert it all to Python'
     )
 ),
-(r'(Do )?you like (.*)(.*?)\W?$', 0,
+(r'(Do )?you (like|liek) (.*)(.*?)\W?$', -1,
     R(
-        Recurse('what do you think about {2}'),
+        Recurse('what do you think about {3}'),
         Recurse('yes'),
+        S(
+            R('', 'No, but ', 'Yes, and '),
+            Markov_forward('I like'),
+        ),
         "no\nworst thing in the world",
         'no\nit sucks',
         'of course'
@@ -772,7 +800,7 @@ PATTERN_REPLIES = (
         Recurse('what do you think of {0}')
     )
 ),
-(r"^(how is|how's|do you like|you like) (.*?)\W?$", -1,
+(r"^(how is|how's|do you like|you like|you liek) (.*?)\W?$", -1,
     Recurse('what do you think of {2}')
 ),
 (r"\btell (me|us) about (.*)", -2, R(Recurse('{2}'))),
