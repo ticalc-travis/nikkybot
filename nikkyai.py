@@ -401,6 +401,7 @@ PATTERN_REPLIES = (
         Recurse("what's"),
     ),
 ),
+(r"^(what do you|what is going|what's going)", -1, Recurse('for what')),
 (r"(^(what|what's|whats)|for what|for which)", 1,
     R(
         Markov_forward('a'),
@@ -617,7 +618,7 @@ PATTERN_REPLIES = (
         ),
     ),
 ),
-(r'^(is|are|am|does|should|can|do)\b', 2, R(Recurse('***yes/no***')), True),
+(r"^(is|isn't|are|am|does|should|can|do)\b", 2, R(Recurse('***yes/no***')), True),
 (r'^(do you think|what about|really)\b', 0, R(Recurse('***yes/no***')), True),
 (r"^(is|are|am|should|can|do|does|which|what|what's|who|who's)(?: \S+)+[ -](.*?)\W+or (.*)\b", -1,
     S(
@@ -667,6 +668,7 @@ PATTERN_REPLIES = (
             R('', 'No, but ', 'Yes, and '),
             Markov_forward('I like'),
         ),
+        Markov_forward("I'd rather"),
         "no\nworst thing in the world",
         'no\nit sucks',
         'of course'
@@ -714,7 +716,16 @@ PATTERN_REPLIES = (
 (r'\b(you|nikkybot) (did|does|do)\b', 1,
     R('I did?', 'I what?', 'Someone talking about me?')
 ),
-(r'\b(nikkybot is|you are) (a |an |)(.*)', 1,
+(r'\bI \S+ (you|nikkybot)', 0,
+    S(
+        R('Great\n', 'gee\n', 'thanks\n', 'Awesome\n'),
+        R(
+            Markov_forward('I hope you'),
+            Markov_forward('I hope your'),
+        ),
+    ),
+),
+(r'\b(nikkybot is|you are|nikkybot must|you must) (a |an |)(.*)', 1,
     R(
         R(
             "That's what you think",
