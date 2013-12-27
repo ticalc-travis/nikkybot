@@ -415,6 +415,7 @@ class NikkyBot(irc.IRCClient):
             self.nikkies[k] = NikkyAI()
             self.nikkies[k].last_replies = last_replies
             self.nikkies[k].nick = self.nickname
+            self.nikkies[k].load_preferred_keywords()
 
     def auto_reload(self):
         """Automatically reload AI module on intervals (to update regularly
@@ -491,6 +492,10 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
                         pass
                     else:
                         nikky.last_replies = state[k]['last_replies']
+                        try:
+                            nikky.load_preferred_keywords()
+                        except Exception as e:
+                            print("Couldn't load preferred keyword patterns: {}".format(e))
                 print("Loaded state data")
                 
     def save_state(self):

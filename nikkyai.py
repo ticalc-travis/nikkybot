@@ -29,6 +29,7 @@ import markov
 
 DEBUG = True
 
+PREFERRED_KEYWORDS_FILE = 'preferred_keywords.txt'
 RECURSE_LIMIT = 333
 MAX_LF_L = 0
 MAX_LF_R = 1
@@ -233,16 +234,6 @@ PATTERN_REPLIES = (
 # pattern regexp, priority, action
 # pattern regexp, priority, action, allow repeat?
 # pattern regexp, last reply, priority, action, allow repeat?
-
-# Priority keywords (force standard Markov processing on these keywords/phrases
-# if they appear anywhere in the message and the message doesn't match any
-# other pattern below)
-(r'\b((hcwp|poty|ticalc|kerm|disallow|backup|tape|markov|tev|apple|flash|iphone|cpu|celeron|opera|firefox|netscape|explorer|flash|decbot|cbl|ti|hp|50g|48|49|calc|nspire|cx|cse|doors|computer|kde|troll|sleep|contest|gcn|globalcalc|global calc|sourcecoder|bug|delete|kill|drama|font|winme|win98|impersonate|nick|status nick|marry|rickroll|bot|ban|admin)\w*)', 99,
-    R(
-        Markov('{1}'),
-        Markov('{2}'),
-    )
-),
 
 # Synonyms
 (r'\b(saxjax|tardmuffin|censor)', 98,
@@ -1137,6 +1128,7 @@ markovs = {5: markov5, 4: markov4, 3: markov3, 2: markov2}
 for m in markovs.values():
     m.default_max_left_line_breaks = MAX_LF_L
     m.default_max_right_line_breaks = MAX_LF_R
+preferred_keywords = []
 
 
 def random_markov():
@@ -1153,24 +1145,48 @@ def markov_reply(msg, failmsg=None, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
     """Generate a Markov-chained reply for msg"""
     if not msg.strip():
         return random_markov()
+    
+    # Search for a sequence of input words to Markov chain from: use the
+    # longest possible chain matching any regexp from preferred_patterns;
+    # failing that, use the longest possible chain of any words found in the
+    # Markov database.
     words = [x for x in msg.split(' ') if x]
+    high_priority_replies = {1:[]}
+    low_priority_replies = {1:[]}
     for order in (5, 4, 3, 2):
-        avail_replies = []
+        markov = markovs[order]
+        high_priority_replies[order] = []
+        low_priority_replies[order] = []
         for i in xrange(len(words) - (order-1)):
-            response = \
-                markovs[order].sentence_from_chain(
-                    tuple(words[i:i+order]), max_lf_l, max_lf_r
-                )
+            chain = tuple(words[i:i+order])
+            response = markov.sentence_from_chain(chain, max_lf_l, max_lf_r)
+            chain_text = ' '.join(chain)
             if response.strip():
-                avail_replies.append(response)
-        if avail_replies:
-            return choice(avail_replies)
+                for p in preferred_keywords:
+                    if re.search(p, chain_text, re.I):
+                        high_priority_replies[order].append(response)
+                else:
+                    low_priority_replies[order].append(response)
+
+    # Failing that, try to chain on the longest possible single input word
     words.sort(key=len)
     words.reverse()
     for word in words:
         response = markov5.sentence_from_word(word, max_lf_l, max_lf_r)
         if response.strip():
-            return response
+            for p in preferred_keywords:
+                if re.search(p, word, re.I):
+                    high_priority_replies[1].append(response)
+            else:
+                low_priority_replies[1].append(response)
+    for order in reversed(high_priority_replies.keys()):
+        if high_priority_replies[order]:
+            return choice(high_priority_replies[order])
+    for order in reversed(low_priority_replies.keys()):
+        if low_priority_replies[order]:
+            return choice(low_priority_replies[order])
+        
+    # Failing *that*, return either failmsg (or random Markov if no failmsg)
     if failmsg is None:
         return random_markov()
     else:
@@ -1290,6 +1306,32 @@ class NikkyAI(object):
         self.last_reply = ''
         self.last_replies = {}
         self.nick = 'nikkybot'
+        
+    def load_preferred_keywords(self, filename=None):
+        """Load a list of preferred keyword patterns for markov_reply"""
+        global preferred_keywords
+        if filename is None:
+            filename = PREFERRED_KEYWORDS_FILE
+        with open(filename, 'r') as f:
+            pk = [L.strip('\n') for L in f.readlines()]
+        preferred_keywords = pk
+        print("load_preferred_keywords: {} patterns loaded from {}".format(len(pk), repr(filename)))
+        
+    def save_preferred_keywords(self, filename=None):
+        """Save a list of preferred keyword patterns for markov_reply"""
+        if filename is None:
+            filename = PREFERRED_KEYWORDS_FILE
+        with open(filename, 'w') as f:
+            f.writelines([s+'\n' for s in sorted(preferred_keywords)])
+        print("save_preferred_keywords: {} patterns saved to {}".format(len(preferred_keywords), repr(filename)))
+        
+    def add_preferred_keyword(self, keyword, filename=None):
+        """Convenience function for adding a single keyword pattern to the
+        preferred keywords pattern list"""
+        if keyword not in self.preferred_keywords:
+            preferred_keywords.append(keyword)
+            print("add_preferred_keyword: Added keyword {}".format(repr(keyword)))
+            self.save_preferred_keywords(filename)
         
     def add_last_reply(self, reply, datetime_=None):
         """Convenience function to add a reply string to the last replies
