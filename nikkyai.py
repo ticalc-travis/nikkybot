@@ -442,7 +442,6 @@ PATTERN_REPLIES = (
         Markov_forward('beyond'),
     )
 ),
-#(r'^when (can|would|should|will|are|is|am|have|was|were|do|does)\b', 1,
 (r'^when\b', 1,
     R(
         'never',
