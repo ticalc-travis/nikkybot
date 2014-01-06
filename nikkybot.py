@@ -162,8 +162,12 @@ class NikkyBot(irc.IRCClient):
                 else:
                     m = re.match(r'\(.\) \*(.*?) (.*)', msg)
                     if m:
-                        nick = m.group(1)
-                        formatted_msg = '<{}> {}'.format(nick, m.group(2))
+                        if m.group(1) != 'File':
+                            nick = m.group(1)
+                        else:
+                            nick = ''
+                        formatted_msg = '<> {} {}'.format(m.group(1),
+                                                          m.group(2))
             if self.is_highlight(msg):
                 raw_msg = msg
                 for n in self.factory.nicks:
