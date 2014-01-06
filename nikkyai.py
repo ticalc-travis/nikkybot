@@ -930,7 +930,35 @@ PATTERN_REPLIES = (
         Markov_forward('hello {0}', ('hello',)),
         Markov_forward('hey {0}', ('hey',)),
         Markov_forward('sup {0}', ('sup',)),
-        Markov_forward('shut the', ('shut the hell up',))
+        Markov_forward('I heard {0}'),
+        Markov_forward('I heard that {0}'),
+    ),
+),
+(r'^uploaded new file "(.*)" to archives queue.', 1,
+    R(
+        Recurse('{1}'),
+        Recurse('{0}'),
+        Markov_forward('{0}'),
+    )
+),
+(r'File (.*) by (.*) accepted into archives by (.*)', 1,
+    R(
+        Recurse('{1}'),
+        Recurse('{2}'),
+        Markov_forward('{2}'),
+        Recurse('{3}'),
+        Markov_forward('{3}'),
+    ),
+),
+(r'File (.*) by (.*) rejected from archives by (.*)', 1,
+    R(
+        Recurse('{1}'),
+        Recurse('{2}'),
+        Markov_forward('{2}'),
+        Recurse('{3}'),
+        Markov_forward('{3}'),
+        Recurse('deleted a post in'),
+        Markov_forward('reject')
     ),
 ),
 (r'\bspam post', 1,
