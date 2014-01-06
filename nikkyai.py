@@ -33,7 +33,7 @@ import markov
 DEBUG = True
 
 PREFERRED_KEYWORDS_FILE = 'preferred_keywords.txt'
-RECURSE_LIMIT = 333
+RECURSE_LIMIT = 100
 MAX_LF_L = 0
 MAX_LF_R = 1
 
@@ -1137,8 +1137,11 @@ preferred_keywords = []
 def random_markov():
     """Pick any random Markov-chained sentence and output it"""
     while True:
-        out = markov5.sentence_from_chain(
-            tuple(m.chain_forward.random_key())
+        #out = markov5.sentence_from_chain(
+            #tuple(m.chain_forward.random_key())
+        #)
+        out = markov5.sentence_from_word(
+            choice(['the', 'a', 'an', 'I', 'you', 'of', 'that', 'will'])
         )
         if out.strip():
             return out

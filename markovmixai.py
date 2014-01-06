@@ -29,11 +29,11 @@ import markov
 reload(markov)   # DEBUG
 
 PERSONALITIES = ('netham45', 'kevin_o', 'brandonw', 'tev', 'merth', 'randomist', 'chronomex', 'sir_lewk', 'michael_v', 'e-j', 'cricket_b', 'glk', 'kerm')
-RECURSE_LIMIT = 333
 # !TODO! Do some proper log handling instead of print()--send debug/log stuff
 # to a different stream or something.  It interferes with things like botchat
 
 DEBUG = True
+RECURSE_LIMIT = 100
 CANDIDATES = 1
 MAX_LF_L = 0
 MAX_LF_R = 2

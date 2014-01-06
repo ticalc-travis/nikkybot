@@ -18,9 +18,10 @@
 
 from collections import defaultdict, Counter
 from random import choice, randint
+import re
 import shelve
 
-DEFAULT_IGNORE_CHARS = '!"&`()*,./:;<=>?[\\]^=\'{|}~'
+DEFAULT_IGNORE_CHARS = '\\]\\-!"&`()*,./:;<=>?[\\^=\'{|}~'
 
 class Markov(object):
     """tev's Markov chain implementation"""
@@ -47,17 +48,21 @@ class Markov(object):
         """Convert a string or sequence of strings to lowercase if case
         sensitivity is disabled, and strip characters contained in
         self._ignore_chars"""
-        for c in self._ignore_chars:
-            try:
-                s = s.replace(c, '')
-            except AttributeError:
-                s = [x.replace(c, '') for x in s]
-        if self._case_sensitive:
-            return s
         try:
-            return s.lower()
+            s.lower()
         except AttributeError:
-            return [x.lower() for x in s]
+            if self._case_sensitive:
+                s = [re.sub('[{}]'.format(self._ignore_chars), '', x) for x in s]
+            else:
+                s = [re.sub('[{}]'.format(self._ignore_chars), '', x).lower()
+                    for x in s]
+            return s
+        else:
+            if self._case_sensitive:
+                s = re.sub('[{}]'.format(self._ignore_chars), '', s)
+            else:
+                s = re.sub('[{}]'.format(self._ignore_chars), '', s).lower()
+            return s
 
     def adjust_left_line_breaks(self, string, max):
         """Limit newline characters in string to 'max' total, counting from end of
