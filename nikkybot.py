@@ -296,6 +296,7 @@ class NikkyBot(irc.IRCClient):
                                   '{}: Botchat result: {}'.format(nick, output))
         else:
             self.output_timed_msg(nick, 'Botchat result: {}'.format(output))
+        print('return_bot_chat: Reporting botchat completion: {}'.format(output))
         self.user_threads -= 1
         assert(self.user_threads >= 0)
     

@@ -1318,7 +1318,8 @@ class NikkyAI(object):
         with open(filename, 'r') as f:
             pk = [L.strip('\n') for L in f.readlines()]
         preferred_keywords = pk
-        print("load_preferred_keywords: {} patterns loaded from {}".format(len(pk), repr(filename)))
+        if DEBUG:
+            print("load_preferred_keywords: {} patterns loaded from {}".format(len(pk), repr(filename)))
         
     def save_preferred_keywords(self, filename=None):
         """Save a list of preferred keyword patterns for markov_reply"""
@@ -1326,7 +1327,8 @@ class NikkyAI(object):
             filename = PREFERRED_KEYWORDS_FILE
         with open(filename, 'w') as f:
             f.writelines([s+'\n' for s in sorted(preferred_keywords)])
-        print("save_preferred_keywords: {} patterns saved to {}".format(len(preferred_keywords), repr(filename)))
+        if DEBUG:
+            print("save_preferred_keywords: {} patterns saved to {}".format(len(preferred_keywords), repr(filename)))
         
     def add_preferred_keyword(self, keyword, filename=None):
         """Convenience function for adding a single keyword pattern to the

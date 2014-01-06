@@ -47,7 +47,7 @@ def get_response(nick, target_nick, msg):
     if nick == 'nikkybot':
         reply = nikkybot.reply(msg)
     else:
-        reply = markovmix.reply(nick + ' ' + msg)
+        reply = markovmix.reply('?' + nick + ' ' + msg)
         reply = [line.replace('<' + nick + '> ', '', 1) for line in reply]
     if not isinstance(reply, list):
         reply = [reply]

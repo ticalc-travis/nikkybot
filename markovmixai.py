@@ -30,6 +30,10 @@ reload(markov)   # DEBUG
 
 PERSONALITIES = ('netham45', 'kevin_o', 'brandonw', 'tev', 'merth', 'randomist', 'chronomex', 'sir_lewk', 'michael_v', 'e-j', 'cricket_b', 'glk', 'kerm')
 RECURSE_LIMIT = 333
+# !TODO! Do some proper log handling instead of print()--send debug/log stuff
+# to a different stream or something.  It interferes with things like botchat
+
+DEBUG = True
 CANDIDATES = 1
 MAX_LF_L = 0
 MAX_LF_R = 2
@@ -404,7 +408,7 @@ def pattern_reply(msg, who, last_used_reply='', nick='markovmix', _recurse_level
         try:
             m = re.search(pattern, msg, flags=re.I)
         except Exception as e:
-            print('Regex: {}'.format(pattern))
+            print('Regex: {}, {}'.format(pattern, e))
             raise e
         if m:
             # Input matches, what about last_reply?
@@ -425,8 +429,13 @@ def pattern_reply(msg, who, last_used_reply='', nick='markovmix', _recurse_level
     try:
         match, reply, allow_repeat = choice(matches)
     except IndexError:
+        if DEBUG:
+            print("DEBUG: pattern_reply: sourcenick {}, msg {}: No pattern match found".format(repr(sourcenick), repr(msg)))
         raise Dont_know_how_to_respond_error
     fmt_list = (sourcenick,) + match.groups()
+    else:
+        if DEBUG:
+            print("DEBUG: pattern_reply: sourcenick {}, msg {}: Chose match {}".format(repr(sourcenick), repr(msg), repr(match.re.pattern)))
     try:
         return (reply.get(who, fmt_list), allow_repeat)
     except AttributeError as e:
