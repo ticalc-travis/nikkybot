@@ -892,5 +892,5 @@ class NikkyAI(object):
         try:
             return choice(outputs)
         except IndexError:
-            return "I'm don't know what to say!"
+            return "I don't know what to say!"
 
