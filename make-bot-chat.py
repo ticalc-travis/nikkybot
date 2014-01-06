@@ -68,7 +68,6 @@ def format_response(nick, msg, tag=None):
 response = 'Hi'
 for i in xrange(NUMBER_OF_ROUNDS):
     response = get_response(nick1, nick2, response)
-    print(format_response(nick1, response, tag1))
+    print(format_response(nick1, response, tag1)+'\n')
     response = get_response(nick2, nick1, response)
-    print(format_response(nick2, response, tag2))
-
+    print(format_response(nick2, response, tag2)+'\n')
