@@ -28,16 +28,26 @@ from pytz import timezone
 import markov
 reload(markov)   # DEBUG
 
-PERSONALITIES = ('netham45', 'kevin_o', 'brandonw', 'tev', 'merth', 'randomist', 'chronomex', 'sir_lewk', 'michael_v', 'e-j', 'cricket_b', 'glk', 'kerm')
 # !TODO! Do some proper log handling instead of print()--send debug/log stuff
 # to a different stream or something.  It interferes with things like botchat
 
+PERSONALITIES = ('debrouxl', 'bb010g', 'calebh', 'cvsoft-d', 'netham45', 'kevin_o', 'brandonw', 'tev', 'merth', 'randomist', 'chronomex', 'sir_lewk', 'michael_v', 'e-j', 'cricket_b', 'glk', 'kerm')
+
 DEBUG = True
+PREFERRED_KEYWORDS_FILE = 'preferred_keywords.txt'
 RECURSE_LIMIT = 100
 CANDIDATES = 1
 MAX_LF_L = 0
 MAX_LF_R = 2
 
+
+def sanitize(s):
+    """Remove control characters from 's' if it's a string; return it as is
+    if it's None"""
+    if s is not None:
+        for cn in xrange(0, 32):
+            s = s.replace(chr(cn), '')
+    return s
 
 class S(list):
     """Sequence table"""
@@ -50,7 +60,7 @@ class S(list):
         s = ''
         for i in self:
             try:
-                s += i.get(markov, fmt)
+                s += i.get(who, fmt)
             except AttributeError:
                 s += i.format(*fmt)
         return s
@@ -76,8 +86,9 @@ class E(str):
 
 class Markov_forward(object):
     """Return a Markov chain from word or chain forward"""
-    def __init__(self, string, failmsglist=None):
+    def __init__(self, string, failmsglist=None, max_lf_r=MAX_LF_R):
         self.chain = string.split(' ')
+        self.max_lf_r = max_lf_r
         if failmsglist is None:
             failmsglist = ['']
         self.failmsglist = failmsglist
@@ -85,8 +96,36 @@ class Markov_forward(object):
     def get(self, who, fmt=None):
         if fmt is None:
             fmt = []
+        failmsg = choice(self.failmsglist)
+        if DEBUG:
+            print("DEBUG: Markov_forward.get: {}: {}".format(
+                repr(self.chain), repr(fmt)))
+        try:
+            failmsg = failmsg.get(who, fmt)
+        except AttributeError:
+            pass
         return markov_forward(who, [x.format(*fmt) for x in self.chain],
-            choice(self.failmsglist))
+            failmsg, self.max_lf_r)
+
+
+class Markov(object):
+    """Force standard Markov processing on the given message and return
+    result, even if message would otherwise match another regexp pattern"""
+    def __init__(self, text, failmsglist=None):
+        if failmsglist is None:
+            failmsglist = ['']
+        self.failmsglist = failmsglist
+        self.text = text
+
+    def get(self, who, fmt=None):
+        if fmt is None:
+            fmt = []
+        failmsg = choice(self.failmsglist)
+        try:
+            failmsg = failmsg.get(who, fmt)
+        except AttributeError:
+            pass
+        return markov_reply(self.text.format(*fmt), failmsg)
 
 
 class Recurse(str):
@@ -96,13 +135,12 @@ class Recurse(str):
             fmt = []
         try:
             return pattern_reply(self.format(*fmt), who)[0]
-        except Dont_know_how_to_respond_error:
+        except (Dont_know_how_to_respond_error, RuntimeError):
             for i in xrange(RECURSE_LIMIT):
-                reply = markov_reply(who + ': ' + self.format(*fmt))
+                reply = markov_reply(self.format(*fmt))
                 if reply.strip():
                     return reply
             return random_markov(markovs[who, 5])
-
 
 # === DATA SECTION ============================================================
 
@@ -122,7 +160,7 @@ PATTERN_REPLIES = (
         Markov_forward('hey {0}', ('hey',)),
         Markov_forward('sup {0}', ('sup',)),
     ),
-    False
+    True
 ),
 (r"\b(good night|goodnight|g'?night)\b", 1,
     R(
@@ -133,42 +171,159 @@ PATTERN_REPLIES = (
 (r"\b(bye|bye bye|goodbye|good bye|see you later|night|good night|g'night)\b",
 1,
     R(
-        Markov_forward('bye {0}', ('bye',))
+        Markov_forward('bye {0}', ('bye',)),
+        Markov_forward('bye'),
+        Markov_forward('goodbye', ('goodbye',)),
+        Markov_forward('see you', ('see you')),
+        Markov_forward('cya'),
     ),
-    False
+    True
 ),
+(r"\b(congratulations|congrats)", 1, Markov_forward('Thanks', 'thx', 'ty')),
 (r'\b(thanks|thank you)\b', 1,
     R(
         Markov_forward("you're welcome", ("you're welcome",)),
     )
 ),
-
-# General
-(r"^(who is|who's|what is|what's|how's|how is) (.*?)\W?$", -1,
+(r"\*\*\*yes/no\*\*\*", -99,
     R(
-        Markov_forward('{1} is',
-            ("Never heard of 'em", 'Beats me', "Don't ask me")
-        )
+        'yes', 'no', 'maybe', 'probably', 'yeah',
+        Markov_forward('yes'),
+        Markov_forward('no'),
+        Markov_forward('maybe'),
+        Markov_forward('yeah'),
+        Markov_forward('yes'),
+        Markov_forward('only if'),
+        Markov_forward('only when'),
+        Markov_forward('as long as'),
+        Markov_forward('whenever'),
+        Markov_forward('of course')
     ),
     True
 ),
+
+# General
+(r"which", 1,
+    R(
+        Markov_forward('this'),
+        Markov_forward('that'),
+        Markov_forward('the'),
+        Markov_forward('those'),
+        Markov_forward('these'),
+        Markov_forward('all of'),
+        Markov_forward('all the'),
+    ),
+),
+(r"^anything else", 1,
+    S(
+        R('', Recurse('***yes/no***')),
+        '\n',
+        Recurse("what's"),
+    ),
+),
+(r"^(what do you|what is going|what's going)", -2, Recurse('for what')),
+(r"(^(what|what's|whats)|for what|for which)", 1,
+    R(
+        Markov_forward('a'),
+        Markov_forward('an'),
+        Markov_forward('the'),
+        Recurse('how many'),
+    ),
+),
+(r"^(who is|who's|what is|what's|how's|how is) (the |a |an |your |my )?(.*?)\?*$", 0,
+    R(
+        Markov_forward('{3} is'),
+        Markov_forward('{3}'),
+        Recurse("what's"),
+    ),
+),
+(r"^(who are|who're|what are|what're|how're|how are) (.*?)\?*$", 0,
+    R(
+        Markov_forward('{2} are'),
+        Markov_forward("They're"),
+        Markov_forward('They are'),
+    ),
+),
+(r"^(what are|what're) .*ing\b", -1,
+    Recurse("what's"),
+),
+(r'^where\b', 0,
+    R(
+        Markov_forward('in'),
+        Markov_forward('on'),
+        Markov_forward('on top of'),
+        Markov_forward('inside of'),
+        Markov_forward('inside'),
+        Markov_forward('under'),
+        Markov_forward('behind'),
+        Markov_forward('outside'),
+        Markov_forward('over'),
+        Markov_forward('up'),
+        Markov_forward('beyond'),
+    )
+),
+(r'^when\b', 1,
+    R(
+        'never',
+        'forever',
+        'right now',
+        'tomorrow',
+        'now',
+        Markov_forward('never'),
+        Markov_forward('tomorrow'),
+        Markov_forward('as soon as'),
+        Markov_forward('whenever'),
+        Markov_forward('after'),
+        Markov_forward('before'),
+        Markov_forward('yesterday'),
+        Markov_forward('last'),
+        Markov_forward('next'),
+    )
+),
+(r'^how (long|much longer|much more time)\b', -2,
+    R(
+        'never',
+        'forever',
+        Markov_forward('until'),
+        Markov_forward('as soon as'),
+        Markov_forward('whenever'),
+    )
+),
+(r'^how\b', -1,
+    R(
+        Markov_forward('by'),
+        Markov_forward('via'),
+        Markov_forward('using'),
+    )
+),
 (r'\b(why|how come)\b', 0,
     R(
-        Markov_forward('because', ("Don't know",)),
-        Markov_forward('because your', ("Don't know",)),
-        Markov_forward('because you', ("Don't know",)),
-        Markov_forward('because of', ("Don't know",)),
-        Markov_forward('because of your', ("Don't know",))
+        Markov_forward('because'),
+        Markov_forward('because your'),
+        Markov_forward('because you'),
+        Markov_forward('because of'),
+        Markov_forward('because of your')
     )
 ),
 (r'\bwhat does it mean\b', 1,
-    Recurse('it means')
+    Markov_forward('it means')
+),
+(r'\bcontest\b', 1,
+    R(
+        Recurse("I'm entering"),
+        Recurse("You'll lose"),
+        Recurse('My entry'),
+        Markov_forward('Contests')
+    )
+),
+(r'\b(who|what) (does|do|did|should|will|is) \S+ (.*?)\?*$', -1,
+    Recurse('what do you think about {3}')
 ),
 (r'\b(how much|how many|what amount)\b', -1,
     R(
-        Markov_forward('enough', ('enough',)),
-        Markov_forward('too many', ('too many',)),
-        Markov_forward('more than you', ("Don't know",))
+        Markov_forward('enough'),
+        Markov_forward('too many'),
+        Markov_forward('more than you')
     )
 ),
 (r"^where\b", 1,
@@ -185,7 +340,23 @@ PATTERN_REPLIES = (
         Markov_forward('up')
     )
 ),
-#(r'^when (can|would|should|will|are|is|am|have|was|were|do|does)\b', 1,
+(r"^(is|isn't|are|am|does|should|can|do)\b", 2, R(Recurse('***yes/no***')), True),
+(r'^(do you think|what about|really)\b', 0, R(Recurse('***yes/no***')), True),
+(r"^(is|are|am|should|can|do|does|which|what|what's|who|who's)(?: \S+)+[ -](.*?)\W+or (.*)\b", -1,
+    S(
+        R(
+            S('{2}', R(' by far', ', of course', ', naturally', '\nduh')),
+            S('{3}', R(' by far', ', of course', ', naturally', '\nduh')),
+            'both',
+            'neither',
+            'dunno',
+            S('{2}', R('--', '? ', ': ', '\n'), Recurse('what do you think of {2}')),
+            S('{3}', R('--', '? ', ': ', '\n'), Recurse('what do you think of {3}'))
+        ),
+        '\n',
+        R('', Markov_forward('because', [' ']), Markov_forward('since', [' '])),
+    ),
+),
 (r'^when\b', 1,
     R(
         Markov_forward('never'),
@@ -207,6 +378,12 @@ PATTERN_REPLIES = (
         Markov_forward('better than'),
         Markov_forward('worse than'),
     )
+),
+(r'\bwhat time\b', 0,
+    R(
+        Markov_forward('time for'),
+        Markov_forward("it's time"),
+    ),
 ),
 
 # Meta
@@ -240,6 +417,45 @@ PATTERN_REPLIES = (
 (r"^(how is|how's|do you like|you like) (.*?)\W?$", -1,
     Recurse('what do you think of {2}')
 ),
+(r'\bI \S+ you', 0,
+    S(
+        R('Great\n', 'gee\n', 'thanks\n', 'Awesome\n'),
+        R(
+            Markov_forward('I wish you'),
+            Markov_forward('I hope you'),
+            Markov_forward('I hope your'),
+        ),
+    ),
+),
+(r'\b(you are|you must) (a |an |)(.*)', 1,
+    R(
+        Markov_forward('I am'),
+        Markov_forward("I'm"),
+        Markov_forward('I am really'),
+        Markov_forward("I'm really"),
+        Markov_forward('I am actually'),
+        Markov_forward("I'm actually"),
+    )
+),
+(r"\b(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -1,
+    R(
+        Markov_forward('{6} is'),
+        Markov_forward('{6}'),
+        Markov_forward('better than'),
+        Markov_forward('worse than'),
+    ),
+    False
+),
+(r"^(what do you think|what do you know|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )me\W?$", -2,
+    R(
+        Markov_forward('you'),
+        Recurse('what do you think of {0}')
+    )
+),
+(r"^(how is|how's|do you like|you like|you liek) (.*?)\W?$", -1,
+    Recurse('what do you think of {2}')
+),
+(r"\btell (me|us) about (.*)", -2, R(Recurse('{2}'))),
 )
 
 # === END OF DATA SECTION =====================================================
@@ -251,7 +467,7 @@ class Nikky_error(Exception):
 class Dont_know_how_to_respond_error(Nikky_error):
     pass
 
-class Repeated_response_error(Nikky_error):
+class Bad_response_error(Nikky_error):
     pass
 
 
@@ -268,6 +484,7 @@ for p in PERSONALITIES:
             order=o, readonly=True, case_sensitive=False)
         markovs[p, o].default_max_left_line_breaks = MAX_LF_L
         markovs[p, o].default_max_right_line_breaks = MAX_LF_R
+preferred_keywords = []
 
 
 def to_whom(msg):
@@ -281,63 +498,89 @@ def to_whom(msg):
             msg = m.group(1)
             
         # Check initial highlight
-        m = re.match(r'((?:\w|-)*)\W *(.*)', msg)
+        #m = re.match(r'((?:\w|-)*)\W *(.*)', msg)
+        m = re.match(r'^\?(\S+?)[:,-]*\W(.*)', msg)
         if m:
             for k in markovs.keys():
                 if k[0].lower() == m.group(1).lower():
-                    return m.group(1).lower(), m.group(2)
+                    return m.group(1), m.group(2)
             return None, msg
-        else:
-            # Try to find an "internal" highlight in the message; return first match
-            for p in PERSONALITIES:
-                try:
-                    if re.match(re.escape(p), msg, re.I):
-                        return p.lower(), msg
-                except KeyError:
-                    return None, msg
+        #else:
+            ## Try to find an "internal" highlight in the message; return first match
+            #for p in PERSONALITIES:
+                #try:
+                    #if re.match(re.escape(p), msg, re.I):
+                        #return p.lower(), msg
+                #except KeyError:
+                    #return None, msg
         return None, msg
 
 
 def random_markov(m):
     """Pick any random Markov-chained sentence and output it"""
     while True:
-        out = m.sentence_from_chain(
-            tuple(m.chain_forward.random_key())
+        #out = m.sentence_from_chain(
+            #tuple(m.chain_forward.random_key())
+        #)
+        out = m.sentence_from_word(
+            choice(['the', 'a', 'an', 'I', 'you', 'of', 'that', 'will'])
         )
         if out.strip():
             return out
 
 
-def markov_reply(msg, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
+def markov_reply(msg, failmsg=None, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
     """Generate a Markov-chained reply for msg"""
-
-    # Find who's being talked to and split it out
-    who, msg = to_whom(msg)
-    if not who:
-        return ''
     
+    # Search for a sequence of input words to Markov chain from: use the
+    # longest possible chain matching any regexp from preferred_patterns;
+    # failing that, use the longest possible chain of any words found in the
+    # Markov database.
+    who, msg = to_whom(msg)
     if not msg.strip():
         return random_markov(markovs[who, 5])
+    
+    words = [x for x in msg.split(' ') if x]
+    high_priority_replies = {1:[]}
+    low_priority_replies = {1:[]}
     for order in (5, 4, 3, 2):
-        words = [x for x in msg.split(' ') if x]
-        avail_replies = []
+        markov = markovs[who, order]
+        high_priority_replies[order] = []
+        low_priority_replies[order] = []
         for i in xrange(len(words) - (order-1)):
-            markov = markovs[who, order]
-            response = \
-                markov.sentence_from_chain(
-                    tuple(words[i:i+order]), max_lf_l, max_lf_r
-                )
+            chain = tuple(words[i:i+order])
+            response = markov.sentence_from_chain(chain, max_lf_l, max_lf_r)
+            chain_text = ' '.join(chain)
             if response.strip():
-                avail_replies.append(response)
-        if avail_replies:
-            return choice(avail_replies)
+                for p in preferred_keywords:
+                    if re.search(p, chain_text, re.I):
+                        high_priority_replies[order].append(response)
+                else:
+                    low_priority_replies[order].append(response)
+
+    # Failing that, try to chain on the longest possible single input word
     words.sort(key=len)
     words.reverse()
     for word in words:
         response = markovs[who, 5].sentence_from_word(word, max_lf_l, max_lf_r)
         if response.strip():
-            return response
-    return ''
+            for p in preferred_keywords:
+                if re.search(p, word, re.I):
+                    high_priority_replies[1].append(response)
+            else:
+                low_priority_replies[1].append(response)
+    for order in reversed(high_priority_replies.keys()):
+        if high_priority_replies[order]:
+            return choice(high_priority_replies[order])
+    for order in reversed(low_priority_replies.keys()):
+        if low_priority_replies[order]:
+            return choice(low_priority_replies[order])
+        
+    # Failing *that*, return either failmsg (or random Markov if no failmsg)
+    if failmsg is None:
+        return random_markov(markovs[who, 5])
+    else:
+        return failmsg
 
 
 def manual_markov(order, msg, _recurse_level=0):
@@ -377,17 +620,20 @@ def markov_forward(who, chain, failmsg='', max_lf=MAX_LF_R):
     return markov.adjust_right_line_breaks(out, max_lf)
 
 
-def pattern_reply(msg, who, last_used_reply='', nick='markovmix', _recurse_level=0):
-    if _recurse_level > RECURSE_LIMIT:
-        raise Dont_know_how_to_respond_error
+def pattern_reply(msg, who, last_used_reply='', nick='nikkybot'):
 
     # Separate out speaker's nick if known
-    m = re.match(r'<(.*)> (.*)', msg)
+    m = re.match(r'<(.*?)> (.*)', msg)
     if m:
         sourcenick = m.group(1)
         msg = m.group(2)
     else:
         sourcenick = ''
+
+    # Remove highlight at beginning of line, if it exists
+    m = re.match(re.escape(nick) + r'\W *(.*)', msg, re.I)
+    if m:
+        msg = m.group(1)
 
     # Find matching responses for msg, honoring priorities
     cur_priority = None
@@ -432,10 +678,10 @@ def pattern_reply(msg, who, last_used_reply='', nick='markovmix', _recurse_level
         if DEBUG:
             print("DEBUG: pattern_reply: sourcenick {}, msg {}: No pattern match found".format(repr(sourcenick), repr(msg)))
         raise Dont_know_how_to_respond_error
-    fmt_list = (sourcenick,) + match.groups()
     else:
         if DEBUG:
             print("DEBUG: pattern_reply: sourcenick {}, msg {}: Chose match {}".format(repr(sourcenick), repr(msg), repr(match.re.pattern)))
+    fmt_list = [sourcenick,] + [sanitize(s) for s in match.groups()]
     try:
         return (reply.get(who, fmt_list), allow_repeat)
     except AttributeError as e:
@@ -452,30 +698,91 @@ class NikkyAI(object):
         self.last_reply = ''
         self.last_replies = {}
         self.nick = 'markovmix'
+        
+    def load_preferred_keywords(self, filename=None):
+        """Load a list of preferred keyword patterns for markov_reply"""
+        global preferred_keywords
+        if filename is None:
+            filename = PREFERRED_KEYWORDS_FILE
+        with open(filename, 'r') as f:
+            pk = [L.strip('\n') for L in f.readlines()]
+        preferred_keywords = pk
+        if DEBUG:
+            print("load_preferred_keywords: {} patterns loaded from {}".format(len(pk), repr(filename)))
+        
+    def save_preferred_keywords(self, filename=None):
+        """Save a list of preferred keyword patterns for markov_reply"""
+        if filename is None:
+            filename = PREFERRED_KEYWORDS_FILE
+        with open(filename, 'w') as f:
+            f.writelines([s+'\n' for s in sorted(preferred_keywords)])
+        if DEBUG:
+            print("save_preferred_keywords: {} patterns saved to {}".format(len(preferred_keywords), repr(filename)))
+        
+    def add_preferred_keyword(self, keyword, filename=None):
+        """Convenience function for adding a single keyword pattern to the
+        preferred keywords pattern list"""
+        if keyword not in preferred_keywords:
+            preferred_keywords.append(keyword)
+            print("add_preferred_keyword: Added keyword {}".format(repr(keyword)))
+            self.save_preferred_keywords(filename)
+        
+    def add_last_reply(self, reply, datetime_=None):
+        """Convenience function to add a reply string to the last replies
+        memory (used by check_output_response). datetime_ defaults to
+        datetime.now()."""
+        if datetime_ is None:
+            datetime_ = datetime.now()
+        self.last_replies[reply.lower()] = datetime.now()
 
-    def check_output_response(self, response, who, allow_repeat=False):
-        """If not allow_repeat, check if the response was already output
-        not too long ago; do exception if so, else record when this response
-        was last used.  Also set response as last-used response if accepted.
-        If accepted, return response list, split by newlines."""
+    def check_output_response(self, response, who, allow_repeat=False,
+                              add_response=True):
+        """Throw Bad_response_error on null responses, and, if not
+        allow_repeat, if the response was already output not too long ago.
+        Otherwise, set response as last-used response if add_response is True,
+        and return response list, split by newlines."""
 
+        if not [line for line in response if response.strip()]:
+            raise Bad_response_error
         if not allow_repeat:
             try:
                 if (datetime.now() -
-                    self.last_replies[response.lower().strip()] <
+                    self.last_replies[response.lower()] <
                         PATTERN_RESPONSE_RECYCLE_TIME):
-                    raise Repeated_response_error
-                else:
-                    self.last_replies[response.lower()] = datetime.now()
+                    raise Bad_response_error
+                elif add_response:
+                    self.add_last_reply(response)
             except KeyError:
-                self.last_replies[response.lower()] = datetime.now()
+                if add_response:
+                    self.add_last_reply(response)
 
         self.last_reply = response
         return ['<{}> '.format(who) + line for line in response.split('\n')]
 
-    def pattern_reply(self, msg):
+    def clean_up_last_replies(self):
+        """Remove stale (no longer applicable) entries from self.last_replies
+        dictionary"""
+        num_removed = 0
+        orig_size = len(self.last_replies)
+        for k, d in self.last_replies.items():
+            if (datetime.now() - d > PATTERN_RESPONSE_RECYCLE_TIME):
+                print(
+                    "clean_up_last_replies: "
+                    "Removed stale last_replies entry {} ({})".format(
+                        repr(k), d)
+                )
+                del self.last_replies[k]
+                num_removed += 1
+        print(
+            "clean_up_last_replies: "
+            "Removed {} items (len {} -> {})".format(
+                num_removed, orig_size, len(self.last_replies))
+        )
+
+    def pattern_reply(self, msg, add_response=True):
         """Generate a reply using predefined pattern/response patterns.
-        Check for and avoids repeated responses."""
+        Check for and avoid repeated responses.  Add new response to
+        add_response to self.last_replies if add_response."""
         who, msg = to_whom(msg)
         if not who:
             return ''
@@ -483,15 +790,17 @@ class NikkyAI(object):
             response, allow_repeat = \
                 pattern_reply(msg, who, self.last_reply, self.nick)
             try:
-                return self.check_output_response(response, who, allow_repeat)
-            except Repeated_response_error:
+                return self.check_output_response(
+                    response, who, allow_repeat, add_response=add_response)
+            except Bad_response_error:
                 pass
-        return self.markov_reply('{}: {}'.format(who, msg))
+        return self.markov_reply(msg)
 
-    def markov_reply(self, msg, _recurse_level=0):
+
+    def markov_reply(self, msg, add_response=True,_recurse_level=0):
         """Generate a reply using Markov chaining. Check and avoid repeated
-        responses."""
-
+        responses.  Add new response to self.last_replies if add_response."""
+        
         # Split speaker nick and rest of message
         m = re.match(r'<(.*?)> (.*)', msg)
         if m:
@@ -499,11 +808,13 @@ class NikkyAI(object):
             msg = m.group(2)
         else:
             sourcenick = ''
-
+        if msg.startswith('{}: '.format(self.nick.lower())):
+            msg = msg[len(self.nick) + 2:]
+            
         who = to_whom(msg)[0]
         if not who:
             return ''
-
+        
         if _recurse_level > RECURSE_LIMIT:
             out = random_markov(markovs[who, 5])
             return ['<{}> '.format(who) + line for line in out.split('\n')]
@@ -527,21 +838,34 @@ class NikkyAI(object):
                 msg = new_msg
                 if stop_here:
                     break
+        
+        out = markov_reply(msg.rstrip()).rstrip()
 
-        # Pick some candidate responses; pick the longest
-        out = ''
-        for i in xrange(CANDIDATES):
-            candidate = markov_reply(msg.rstrip())
-            if len(candidate) > len(out):
-                out = candidate
+        # Transform phrases at beginning of reply
+        for transform in (
+                        # Avoid self-references in third person
+                        (self.nick + ' has ', 'I have '),
+                        (self.nick + ' is', 'I am'),
+                        (self.nick + ':', sourcenick + ': '),
+                        ('nikkybot', 'nikky'),
+                        ('nikkybot:', sourcenick + ':'),
+                        ):
+            old, new = transform
+            if out.lower().startswith(old):
+                out = new + out[len(old):]
+                break
+        out = out.replace(self.nick, sourcenick)
 
-        if not out.strip():
-            out = random_markov(markovs[who, 5])
+        # Transform initial highlights to a highlight to the speaker for a
+        # sense of realism
+        if sourcenick and randint(0, 10):
+            out = re.sub(r'\S+: ', sourcenick + ': ', out)
 
         try:
-            return self.check_output_response(out, who)
-        except Repeated_response_error:
-            return self.markov_reply(msg, _recurse_level + 1)
+            return self.check_output_response(out, who, 
+                                              add_response=add_response)
+        except Bad_response_error:
+            return self.markov_reply(msg, _recurse_level=_recurse_level+1)
 
     def reply(self, msg):
         """Generic reply method.  Try to use pattern_reply; if no response
