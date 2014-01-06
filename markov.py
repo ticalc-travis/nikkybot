@@ -294,7 +294,7 @@ class Markov_Shelf(shelve.DbfilenameShelf):
         return [eval(x) for x in shelve.Shelf.keys(self)]
 
     def random_key(self):
-        return eval(choice(shelve.Shelf.keys(self)))
+        return choice(self.keys())
 
 
 class Markov_Shelved(Markov):
