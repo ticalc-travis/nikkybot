@@ -1398,7 +1398,7 @@ class NikkyAI(object):
     def add_preferred_keyword(self, keyword, filename=None):
         """Convenience function for adding a single keyword pattern to the
         preferred keywords pattern list"""
-        if keyword not in self.preferred_keywords:
+        if keyword not in preferred_keywords:
             preferred_keywords.append(keyword)
             print("add_preferred_keyword: Added keyword {}".format(repr(keyword)))
             self.save_preferred_keywords(filename)
