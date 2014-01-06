@@ -9,6 +9,10 @@ from sys import argv, exit
 from time import sleep
 
 NUMBER_OF_ROUNDS = 50
+nikkyai.DEBUG = False
+nikkyai.RECURSE_LIMIT = 333
+markovmixai.DEBUG = False
+markovmixai.RECURSE_LIMIT = 333
 
 def usage_exit():
     print('Usage: {} personality1 personality2'.format(argv[0]))

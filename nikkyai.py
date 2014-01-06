@@ -27,6 +27,9 @@ from pytz import timezone
 
 import markov
 
+# !TODO! Do some proper log handling instead of print()--send debug/log stuff
+# to a different stream or something.  It interferes with things like botchat
+
 DEBUG = True
 
 PREFERRED_KEYWORDS_FILE = 'preferred_keywords.txt'
