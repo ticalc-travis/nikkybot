@@ -1511,6 +1511,8 @@ class NikkyAI(object):
             msg = m.group(2)
         else:
             sourcenick = ''
+        if msg.startswith('{}: '.format(self.nick.lower())):
+            msg = msg[len(self.nick) + 2:]
 
         # Transform phrases in input
         for transform in (
