@@ -36,7 +36,9 @@ else:
     tag1 = tag2 = None
 
 nikkybot = nikkyai.NikkyAI()
+nikkybot.load_preferred_keywords()
 markovmix = markovmixai.NikkyAI()
+markovmix.load_preferred_keywords()
 
 tw = textwrap.TextWrapper(subsequent_indent=' '*20, expand_tabs=True, width=80)
 
