@@ -292,6 +292,25 @@ PATTERN_REPLIES = (
         Markov('herd u liek'),
     ),
 ),
+(r'\b(fire|bonfire|burn|flame|extinguish|fry|fries)', 1,
+    R(
+        Markov('fire'),
+        Markov('fires'),
+        Markov('fire alarm'),
+        Markov('fire alarms'),
+        Markov('bonfire'),
+        Markov('bonfires'),
+        Markov('burn'),
+        Markov('burns'),
+        Markov('flame'),
+        Markov('flames'),
+        Markov('extinguish'),
+        Markov('extinguisher'),
+        Markov('extinguishers'),
+        Markov('fry'),
+        Markov('fries'),
+    )
+),
 
 # Basics
 (r'\b(hi|hello|hey)\b', 0,
@@ -532,14 +551,6 @@ PATTERN_REPLIES = (
 ),
 (r'\bI hate\b', 1,
     R('I hate you too', ':(\nI hate you too', 'I HATE YOU {0}\nNerd')
-),
-(r'\b(bonfire|fire|flames)\b', 1,
-    R(
-        Recurse('burns'),
-        Recurse('flames'),
-        Recurse('extinguisher'),
-        Recurse('fries')
-    )
 ),
 (r'\bwhere.*you hear that\b', 1, R('Omnimaga', 'your mom', 'your face')),
 (r'\b(why|how come)\b', 0,
