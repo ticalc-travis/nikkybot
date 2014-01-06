@@ -311,7 +311,9 @@ PATTERN_REPLIES = (
         Markov_forward('hello {0}', ('hello',)),
         Markov_forward('hey {0}', ('hey',)),
         Markov_forward('sup {0}', ('sup',)),
-        Markov_forward('shut the', ('shut the hell up',))
+        Markov_forward('shut the', ('shut the hell up',)),
+        Markov_forward('I heard {0}'),
+        Markov_forward('I heard that {0}'),
     ),
     True
 ),
@@ -395,12 +397,18 @@ PATTERN_REPLIES = (
         Recurse("what's"),
     ),
 ),
-(r"^(what do you|what is going|what's going)", -1, Recurse('for what')),
+(r"^(what do you|what is going|what's going)", -2, Recurse('for what')),
 (r"(^(what|what's|whats)|for what|for which)", 1,
     R(
         Markov_forward('a'),
         Markov_forward('an'),
         Markov_forward('the'),
+        Markov_forward("It's a"),
+        Markov_forward("It's an"),
+        Markov_forward("It's the"),
+        Markov_forward("It is a"),
+        Markov_forward("It is an"),
+        Markov_forward("It is the"),
         Recurse('how many'),
     ),
 ),
@@ -408,6 +416,12 @@ PATTERN_REPLIES = (
     R(
         Markov_forward('{3} is'),
         Markov_forward('{3}'),
+        Markov_forward('A {3} is'),
+        Markov_forward('An {3} is'),
+        Markov_forward('The {3} is'),
+        Markov_forward('A {3}'),
+        Markov_forward('An {3}'),
+        Markov_forward('The {3}'),
         Recurse("what's"),
     ),
 ),
@@ -421,7 +435,7 @@ PATTERN_REPLIES = (
 (r"^(what are|what're) .*ing\b", -1,
     Recurse("what's"),
 ),
-(r'^where\b', 1,
+(r'^where\b', 0,
     R(
         Markov_forward('in'),
         Markov_forward('on'),
@@ -537,10 +551,17 @@ PATTERN_REPLIES = (
         Markov_forward('because of your')
     )
 ),
-(r'\b(lousy|freaking|stupid|damn|dumb|farking)\b', 1,
-    R('sorry', 'sry', 'sorry\n:(')
+(r'\b(lousy|freaking|stupid|damn|dumb|farking|dammit|damnit|screw)\b', 1,
+    S(
+        R(
+            'sorry\n',
+            'sry\n',
+            'sorry\n:(\n',
+        ),
+        Recurse('excuse me while I'),
+    )
 ),
-(r'\byou t?here\b', 0,
+(r'\b((are|is) \S+|you) t?here\b', 0,
     R(
         'no',
         "No\nhe said he's never talking to anyone again",
@@ -684,7 +705,7 @@ PATTERN_REPLIES = (
         '{0}: https://github.com/ticalc-travis/nikkybot',
     ), True
 ),
-(r"\bthat ((made|makes|is making) no sense|does not .* make (any |no )?sense|doesn't .* make (any |no )?sense|.* sense make)\b", 1,
+(r"\bthat ((made|makes|is making) (no )?sense|does not .* make (any |no )?sense|doesn't .* make (any |no )?sense|.* sense make)\b", 1,
     R(
         'Sorry',
         'sorry\n:(',
@@ -709,12 +730,15 @@ PATTERN_REPLIES = (
 (r'\b(you|nikkybot) (did|does|do)\b', 1,
     R('I did?', 'I what?', 'Someone talking about me?')
 ),
-(r'\bI \S+ (you|nikkybot)', 0,
+(r'\bI \S+ (u|you|nikkybot)', 0,
     S(
         R('Great\n', 'gee\n', 'thanks\n', 'Awesome\n'),
         R(
+            Markov_forward('I wish you'),
             Markov_forward('I hope you'),
             Markov_forward('I hope your'),
+            Markov_forward('You deserve'),
+            Markov_forward("You don't deserve"),
         ),
     ),
 ),
@@ -737,25 +761,25 @@ PATTERN_REPLIES = (
         Markov_forward("I'm actually"),
     )
 ),
-(r'\b(nikkybot is|you are) (.*)', 1,
-    R(
-        R(
-            "That's what you think",
-            "Yes, I'm totally {2}",
-            'Am not',
-            'Why thank you pumpkin',
-            'Thanks',
-            'Damn straight',
-            'Where did you hear that?'
-        ),
-        Markov_forward('I am'),
-        Markov_forward("I'm"),
-        Markov_forward('I am really'),
-        Markov_forward("I'm really"),
-        Markov_forward('I am actually'),
-        Markov_forward("I'm actually"),
-    )
-),
+#(r'\b(nikkybot is|you are) (.*)', 1,
+    #R(
+        #R(
+            #"That's what you think",
+            #"Yes, I'm totally {2}",
+            #'Am not',
+            #'Why thank you pumpkin',
+            #'Thanks',
+            #'Damn straight',
+            #'Where did you hear that?'
+        #),
+        #Markov_forward('I am'),
+        #Markov_forward("I'm"),
+        #Markov_forward('I am really'),
+        #Markov_forward("I'm really"),
+        #Markov_forward('I am actually'),
+        #Markov_forward("I'm actually"),
+    #)
+#),
 (r'\b(are you|is nikkybot) (a |an |)\b(.*)\b', 1,
     R(
         'yes',
@@ -789,7 +813,7 @@ PATTERN_REPLIES = (
     R('"Your" retarded', "*You're")
 ),
 (r'\bsorry\b', 1, R('you should be')),
-(r"\b(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -1,
+(r"\b(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -3,
     R(
         Markov_forward('{6} is'),
         Markov_forward('{6}'),
@@ -798,13 +822,14 @@ PATTERN_REPLIES = (
     ),
     False
 ),
-(r"^(what do you think|what do you know|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )me\W?$", -2,
+(r"\bis (.*) (any good|good)", -3, Recurse('what do you think of {1}')),
+(r"^(what do you think|what do you know|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )me\W?$", -3,
     R(
         Markov_forward('you'),
         Recurse('what do you think of {0}')
     )
 ),
-(r"^(how is|how's|do you like|you like|you liek) (.*?)\W?$", -1,
+(r"^(how is|how's|do you like|you like|you liek) (.*?)\W?$", -3,
     Recurse('what do you think of {2}')
 ),
 (r"\btell (me|us) about (.*)", -2, R(Recurse('{2}'))),
@@ -830,13 +855,11 @@ PATTERN_REPLIES = (
 # Memes
 (r'\b(fail|epic fail)\b', 1, R('Yeah, you suck', 'HAW HAW', 'Lame')),
 (r'\<3 (.*)', 1, R('{0} loves {1}')),
+(r'\<3 nikkybot', 1, R('{0} loves me!')),
 (r'\o/', 1, R('\o/')),
 (r'$\>.*', 1, R('>true dat', '>hi kerm\n>is\n>this\n>annoying?')),
 
 # Cemetech
-(r'\bCemetech\b', 1,
-    R('Cemetech sucks', 'Cemetech\nmore like\nOmnimaga', 'Kammytech sucks')
-),
 (r'\b#cemetech\b', 1,
     R(
         'Join #tcpa',
