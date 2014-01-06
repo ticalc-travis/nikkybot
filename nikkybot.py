@@ -184,10 +184,9 @@ class NikkyBot(irc.IRCClient):
                         else:
                             print('Executed: {}'.format(raw_msg.strip()))
                         break
-                    else:
-                        self.do_AI_reply(formatted_msg, channel,
-                                         log_response=False)
-                        break
+                else:
+                    self.do_AI_reply(formatted_msg, channel,
+                                     log_response=False)
             else:
                 self.do_AI_maybe_reply(formatted_msg, channel, log_response=False)
 
