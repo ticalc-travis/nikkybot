@@ -886,7 +886,7 @@ class NikkyAI(object):
             sourcenick = ''
         outputs = []
         for p in PERSONALITIES:
-            r = self.reply('{}: {}'.format(p, msg))
+            r = self.reply('?{}: {}'.format(p, msg))
             if r:
                 outputs.append(r)
         try:
