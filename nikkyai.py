@@ -633,7 +633,7 @@ PATTERN_REPLIES = (
         'nikkybot\nmore like\nawesome',
     ), True
 ),
-(r'\bmore like\W*$', -10, E('markov_reply("\\n more like \\n", 2)')),
+(r'\bmore like\W*$', -10, E('markov_reply("\\n more like \\n", max_lf_l=2)')),
 (r'(.*) (more|moer|mroe) (like|liek)\W*$', -15,
     R(
         Markov_forward('{1} \n more like'),
