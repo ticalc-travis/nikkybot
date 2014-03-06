@@ -31,7 +31,7 @@ reload(markov)   # DEBUG
 # !TODO! Do some proper log handling instead of print()--send debug/log stuff
 # to a different stream or something.  It interferes with things like botchat
 
-PERSONALITIES = ('debrouxl', 'bb010g', 'calebh', 'cvsoft-d', 'netham45', 'kevin_o', 'brandonw', 'tev', 'merth', 'randomist', 'chronomex', 'sir_lewk', 'michael_v', 'e-j', 'cricket_b', 'glk', 'kerm')
+PERSONALITIES = ('jonimus', 'joeyoung', 'comic', 'juju', 'debrouxl', 'bb010g', 'calebh', 'cvsoft-d', 'netham45', 'kevin_o', 'brandonw', 'tev', 'merth', 'randomist', 'chronomex', 'sir_lewk', 'michael_v', 'e-j', 'cricket_b', 'glk', 'kerm')
 
 DEBUG = True
 PREFERRED_KEYWORDS_FILE = 'preferred_keywords.txt'
