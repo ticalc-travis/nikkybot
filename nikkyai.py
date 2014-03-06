@@ -277,13 +277,13 @@ PATTERN_REPLIES = (
         Markov('Kevin_O'),
     )
 ),
-(r'\bomnimaga', 98,
+(r'\bomnimaga', -1,
     R(
         Markov('omnimaga'),
         Markov('omnidrama'),
     )
 ),
-(r'\b(mudkip|herd|liek|like)', 98,
+(r'\b(mudkip|herd|liek)', 98,
     R(
         Markov('mudkip'),
         Markov('mudkipz'),
@@ -310,6 +310,31 @@ PATTERN_REPLIES = (
         Markov('fry'),
         Markov('fries'),
     )
+),
+(r'(\!q|\bquot).*', 1,
+    R(
+        Markov('!qadd'),
+        Markov('!qfind'),
+        Markov('!qdel'),
+        Markov('quote'),
+        Markov('quotes'),
+        Markov('!qsay'),
+        "I just added \"!qadd tev sucks\"\n"
+        "as one of my error messages when something goes wrong\n"
+        "And without the bot escape, so DecBot actually adds it",
+    ),
+),
+(r'^[0-9]+ quotes? found:', -2,
+    R(
+        Markov('!qadd'),
+        Markov('!qdel'),
+        Markov('quote'),
+        Markov('quotes'),
+        Markov('!qsay'),
+        "I just added \"!qadd tev sucks\"\n"
+        "as one of my error messages when something goes wrong\n"
+        "And without the bot escape, so DecBot actually adds it",
+    ),
 ),
 
 # Basics
@@ -501,6 +526,10 @@ PATTERN_REPLIES = (
         Markov_forward('by'),
         Markov_forward('via'),
         Markov_forward('using'),
+        Markov_forward('use'),
+        Markov_forward('only by'),
+        Markov_forward('only by using'),
+        Markov_forward('just use'),
     )
 ),
 (r'\b(you suck|your .* sucks)\b', 1,
@@ -549,9 +578,6 @@ PATTERN_REPLIES = (
         'Or you can start using a halfway decent OS'
     )
 ),
-(r'\bI hate\b', 1,
-    R('I hate you too', ':(\nI hate you too', 'I HATE YOU {0}\nNerd')
-),
 (r'\bwhere.*you hear that\b', 1, R('Omnimaga', 'your mom', 'your face')),
 (r'\b(why|how come)\b', 0,
     R(
@@ -588,13 +614,21 @@ PATTERN_REPLIES = (
         'me too',
         'I hate it too',
         "Don't use it\nI hate it too"
+        'I hate you too',
+        ':(\nI hate you too',
+        'I HATE YOU {0}\nNerd',
     )
 ),
 (r'\bwhat does it mean\b', 1,
     R('Communism.', Recurse('it means'))
 ),
-(r'\b(who|what) (does|do|did|should|will|is) \S+ (.*?)\?*$', -1,
-    Recurse('what do you think about {3}')
+(r'\b(who|what) (does|do|did|should|will|is) (\S+) (.*?)\?*$', -1,
+    #Recurse('what do you think about {3}')
+    R(
+        Recurse('which'),
+        Markov_forward('{3} {4}'),
+        Markov_forward('{3} {4}s'),
+    ),
 ),
 (r'\bcontest\b', 1,
     R(
@@ -672,6 +706,39 @@ PATTERN_REPLIES = (
         Markov_forward("it's time"),
     ),
 ),
+(r"\b(will|should|can|going to|won't|wouldn't|would|can't|isn't|won't) (\w+)\b", 5,
+    R(
+        Markov_forward('and'),
+        Markov_forward('and just'),
+        Markov_forward('and then'),
+        Markov_forward('and then just'),
+        Markov_forward('or'),
+        Markov_forward('or just'),
+        Markov_forward('yes and'),
+        Markov_forward('yes or'),
+        Markov_forward('yeah and'),
+        Markov_forward('yes and'),
+        Markov_forward('yes and just'),
+        Markov_forward('yes or just'),
+        Markov_forward('yeah and just'),
+        Markov_forward('yes and just'),
+        Markov_forward('and {2}'),
+        Markov_forward('and just {2}'),
+        Markov_forward('and then {2}'),
+        Markov_forward('and then just {2}'),
+        Markov_forward('or {2}'),
+        Markov_forward('or just {2}'),
+        Markov_forward('yes and {2}'),
+        Markov_forward('yes or {2}'),
+        Markov_forward('yeah and {2}'),
+        Markov_forward('yes and {2}'),
+        Markov_forward('yes and just {2}'),
+        Markov_forward('yes or just {2}'),
+        Markov_forward('yeah and just {2}'),
+        Markov_forward('yes and just {2}'),
+        Markov_forward('why'),
+    ),
+),
 
 # Meta
 (r'\b((how much|how many lines (of)?|how much) (code|coding|programming)|how long .* to (make|program|code|design|write) you)', -2,
@@ -699,11 +766,11 @@ PATTERN_REPLIES = (
         'of course'
     )
 ),
-(r'\b(who (made|wrote|programmed) you|(who\'s|whose) are you|who (runs|operates) you)\b', -1,
+(r"\b(who (made|wrote|programmed) you|(who\'s|whose) are you|who (runs|operates) you|(who is|who's) your (creator|programmer|maker|admin|administrator))\b", -2,
     R(
-        'tev does',
+        "It's tev",
         'tev',
-        Recurse('tev')
+        Markov_forward('tev is')
     )
 ),
 (r"\b(why did you (restart|disconnect|quit|cycle)|(where did|where'd) you go)", -1,
@@ -741,7 +808,7 @@ PATTERN_REPLIES = (
 (r'\b(you|nikkybot) (did|does|do)\b', 1,
     R('I did?', 'I what?', 'Someone talking about me?')
 ),
-(r'\bI \S+ (u|you|nikkybot)', 0,
+(r'^(\S+ (u|you|nikkybot)$|(\bWe |\bI )\S+ (u|you|nikkybot))', 5,
     S(
         R('Great\n', 'gee\n', 'thanks\n', 'Awesome\n'),
         R(
@@ -866,7 +933,8 @@ PATTERN_REPLIES = (
 # Memes
 (r'\b(fail|epic fail)\b', 1, R('Yeah, you suck', 'HAW HAW', 'Lame')),
 (r'\<3 (.*)', 1, R('{0} loves {1}')),
-(r'\<3 nikkybot', 1, R('{0} loves me!')),
+(r'\<3 nikkybot', 0, R('{0} loves me!')),
+(r'\<3 (u|you) nikkybot', 0, R('{0} loves me!')),
 (r'\o/', 1, R('\o/')),
 (r'$\>.*', 1, R('>true dat', '>hi kerm\n>is\n>this\n>annoying?')),
 
@@ -1011,6 +1079,9 @@ PATTERN_REPLIES = (
         '{0}--',
         '{0}--\nTake THAT',
         '{0}--\nHAHAHAHAHAHA ROLFILIL',
+        '{0} sucks',
+        '{0} kicks ass',
+        '{0} sucks balls',
         '{1}++',
         '{1}--',
         '{1} sucks',
@@ -1070,7 +1141,7 @@ PATTERN_REPLIES = (
 ),
 
 # Computers
-(r'\b(what command|which command|what (command )?do .* enter|what (command )?should .* enter|what (command )?do .* type|what (command )?should .* type)\b', 1,
+(r'\b(what command|which command|what (command )?do .* enter|what (command )?should .* enter|what (command )?do .* type|what (command )?should .* type)\b', 0,
     R(
         Markov_forward('sudo'),
         Markov_forward('chown'),
