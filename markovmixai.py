@@ -137,7 +137,7 @@ class Recurse(str):
             return pattern_reply(self.format(*fmt), who)[0]
         except (Dont_know_how_to_respond_error, RuntimeError):
             for i in xrange(RECURSE_LIMIT):
-                reply = markov_reply(self.format(*fmt))
+                reply = markov_reply('?{} {}'.format(who, self.format(*fmt)))
                 if reply.strip():
                     return reply
             return random_markov(markovs[who, 5])
