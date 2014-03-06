@@ -11,7 +11,7 @@ SERVERS = (
 )
 REAL_NAME = 'NikkyBot'
 NICKS = ('nikkybot', 'nikkybot2', 'nikkybot_')
-CHANNELS = ('#flood', '#markov', '#cemetech')
+CHANNELS = ('#flood', '#markov', '#cemetech', '#caleb')
 CLIENT_VERSION = \
     "nikkybot (twisted IRC bot)--contact 'tev' or travisgevans@gmail.com"
 ADMIN_HOSTMASKS = ('*!ijel@ip68-102-86-156.ks.ok.cox.net',
