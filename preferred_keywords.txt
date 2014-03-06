@@ -1,3 +1,4 @@
+!q
 \b#cemetech
 \b48\b
 \b49\b
@@ -9,6 +10,7 @@
 \badmin
 \badriweb
 \bamd
+\bamen
 \bandroid
 \bapple
 \barch
@@ -39,6 +41,7 @@
 \bchannel
 \bchristopher
 \bcircum
+\bclone
 \bcom
 \bcomcast
 \bcomputer
@@ -79,6 +82,7 @@
 \bglobal calc
 \bglobalcalc
 \bgoogle
+\bgoto
 \bgun
 \bhalfop
 \bhcwp
@@ -93,12 +97,15 @@
 \biphone
 \birc
 \bjava
+\bjealous
+\bjoke
 \bjust f
 \bkde
 \bkerm
 \bkick
 \bkill
 \blaptop
+\blbl
 \blink
 \blinux
 \blionel
@@ -122,6 +129,7 @@
 \bnumbar
 \bnumber
 \bobama
+\boffens
 \boffice
 \bomnimaga
 \bop\b
@@ -135,6 +143,9 @@
 \bperl
 \bphone
 \bphp
+\bponies
+\bponiez
+\bpony
 \bpost
 \bpoty
 \bprime
@@ -160,6 +171,7 @@
 \bstop it
 \bsubprogram
 \bsudo
+\bsue
 \bsuper mario
 \btakeover
 \btape
@@ -182,4 +194,7 @@
 \bwin
 \bxp
 clock\b
+distro
+linux
+quote
 tard\b
