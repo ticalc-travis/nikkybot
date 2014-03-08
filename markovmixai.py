@@ -499,7 +499,7 @@ def to_whom(msg):
             
         # Check initial highlight
         #m = re.match(r'((?:\w|-)*)\W *(.*)', msg)
-        m = re.match(r'^\?(\S+?)[:,-]*\W(.*)', msg)
+        m = re.match(r'^\?(\S+)[:,]*\W(.*)', msg)
         if m:
             for k in markovs.keys():
                 if k[0].lower() == m.group(1).lower():
