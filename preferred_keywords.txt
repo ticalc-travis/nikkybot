@@ -123,6 +123,7 @@
 \bmoral
 \bmouse
 \bmudkip
+\bnerd
 \bnetspace
 \bnick
 \bnspire
