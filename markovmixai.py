@@ -179,7 +179,13 @@ PATTERN_REPLIES = (
     ),
     True
 ),
-(r"\b(congratulations|congrats)", 1, Markov_forward('Thanks', 'thx', 'ty')),
+(r"\b(congratulations|congrats)", 1,
+    R(
+        Markov_forward('Thanks'),
+        Markov_forward('thx'),
+        Markov_forward('ty'),
+    ),
+),
 (r'\b(thanks|thank you)\b', 1,
     R(
         Markov_forward("you're welcome", ("you're welcome",)),
