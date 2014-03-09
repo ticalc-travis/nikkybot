@@ -22,6 +22,7 @@ import cPickle
 from os import fstat, stat, getpid
 import re
 import subprocess
+import psycopg2
 
 from pytz import timezone
 
@@ -1252,14 +1253,15 @@ def nikkysim_parse_saying_no(w, x, y):
 
 
 # Markov chain initialization
-markov5 = markov.Markov_Shelved('markov/nikky-markov.5', order=5, readonly=True,
-    case_sensitive=False)
-markov4 = markov.Markov_Shelved('markov/nikky-markov.4', order=4, readonly=True,
-    case_sensitive=False)
-markov3 = markov.Markov_Shelved('markov/nikky-markov.3', order=3, readonly=True,
-    case_sensitive=False)
-markov2 = markov.Markov_Shelved('markov/nikky-markov.2', order=2, readonly=True,
-    case_sensitive=False)
+dbconn = psycopg2.connect('dbname=markovmix user=markovmix')
+markov5 = markov.Markov_Shelved(
+    dbconn, 'nikky.5', order=5, case_sensitive=False)
+markov4 = markov.Markov_Shelved(
+    dbconn, 'nikky.4', order=4, case_sensitive=False)
+markov3 = markov.Markov_Shelved(
+    dbconn, 'nikky.3', order=3, case_sensitive=False)
+markov2 = markov.Markov_Shelved(
+    dbconn, 'nikky.2', order=2, case_sensitive=False)
 markovs = {5: markov5, 4: markov4, 3: markov3, 2: markov2}
 for m in markovs.values():
     m.default_max_left_line_breaks = MAX_LF_L

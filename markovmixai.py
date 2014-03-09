@@ -22,11 +22,11 @@ import cPickle
 from os import fstat, stat
 import re
 import subprocess
+import psycopg2
 
 from pytz import timezone
 
 import markov
-reload(markov)   # DEBUG
 
 # !TODO! Do some proper log handling instead of print()--send debug/log stuff
 # to a different stream or something.  It interferes with things like botchat
@@ -477,11 +477,12 @@ def get_personalities():
 
 
 # Markov chain initialization
+dbconn = psycopg2.connect('dbname=markovmix user=markovmix')
 markovs = {}
 for p in PERSONALITIES:
     for o in (2, 3, 4, 5):
-        markovs[p, o] = markov.Markov_Shelved('markov/{}-markov.{}'.format(p, o),
-            order=o, readonly=True, case_sensitive=False)
+        markovs[p, o] = markov.Markov_Shelved(
+            dbconn, '{}.{}'.format(p, o), order=o, case_sensitive=False)
         markovs[p, o].default_max_left_line_breaks = MAX_LF_L
         markovs[p, o].default_max_right_line_breaks = MAX_LF_R
 preferred_keywords = []

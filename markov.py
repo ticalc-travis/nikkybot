@@ -16,10 +16,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from collections import defaultdict, Counter
+from collections import defaultdict, Counter, MutableMapping
 from random import choice, randint
 import re
 import shelve
+import cPickle
+import psycopg2
 
 DEFAULT_IGNORE_CHARS = '\\]\\-!"&`()*,./:;<=>?[\\^=\'{|}~'
 
@@ -120,6 +122,13 @@ class Markov(object):
         f = open(filename, 'r')
         for line in f:
             self.add(line)
+            
+    def clear(self):
+        """Delete all trained data; restart with a completely empty state"""
+        self.word_forward.clear()
+        self.word_backward.clear()
+        self.chain_forward.clear()
+        self.chain_backward.clear()
             
     def choice(self, counter):
         """Select a random element from Counter 'counter', weighted by the
@@ -275,23 +284,101 @@ class Markov(object):
         return ''
 
 
-class Markov_Shelf(shelve.DbfilenameShelf):
+class PostgresDict(MutableMapping):
+    """A persistent dict-like object that stores its keys and values in a
+    PotgreSQL DB.  Keys must be strings.  Values are automatically
+    pickled."""
+    
+    def __init__(self, connection, tablename, pickle_protocol=2):
+        self._conn = connection
+        self._cur = self._conn.cursor()
+        self.tablename = tablename
+        self._protocol = 2
+        
+        # Initialize new table if needed
+        self._do('CREATE TABLE IF NOT EXISTS "{}" (key varchar PRIMARY KEY, value bytea)'.format(tablename))
+        self._conn.commit()
+        
+    def __iter__(self):
+        for key in self.keys():
+            yield key
+        
+    def __getitem__(self, key):
+        self._do(
+            'SELECT value FROM "{}" WHERE KEY=%s'.format(self.tablename),(key,))
+        if not self._cur.rowcount:
+            raise KeyError(key)
+        value = self._cur.fetchone()[0]
+        return cPickle.loads(str(value))
+    
+    def __setitem__(self, key, value):
+        self._do(
+            'UPDATE "{}" SET value=%s WHERE key=%s'.format(self.tablename),
+            (psycopg2.Binary(cPickle.dumps(value, self._protocol)), key))
+        if not self._cur.rowcount:
+            self._do(
+                'INSERT INTO "{}" VALUES (%s, %s)'.format(self.tablename),
+                (key, psycopg2.Binary(cPickle.dumps(value, self._protocol))))
+        
+    def __delitem__(self, key):
+        self._do('DELETE FROM "{}" WHERE KEY=%s'.format(self.tablename),
+                 (key,))
+        
+    def __len__(self):
+        return len(self.keys())
+    
+    def __contains__(self, key):
+        return self.has_key(key)
+        
+    def _do(self, dbcmd, parms=None):
+        """Shortcut for executing a DB command using the active cursor"""
+        self._cur.execute(dbcmd, parms)
+        
+    def keys(self):
+        self._do('SELECT key FROM "{}"'.format(self.tablename))
+        return [t[0] for t in self._cur.fetchall()]
+    
+    def has_key(self, key):
+        try:
+            self[key]
+        except KeyError:
+            return False
+        else:
+            return True
+    
+    def get(self, key, default=None):
+        if key in self:
+            return self[key]
+        return default
+    
+    def clear(self):
+        self._do('DELETE FROM "{}"'.format(self.tablename))
+        
+    def sync(self):
+        self._conn.commit()
+    
+    def close(self):
+        self._conn.close()
+
+
+
+class Markov_Shelf(PostgresDict):
     """Compatibility layer for Markov classes' use of dicts"""
 
     def __getitem__(self, key):
         try:
-            return shelve.Shelf.__getitem__(self, repr(key))
+            return PostgresDict.__getitem__(self, repr(key))
         except KeyError:
             return Counter()
 
     def __setitem__(self, key, value):
-        shelve.Shelf.__setitem__(self, repr(key), value)
+        PostgresDict.__setitem__(self, repr(key), value)
 
     def has_key(self, key):
-        return shelve.Shelf.has_key(self, repr(key))
+        return PostgresDict.has_key(self, repr(key))
 
     def keys(self):
-        return [eval(x) for x in shelve.Shelf.keys(self)]
+        return [eval(x) for x in PostgresDict.keys(self)]
 
     def random_key(self):
         return choice(self.keys())
@@ -300,31 +387,24 @@ class Markov_Shelf(shelve.DbfilenameShelf):
 class Markov_Shelved(Markov):
     """Markov chain using shelf module for less RAM usage"""
 
-    def __init__(self, file_prefix, readonly=False, order=2, case_sensitive=True,
-            ignore_chars=DEFAULT_IGNORE_CHARS,
-            default_max_left_line_breaks=None, default_max_right_line_breaks=None):
+    def __init__(self, connection, table_prefix,
+                 readonly=False, order=2, case_sensitive=True,
+                 ignore_chars=DEFAULT_IGNORE_CHARS,
+                 default_max_left_line_breaks=None, default_max_right_line_breaks=None):
         self._order = order
         self._case_sensitive = case_sensitive
         self._ignore_chars = ignore_chars
         self.default_max_left_line_breaks = None
         self.default_max_right_line_breaks = None
 
-        flag = 'c'
-        if readonly:
-            flag = 'r'
-
-        self.word_forward = \
-            Markov_Shelf(file_prefix + '.wf', protocol=2, flag=flag,
-                writeback=False)
-        self.chain_forward = \
-            Markov_Shelf(file_prefix + '.cf', protocol=2, flag=flag,
-                writeback=False)
-        self.word_backward = \
-            Markov_Shelf(file_prefix + '.wb', protocol=2, flag=flag,
-                writeback=False)
-        self.chain_backward = \
-            Markov_Shelf(file_prefix + '.cb', protocol=2, flag=flag,
-                writeback=False)
+        self.word_forward = Markov_Shelf(
+            connection, table_prefix + '.wf')
+        self.chain_forward = Markov_Shelf(
+            connection, table_prefix + '.cf')
+        self.word_backward = Markov_Shelf(
+            connection, table_prefix + '.wb')
+        self.chain_backward = Markov_Shelf(
+            connection, table_prefix + '.cb')
 
     def sync(self):
         self.word_forward.sync()

@@ -9,146 +9,208 @@
 
 import os
 import re
+from datetime import datetime
 from sys import stdout, argv, exit
+import psycopg2
 
 import markov
+from personalitiesrc import personality_regexes
 
-if len(argv) < 2:
-    print "Usage: {} order".format(argv[0])
-    exit(1)
+class BadPersonalityError(KeyError):
+    pass
 
-order = int(argv[1])
-home = os.environ['HOME']
-training_glob = []
-
-stdout.write('Starting Markov{} generation.\n'.format(order))
-stdout.write('Parsing logs...\n')
-
-# Old Konversation logs
-for fn in [os.path.join('log_irc_old', x) for x in
-        ('calcgames.log', 'cemetech.log', 'tcpa.log', 'ti.log',
-            'efnet_#tiasm.log')]:
-    with open(os.path.join(home, fn), 'r') as f:
-        line_group = []
-        for line in f:
-            line = line.strip()
-            m = re.match(r'^\[.*\] \[.*\] <(nikky|allyn).*?>\t(.*)', line, re.I)
-            if m:
-                line_group.append(m.group(2))
-            else:
-                if line_group:
-                    training_glob.append('\n'.join(line_group))
-                line_group = []
-
-# Newer irssi logs
-log_path = os.path.join(home, os.path.join('log_irc_new'))
-for dn in [os.path.join(log_path, x) for x in os.listdir(log_path)]:
+def update(pname, order, reset):
+    home = os.environ['HOME']
+    NEVER_UPDATED = datetime(1970, 1, 1, 0, 0)
+    training_glob = []
+    table_prefix = '{}.{}'.format(pname, order)
     try:
-        for fn in os.listdir(dn):
-            if fn.split('_2')[0] in ('#calcgames', '#cemetech', '#flood', '#hp48',
-                    '#inspired', '#nspire-lua', '#prizm', '#tcpa', '#ti'):
+        pregex = personality_regexes[pname]
+    except KeyError:
+        raise UpdateError
+
+    stdout.write('Starting {} Markov generation.\n'.format(table_prefix))
+
+    # Get last updated date
+    conn = psycopg2.connect('dbname=markovmix user=markovmix')
+    cur = conn.cursor()
+    cur.execute('CREATE TABLE IF NOT EXISTS ".last-updated" (name VARCHAR PRIMARY KEY, updated TIMESTAMP NOT NULL DEFAULT NOW())')
+    cur.execute('SELECT updated FROM ".last-updated" WHERE name=%s', (table_prefix,))
+    target_date = datetime(year=datetime.now().year,
+                        month=datetime.now().month,
+                        day=datetime.now().day)
+    if not reset and cur.rowcount:
+        last_updated = cur.fetchone()[0]
+        last_updated = datetime(year=last_updated.year,
+                                month=last_updated.month,
+                                day=last_updated.day)
+    else:
+        last_updated = NEVER_UPDATED
+    # Updated last updated date (will only be written to DB if entire process
+    # finishes to the commit call at the end of the script)
+    cur.execute('UPDATE ".last-updated" SET updated = NOW() WHERE name=%s',
+                (table_prefix,))
+    if not cur.rowcount:
+        cur.execute('INSERT INTO ".last-updated" VALUES (%s)', (table_prefix,))
+
+    if last_updated == NEVER_UPDATED:
+
+        ## Never updated yet ##
+        stdout.write('Parsing old logs...\n')
+        
+        last_updated = NEVER_UPDATED
+
+        # Parse old logs this first time only
+
+        # Old Konversation logs
+        for fn in [os.path.join('log_irc_old', x) for x in
+                ('calcgames.log', 'cemetech.log', 'tcpa.log', 'ti.log',
+                'efnet_#tiasm.log', 'omnimaga.log')]:
+            with open(os.path.join(home, fn), 'r') as f:
+                line_group = []
+                for line in f:
+                    line = line.strip()
+                    m = re.match(r'^\[.*\] \[.*\] <'+pregex[0]+r'>\t(.*)',
+                                line, re.I)
+                    if not m and pregex[1]:
+                        m = re.match(r'^\[.*\] \[.*\] <saxjax>\t\(.\) \[?'+pregex[1]+r'[:\]] (.*)', line, re.I)
+                    if m:
+                        line_group.append(m.group(2))
+                    else:
+                        if line_group:
+                            training_glob.append('\n'.join(line_group))
+                        line_group = []
+        
+        # Old #tcpa logs from elsewhere
+        log_path = os.path.join('/home/retrotcpa', os.path.join('log_irc_retro'))
+        for dn in [os.path.join(log_path, x) for x in os.listdir(log_path)]:
+            for fn in os.listdir(dn):
                 with open(os.path.join(log_path, os.path.join(dn, fn)), 'r') as f:
                     line_group = []
                     for line in f:
                         line = line.strip()
-                        m = re.match('^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} (<[ @+](nikky(?!(?:bot|test)).*?|allyn.*?)>|<[ @+]saxjax> \(.\) \[allynfolksjr\]) (.*)', line, re.I)
+                        m = re.match(r'^\[[0-9]{2}:[0-9]{2}:[0-9]{2}\] <[ @+]?'+pregex[0]+'> (.*)', line, re.I)
                         if m:
-                            line_group.append(m.group(3))
+                            line_group.append(m.group(2))
                         else:
                             if line_group:
                                 training_glob.append('\n'.join(line_group))
                             line_group = []
-    except OSError as e:
-        if e.errno == 20:
-            pass
-        else:
-            raise e
 
-# Old #tcpa logs from elsewhere
-log_path = os.path.join('/home/retrotcpa', os.path.join('log_irc_retro'))
-for dn in [os.path.join(log_path, x) for x in os.listdir(log_path)]:
-    for fn in os.listdir(dn):
-        with open(os.path.join(log_path, os.path.join(dn, fn)), 'r') as f:
+        # Old #calcgames logs from elsewhere
+        log_path = os.path.join('/home/retrotcpa', os.path.join('log_calcgames'))
+        for fn in os.listdir(log_path):
+            with open(os.path.join(log_path, fn), 'r') as f:
+                line_group = []
+                for line in f:
+                    line = line.strip()
+                    m = re.match(r'^[0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?'+pregex[0]+'> (.*)', line, re.I)
+                    if m:
+                        line_group.append(m.group(2))
+                    else:
+                        if line_group:
+                            training_glob.append('\n'.join(line_group))
+                        line_group = []
+
+        # More miscellaneous junk I threw in a separate huge file because it was
+        # too scattered around my system
+        with open('misc_irc_lines.txt', 'r') as f:
             line_group = []
             for line in f:
                 line = line.strip()
-                m = re.match(r'^\[[0-9]{2}:[0-9]{2}:[0-9]{2}\] <.?(nikky|allyn).*?> (.*)', line, re.I)
+                m = re.match(r'^\[?[0-9]{2}:[0-9]{2}(:[0-9]{2})?\]? <[ @+]?'+pregex[0]+'> (.*)', line, re.I)
                 if m:
-                    line_group.append(m.group(2))
+                    line_group.append(m.group(3))
                 else:
                     if line_group:
                         training_glob.append('\n'.join(line_group))
                     line_group = []
 
-# Old #calcgames logs from elsewhere
-log_path = os.path.join('/home/retrotcpa', os.path.join('log_calcgames'))
-for fn in os.listdir(log_path):
-    with open(os.path.join(log_path, fn), 'r') as f:
-        line_group = []
-        for line in f:
-            line = line.strip()
-            m = re.match(r'^[0-9]{2}:[0-9]{2}:[0-9]{2} <.?(nikky|allyn).*?> (.*)', line, re.I)
-            if m:
-                line_group.append(m.group(2))
-            else:
-                if line_group:
-                    training_glob.append('\n'.join(line_group))
+        if pname == 'nikky':
+            # !TODO! Generalize this
+            # And some stuff from elsewhere, too!
+            with open('manually-added.txt', 'r') as f:
                 line_group = []
+                for line in f:
+                    line = line.strip()
+                    if re.match(r'(.+)', line, re.I):
+                        line_group.append(line)
+                    else:
+                        if line_group:
+                            training_glob.append('\n'.join(line_group))
+                        line_group = []
+                        
+    # Current irssi logs
+    stdout.write('Parsing current logs...\n')
+    log_path = os.path.join(home, os.path.join('log_irc_new'))
+    for dn in [os.path.join(log_path, x) for x in sorted(os.listdir(log_path))]:
+        try:
+            for fn in sorted(os.listdir(dn)):
+                m = re.match('#(.*)_([0-9]{4})-([0-9]{2})-([0-9]{2})\.log', fn)
+                if m:
+                    channel, year, month, day = m.groups()
+                    log_date = datetime(
+                        year=int(year), month=int(month), day=int(day))
+                    if (channel in 
+                            ('calcgames', 'cemetech', 'flood', 'hp48',
+                            'inspired', 'nspire-lua', 'prizm', 'tcpa', 'ti')
+                            and log_date < target_date
+                            and last_updated <= log_date):
+                        with open(os.path.join(log_path, dn, fn), 'r') as f:
+                            #stdout.write('Parsing {}...\n'.format(fn))
+                            line_group = []
+                            for line in f:
+                                line = line.strip()
+                                m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?'+pregex[0]+'> (.*)',line, re.I)
+                                if not m and pregex[1]:
+                                    m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?saxjax> \(.\) \[?'+pregex[1]+r'[:\]] (.*)', line, re.I)
+                                    if not m and pregex[2]:
+                                        m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?omnomirc.?> (?:\(.\))?<'+pregex[2]+r'> (.*)', line, re.I)
+                                if m:
+                                    line_group.append(m.group(2))
+                                else:
+                                    if line_group:
+                                        training_glob.append('\n'.join(line_group))
+                                    line_group = []
+        except OSError as e:
+            if e.errno == 20:
+                pass
+            else:
+                raise e
 
-# More miscellaneous junk I threw in a separate huge file because it was
-# too scattered around my system
-with open('misc_irc_lines.txt', 'r') as f:
-    line_group = []
-    for line in f:
-        line = line.strip()
-        m = re.match(r'^\[?[0-9]{2}:[0-9]{2}(:[0-9]{2})?\]? <.?(nikky|allyn).*?> (.*)', line, re.I)
-        if m:
-            line_group.append(m.group(3))
-        else:
-            if line_group:
-                training_glob.append('\n'.join(line_group))
-            line_group = []
-
-# And some stuff from elsewhere, too!
-with open('manually-added.txt', 'r') as f:
-    line_group = []
-    for line in f:
-        line = line.strip()
-        if re.match(r'(.+)', line, re.I):
-            line_group.append(line)
-        else:
-            if line_group:
-                training_glob.append('\n'.join(line_group))
-            line_group = []
-
-# There, that's all I have
-#   ...I think...
-
-items = len(training_glob)
-m = markov.Markov(order, case_sensitive=False)
-for i, l in enumerate(training_glob):
-    if not (i+1) % 100 or i+1 == items:
+    items = len(training_glob)
+    m = markov.Markov_Shelved(conn, '{}.{}'.format(pname, order),
+                            order, case_sensitive=False)
+    if last_updated == NEVER_UPDATED:
+        m.clear()
+    for i, l in enumerate(training_glob):
         stdout.write('Training {}/{}...\r'.format(i+1, items))
         stdout.flush()
-    m.add(l)
+        m.add(l)
 
-stdout.write('\nWriting shelves...\n')
-s = markov.Markov_Shelved('markov/new.nikky-markov.{}'.format(order), readonly=False,
-    order=order, case_sensitive=False)
-for src, dst in ((m.word_forward, s.word_forward),
-             (m.word_backward, s.word_backward),
-             (m.chain_forward, s.chain_forward),
-             (m.chain_backward, s.chain_backward)):
-    keys = src.keys()
-    n = len(keys)
-    for i, k in enumerate(keys):
-        if not (i+1) % 100 or i+1 == n:
-            stdout.write('    Key {}/{}...\r'.format(i+1, n))
-            stdout.flush()
-        dst[k] = src[k]
-    stdout.write('\n')
+    stdout.write('\nClosing...\n')
+    #m.sync()
+    #conn.commit()
+    m.close()
+    stdout.write('Finished!\n\n')
 
-stdout.write('Closing...\n')
-s.sync()
-s.close()
-stdout.write('Finished!\n\n')
+if __name__ == '__main__':
+    if len(argv) < 3:
+        print "Usage: {} nick order [RESET]".format(argv[0])
+        exit(1)
+        
+    reset = False
+    try:
+        if argv[3] == 'RESET':
+            reset = True
+    except IndexError:
+        pass
+    pname = argv[1]
+    order = int(argv[2])
+
+    try:
+        update(pname, order, reset)
+    except BadPersonalityError:
+        print "Personality '{}' not defined in personalitiesrc.py".format(pname)
+        exit(2)
+
