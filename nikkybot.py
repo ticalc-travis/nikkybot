@@ -28,6 +28,7 @@ import subprocess
 import time
 import traceback
 import sys
+import psycopg2
 
 from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol, threads
@@ -350,6 +351,14 @@ class NikkyBot(irc.IRCClient):
         trapping for exceptions"""
         try:
             reply = self.nikkies[target].reply(msg)
+        except psycopg2.OperationalError:
+            """Try to reconnect to DB backend and try again"""
+            print('WARNING: DB backend error; reloading and trying again')
+            time.sleep(5)
+            self.reload_ai()
+            time.sleep(5)
+            self.do_AI_reply(msg, target, silent_errors, log_response,
+                             no_delay)
         except Exception:
             self.report_error(target, silent_errors)
         else:
