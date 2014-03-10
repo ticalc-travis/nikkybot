@@ -27,18 +27,24 @@ import psycopg2
 from pytz import timezone
 
 import markov
+from personalitiesrc import personality_regexes
 
 # !TODO! Do some proper log handling instead of print()--send debug/log stuff
 # to a different stream or something.  It interferes with things like botchat
 
-PERSONALITIES = ('jonimus', 'joeyoung', 'comic', 'juju', 'debrouxl', 'bb010g', 'calebh', 'cvsoft-d', 'netham45', 'kevin_o', 'brandonw', 'tev', 'merth', 'randomist', 'chronomex', 'sir_lewk', 'michael_v', 'e-j', 'cricket_b', 'glk', 'kerm')
+PERSONALITIES = personality_regexes.keys()
+PERSONALITIES.sort()
+
+# Deprecated--remove when no code is using it anymore
+def get_personalities():
+    return PERSONALITIES
 
 DEBUG = True
 PREFERRED_KEYWORDS_FILE = 'preferred_keywords.txt'
-RECURSE_LIMIT = 100
-CANDIDATES = 1
-MAX_LF_L = 0
-MAX_LF_R = 2
+RECURSE_LIMIT = 333
+CANDIDATES = 50
+MAX_LF_L = 4
+MAX_LF_R = 4
 
 
 def sanitize(s):
@@ -48,6 +54,8 @@ def sanitize(s):
         for cn in xrange(0, 32):
             s = s.replace(chr(cn), '')
     return s
+
+
 
 class S(list):
     """Sequence table"""
@@ -106,6 +114,18 @@ class Markov_forward(object):
             pass
         return markov_forward(who, [x.format(*fmt) for x in self.chain],
             failmsg, self.max_lf_r)
+    
+    
+class Manual_markov(object):
+    """Return a Markov-generated phrase of the given/ order"""
+    def __init__(self, order, text):
+        self.order = order
+        self.text = text
+
+    def get(self, who, fmt=None):
+        if fmt is None:
+            fmt = []
+        return manual_markov(self.order, who, self.text.format(*fmt))
 
 
 class Markov(object):
@@ -140,7 +160,7 @@ class Recurse(str):
                 reply = markov_reply('?{} {}'.format(who, self.format(*fmt)))
                 if reply.strip():
                     return reply
-            return random_markov(markovs[who, 5])
+            return random_markov(markovs[who])
 
 # === DATA SECTION ============================================================
 
@@ -462,6 +482,11 @@ PATTERN_REPLIES = (
     Recurse('what do you think of {2}')
 ),
 (r"\btell (me|us) about (.*)", -2, R(Recurse('{2}'))),
+
+(r'^\?markov5 (.*)', -99, Manual_markov(5, '{1}'), True),
+(r'^\?markov4 (.*)', -99, Manual_markov(4, '{1}'), True),
+(r'^\?markov3 (.*)', -99, Manual_markov(3, '{1}'), True),
+(r'^\?markov2 (.*)', -99, Manual_markov(2, '{1}'), True),
 )
 
 # === END OF DATA SECTION =====================================================
@@ -477,20 +502,11 @@ class Bad_response_error(Nikky_error):
     pass
 
 
-# Get personality list
-def get_personalities():
-    return list(PERSONALITIES)
-
-
 # Markov chain initialization
-dbconn = psycopg2.connect('dbname=markovmix user=markovmix')
+dbconn = psycopg2.connect('dbname=markovmix2 user=markovmix')
 markovs = {}
 for p in PERSONALITIES:
-    for o in (2, 3, 4, 5):
-        markovs[p, o] = markov.Markov_Shelved(
-            dbconn, '{}.{}'.format(p, o), order=o, case_sensitive=False)
-        markovs[p, o].default_max_left_line_breaks = MAX_LF_L
-        markovs[p, o].default_max_right_line_breaks = MAX_LF_R
+    markovs[p] = markov.PostgresMarkov(dbconn, p, case_sensitive=False)
 preferred_keywords = []
 
 
@@ -505,36 +521,40 @@ def to_whom(msg):
             msg = m.group(1)
             
         # Check initial highlight
-        #m = re.match(r'((?:\w|-)*)\W *(.*)', msg)
         m = re.match(r'^\?(\S+)[:,]*\W(.*)', msg)
         if m:
             for k in markovs.keys():
-                if k[0].lower() == m.group(1).lower():
+                if k.lower() == m.group(1).lower():
                     return m.group(1), m.group(2)
             return None, msg
-        #else:
-            ## Try to find an "internal" highlight in the message; return first match
-            #for p in PERSONALITIES:
-                #try:
-                    #if re.match(re.escape(p), msg, re.I):
-                        #return p.lower(), msg
-                #except KeyError:
-                    #return None, msg
         return None, msg
 
 
-def random_markov(m):
+def random_markov(markov):
     """Pick any random Markov-chained sentence and output it"""
     while True:
-        #out = m.sentence_from_chain(
-            #tuple(m.chain_forward.random_key())
-        #)
-        out = m.sentence_from_word(
-            choice(['the', 'a', 'an', 'I', 'you', 'of', 'that', 'will'])
-        )
-        if out.strip():
-            return out
-
+        try:
+            return markov.sentence(
+                markov.str_to_chain(choice((
+                    'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have',
+                    'I', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you',
+                    'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they',
+                    'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one',
+                    'all', 'would', 'there', 'their', 'what', 'so', 'up',
+                    'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me',
+                    'when', 'make', 'can', 'like', 'time', 'no', 'just', 'him',
+                    'know', 'take', 'people', 'into', 'year', 'your', 'good',
+                    'some', 'could', 'them', 'see', 'other', 'than', 'then',
+                    'now', 'look', 'only', 'come', 'its', 'over', 'think',
+                    'also', 'back', 'after', 'use', 'two', 'how', 'our',
+                    'work', 'first', 'well', 'way', 'even', 'new', 'want',
+                    'because', 'any', 'these', 'give', 'day', 'most', 'us'
+                )))
+            )
+        except KeyError:
+            continue
+        else:
+            break
 
 def markov_reply(msg, failmsg=None, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
     """Generate a Markov-chained reply for msg"""
@@ -544,23 +564,28 @@ def markov_reply(msg, failmsg=None, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
     # failing that, use the longest possible chain of any words found in the
     # Markov database.
     who, msg = to_whom(msg)
+    if who is None:
+        return failmsg
     if not msg.strip():
-        return random_markov(markovs[who, 5])
+        return random_markov(markovs[who])
+    markov = markovs[who]
     
-    words = [x for x in msg.split(' ') if x]
+    words = markov.str_to_chain(msg)
     high_priority_replies = {1:[]}
     low_priority_replies = {1:[]}
     for order in (5, 4, 3, 2):
-        markov = markovs[who, order]
         high_priority_replies[order] = []
         low_priority_replies[order] = []
         for i in xrange(len(words) - (order-1)):
             chain = tuple(words[i:i+order])
-            response = markov.sentence_from_chain(chain, max_lf_l, max_lf_r)
-            chain_text = ' '.join(chain)
-            if response.strip():
+            try:
+                response = markov.adjust_line_breaks(markov.sentence(chain),
+                                                     max_lf_l, max_lf_r)
+            except KeyError:
+                continue
+            else:
                 for p in preferred_keywords:
-                    if re.search(p, chain_text, re.I):
+                    if re.search(p, response, re.I):
                         high_priority_replies[order].append(response)
                 else:
                     low_priority_replies[order].append(response)
@@ -569,8 +594,12 @@ def markov_reply(msg, failmsg=None, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
     words.sort(key=len)
     words.reverse()
     for word in words:
-        response = markovs[who, 5].sentence_from_word(word, max_lf_l, max_lf_r)
-        if response.strip():
+        try:
+            response = markov.adjust_line_breaks(markov.sentence((word,)),
+                                                 max_lf_l, max_lf_r)
+        except KeyError:
+            continue
+        else:
             for p in preferred_keywords:
                 if re.search(p, word, re.I):
                     high_priority_replies[1].append(response)
@@ -585,49 +614,41 @@ def markov_reply(msg, failmsg=None, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
         
     # Failing *that*, return either failmsg (or random Markov if no failmsg)
     if failmsg is None:
-        return random_markov(markovs[who, 5])
+        return random_markov(markovs[who])
     else:
         return failmsg
 
 
-def manual_markov(order, msg, _recurse_level=0):
-    who, msg = to_whom(msg)
-    chain = tuple(msg.split(' '))
-    if len(chain) == 1:
-        markov = markovs[who, randint(2, 5)]
-        response = markov.sentence_from_word(chain[0])
-    else:
-        markov = markovs[who, len(chain)]
-        response = markov.sentence_from_chain(chain)
-    if response:
-        return response
-    else:
+def manual_markov(order, who, msg, _recurse_level=0):
+    markov = markovs[who]
+    chain = markov.str_to_chain(msg)
+    try:
+        response = markov.sentence(chain, forward_length=order-1, 
+                                backward_length=order-1)
+    except KeyError:
         if _recurse_level < RECURSE_LIMIT:
-            return manual_markov(order, msg, _recurse_level=_recurse_level+1)
+            return manual_markov(order, who, msg,
+                                 _recurse_level=_recurse_level+1)
         else:
             return '{}: Markov chain not found'.format(repr(' '.join(chain)))
+    else:
+        response = markov.adjust_line_breaks(response, MAX_LF_L, MAX_LF_R)
+        return response
 
 
 def markov_forward(who, chain, failmsg='', max_lf=MAX_LF_R):
     """Generate sentence from the current chain forward only and not
     backward"""
-
-    if len(chain) == 1:
-        markov = markovs[who, randint(2,5)]
-        if not markov.word_forward.has_key(chain[0]):
-            return failmsg
-        out = ' '.join(markov.from_word_forward(chain[0])).replace(' \n ', '\n')
-    else:
-        markov = markovs[who, len(chain)]
-        if not markov.chain_forward.has_key(tuple(chain)):
-            return failmsg
-        out = ' '.join(markov.from_chain_forward(chain)).replace(' \n ', '\n')
-    if not out.strip():
+    markov = markovs[who]
+    try:
+        response = markov.sentence_forward(chain)
+    except KeyError:
         return failmsg
-    return markov.adjust_right_line_breaks(out, max_lf)
+    else:
+        return markov.adjust_right_line_breaks(response, max_lf)
 
 
-def pattern_reply(msg, who, last_used_reply='', nick='nikkybot'):
+def pattern_reply(msg, who, last_used_reply='', nick='markovmix'):
 
     # Separate out speaker's nick if known
     m = re.match(r'<(.*?)> (.*)', msg)
@@ -823,7 +844,7 @@ class NikkyAI(object):
             return ''
         
         if _recurse_level > RECURSE_LIMIT:
-            out = random_markov(markovs[who, 5])
+            out = random_markov(markovs[who])
             return ['<{}> '.format(who) + line for line in out.split('\n')]
 
         # Transform phrases in input
@@ -893,7 +914,7 @@ class NikkyAI(object):
             sourcenick = ''
         outputs = []
         for p in PERSONALITIES:
-            r = self.reply('?{}: {}'.format(p, msg))
+            r = self.reply('?{} {}'.format(p, msg))
             if r:
                 outputs.append(r)
         try:

@@ -19,23 +19,24 @@ from personalitiesrc import personality_regexes
 class BadPersonalityError(KeyError):
     pass
 
-def update(pname, order, reset):
-    home = os.environ['HOME']
+def update(pname, reset):
     NEVER_UPDATED = datetime(1970, 1, 1, 0, 0)
+    home = os.environ['HOME']
     training_glob = []
-    table_prefix = '{}.{}'.format(pname, order)
+    table_name = '{}'.format(pname)
     try:
         pregex = personality_regexes[pname]
     except KeyError:
         raise UpdateError
 
-    stdout.write('Starting {} Markov generation.\n'.format(table_prefix))
+    stdout.write('Starting {} Markov generation.\n'.format(table_name))
 
     # Get last updated date
-    conn = psycopg2.connect('dbname=markovmix user=markovmix')
+    conn = psycopg2.connect('dbname=markovmix2 user=markovmix')
+    conn.autocommit = False
     cur = conn.cursor()
     cur.execute('CREATE TABLE IF NOT EXISTS ".last-updated" (name VARCHAR PRIMARY KEY, updated TIMESTAMP NOT NULL DEFAULT NOW())')
-    cur.execute('SELECT updated FROM ".last-updated" WHERE name=%s', (table_prefix,))
+    cur.execute('SELECT updated FROM ".last-updated" WHERE name=%s', (table_name,))
     target_date = datetime(year=datetime.now().year,
                         month=datetime.now().month,
                         day=datetime.now().day)
@@ -49,9 +50,9 @@ def update(pname, order, reset):
     # Updated last updated date (will only be written to DB if entire process
     # finishes to the commit call at the end of the script)
     cur.execute('UPDATE ".last-updated" SET updated = NOW() WHERE name=%s',
-                (table_prefix,))
+                (table_name,))
     if not cur.rowcount:
-        cur.execute('INSERT INTO ".last-updated" VALUES (%s)', (table_prefix,))
+        cur.execute('INSERT INTO ".last-updated" VALUES (%s)', (table_name,))
 
     if last_updated == NEVER_UPDATED:
 
@@ -179,37 +180,34 @@ def update(pname, order, reset):
                 raise e
 
     items = len(training_glob)
-    m = markov.Markov_Shelved(conn, '{}.{}'.format(pname, order),
-                            order, case_sensitive=False)
+    m = markov.PostgresMarkov(conn, '{}'.format(pname), case_sensitive=False)
+    m.begin()
     if last_updated == NEVER_UPDATED:
         m.clear()
     for i, l in enumerate(training_glob):
         stdout.write('Training {}/{}...\r'.format(i+1, items))
         stdout.flush()
-        m.add(l)
+        m.add(unicode(l, errors='replace'))
 
     stdout.write('\nClosing...\n')
-    #m.sync()
-    #conn.commit()
-    m.close()
+    m.commit()
     stdout.write('Finished!\n\n')
 
 if __name__ == '__main__':
-    if len(argv) < 3:
-        print "Usage: {} nick order [RESET]".format(argv[0])
+    if len(argv) < 2:
+        print "Usage: {} nick [RESET]".format(argv[0])
         exit(1)
         
     reset = False
     try:
-        if argv[3] == 'RESET':
+        if argv[2] == 'RESET':
             reset = True
     except IndexError:
         pass
     pname = argv[1]
-    order = int(argv[2])
 
     try:
-        update(pname, order, reset)
+        update(pname, reset)
     except BadPersonalityError:
         print "Personality '{}' not defined in personalitiesrc.py".format(pname)
         exit(2)

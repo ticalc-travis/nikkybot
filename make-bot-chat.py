@@ -10,9 +10,13 @@ from time import sleep
 
 NUMBER_OF_ROUNDS = 50
 nikkyai.DEBUG = False
-nikkyai.RECURSE_LIMIT = 333
+nikkyai.RECURSE_LIMIT = 10
+nikkyai.MAX_LF_L = 2
+nikkyai.MAX_LF_R = 4
 markovmixai.DEBUG = False
-markovmixai.RECURSE_LIMIT = 333
+markovmixai.RECURSE_LIMIT = 10
+markovmixai.MAX_LF_L = 2
+markovmixai.MAX_LF_R = 4
 
 def usage_exit():
     print('Usage: {} personality1 personality2'.format(argv[0]))
@@ -20,14 +24,14 @@ def usage_exit():
     print(', '.join(['nikkybot'] + sorted(personalities)))
     exit(1)
 
-personalities = markovmixai.get_personalities()
+personalities = markovmixai.PERSONALITIES
 
 if len(argv) != 3:
     usage_exit()
 nick1, nick2 = argv[1], argv[2]
-if nick1 != 'nikkybot' and nick1 not in personalities:
+if nick1 not in ('nikkybot', 'nikky') and nick1 not in personalities:
     usage_exit()
-elif nick2 != 'nikkybot' and nick2 not in personalities:
+elif nick2 not in ('nikkybot', 'nikky') and nick2 not in personalities:
     usage_exit()
     
 if nick1 == nick2:
@@ -46,7 +50,7 @@ def get_response(nick, target_nick, msg):
     if isinstance(msg, list):
         msg = '\n'.join(msg)
     msg = '<' + target_nick + '> ' + msg
-    if nick == 'nikkybot':
+    if nick in ('nikky', 'nikkybot'):
         reply = nikkybot.reply(msg)
     else:
         reply = markovmix.reply('?' + nick + ' ' + msg)

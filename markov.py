@@ -284,137 +284,231 @@ class Markov(object):
         return ''
 
 
-class PostgresDict(MutableMapping):
-    """A persistent dict-like object that stores its keys and values in a
-    PotgreSQL DB.  Keys must be strings.  Values are automatically
-    pickled."""
-    
-    def __init__(self, connection, tablename, pickle_protocol=2):
-        self._conn = connection
-        self._cur = self._conn.cursor()
-        self.tablename = tablename
-        self._protocol = 2
+class PostgresMarkov(object):
+    """tev's Markov chain implementation using a PostgreSQL backend to store
+    the data"""
+
+    def __init__(self, connect, table_name,
+            case_sensitive=True,
+            ignore_chars=DEFAULT_IGNORE_CHARS):
         
-        # Initialize new table if needed
-        self._do('CREATE TABLE IF NOT EXISTS "{}" (key varchar PRIMARY KEY, value bytea)'.format(tablename))
-        self._conn.commit()
-        
-    def __iter__(self):
-        for key in self.keys():
-            yield key
-        
-    def __getitem__(self, key):
-        self._do(
-            'SELECT value FROM "{}" WHERE KEY=%s'.format(self.tablename),(key,))
-        if not self._cur.rowcount:
-            raise KeyError(key)
-        value = self._cur.fetchone()[0]
-        return cPickle.loads(str(value))
-    
-    def __setitem__(self, key, value):
-        self._do(
-            'UPDATE "{}" SET value=%s WHERE key=%s'.format(self.tablename),
-            (psycopg2.Binary(cPickle.dumps(value, self._protocol)), key))
-        if not self._cur.rowcount:
-            self._do(
-                'INSERT INTO "{}" VALUES (%s, %s)'.format(self.tablename),
-                (key, psycopg2.Binary(cPickle.dumps(value, self._protocol))))
-        
-    def __delitem__(self, key):
-        self._do('DELETE FROM "{}" WHERE KEY=%s'.format(self.tablename),
-                 (key,))
-        
-    def __len__(self):
-        return len(self.keys())
-    
-    def __contains__(self, key):
-        return self.has_key(key)
-        
-    def _do(self, dbcmd, parms=None):
-        """Shortcut for executing a DB command using the active cursor"""
-        self._cur.execute(dbcmd, parms)
-        
-    def keys(self):
-        self._do('SELECT key FROM "{}"'.format(self.tablename))
-        return [t[0] for t in self._cur.fetchall()]
-    
-    def has_key(self, key):
-        try:
-            self[key]
-        except KeyError:
-            return False
-        else:
-            return True
-    
-    def get(self, key, default=None):
-        if key in self:
-            return self[key]
-        return default
-    
-    def clear(self):
-        self._do('DELETE FROM "{}"'.format(self.tablename))
-        
-    def sync(self):
-        self._conn.commit()
-    
-    def close(self):
-        self._conn.close()
-
-
-
-class Markov_Shelf(PostgresDict):
-    """Compatibility layer for Markov classes' use of dicts"""
-
-    def __getitem__(self, key):
-        try:
-            return PostgresDict.__getitem__(self, repr(key))
-        except KeyError:
-            return Counter()
-
-    def __setitem__(self, key, value):
-        PostgresDict.__setitem__(self, repr(key), value)
-
-    def has_key(self, key):
-        return PostgresDict.has_key(self, repr(key))
-
-    def keys(self):
-        return [eval(x) for x in PostgresDict.keys(self)]
-
-    def random_key(self):
-        return choice(self.keys())
-
-
-class Markov_Shelved(Markov):
-    """Markov chain using shelf module for less RAM usage"""
-
-    def __init__(self, connection, table_prefix,
-                 readonly=False, order=2, case_sensitive=True,
-                 ignore_chars=DEFAULT_IGNORE_CHARS,
-                 default_max_left_line_breaks=None, default_max_right_line_breaks=None):
-        self._order = order
         self._case_sensitive = case_sensitive
         self._ignore_chars = ignore_chars
-        self.default_max_left_line_breaks = None
-        self.default_max_right_line_breaks = None
+        
+        # Set up connection if it's a string; else assume it's a connection
+        # object
+        self.table_name = table_name
+        try:
+            self.connection = psycopg2.connect(connect)
+        except TypeError:
+            self.connection = connect
+        self.cursor = self.connection.cursor()
+        self.doquery = self.cursor.execute
+            
+        # Set up tables if needed
+        try:
+            self.doquery(
+                'CREATE TABLE "{}"' 
+                '(word VARCHAR,'
+                ' next1key VARCHAR DEFAULT NULL, next2key VARCHAR DEFAULT NULL,'
+                ' next3key VARCHAR DEFAULT NULL, next4key VARCHAR DEFAULT NULL,'
+                ' prev1key VARCHAR DEFAULT NULL, prev2key VARCHAR DEFAULT NULL,'
+                ' prev3key VARCHAR DEFAULT NULL, prev4key VARCHAR DEFAULT NULL,'
+                ' next1 VARCHAR DEFAULT NULL, next2 VARCHAR DEFAULT NULL,'
+                ' next3 VARCHAR DEFAULT NULL, next4 VARCHAR DEFAULT NULL,'
+                ' prev1 VARCHAR DEFAULT NULL, prev2 VARCHAR DEFAULT NULL,'
+                ' prev3 VARCHAR DEFAULT NULL, '
+                ' prev4 VARCHAR DEFAULT NULL)'.format(self.table_name)
+            )
+        except psycopg2.ProgrammingError:
+            self.rollback()
+        else:
+            self.doquery(
+                'CREATE INDEX ON "{}" '
+                '(word,next1key,next2key,next3key,next4key)'.format(
+                    self.table_name))
+            self.doquery(
+                'CREATE INDEX ON "{}" '
+                '(word,prev1key,prev2key,prev3key,prev4key)'.format(
+                    self.table_name))
+            self.commit()
+            
+    def begin(self):
+        self.doquery('BEGIN')
+            
+    def commit(self):
+        self.doquery('COMMIT')
+        
+    def rollback(self):
+        self.doquery('ROLLBACK')
+    
+    def conv_key(self, s):
+        """Convert a string or sequence of strings to lowercase if case
+        sensitivity is disabled, and strip characters contained in
+        self._ignore_chars.  Non-strings are returned as-is."""
+        try:
+            s.lower()
+        except AttributeError:
+            try:
+                return [self.conv_key(x) for x in s]
+            except TypeError:
+                return s
+        else:
+            if not s:
+                return s
+            s = re.sub('[{}]'.format(self._ignore_chars), '', s)
+            if not self._case_sensitive:
+                s = s.lower()
+            if s.strip(' '):
+                return s
+            else:
+                return '_'
+        
+    def str_to_chain(self, string):
+        """Convert a normal sentence in a string to a list of words"""
+        return [s for s in string.replace('\n', ' \n ').split(' ') if s]
+    
+    def chain_to_str(self, chain):
+        """Unsplit a tuple of words back into a string"""
+        chain = [s.strip(' ') for s in chain]
+        return ' '.join(chain).strip().replace(' \n ', '\n')
+    
+    def add(self, sentence):
+        """Parse and add a string of words to the chain"""
+        words = self.str_to_chain(sentence)
+        words = ['']*4 + [x.strip(' ') for x in words] + ['']*4
+        for i, word in enumerate(words):
+            if not word or i < 4 or i > len(words)-5:
+                continue
+            forward_chain = words[i+1:i+5]
+            backward_chain = words[i-4:i]
+            backward_chain.reverse()
+            forward_key = self.conv_key(forward_chain)
+            backward_key = self.conv_key(backward_chain)
+            self.doquery(
+                'INSERT INTO "{}" '
+                '(word, next1key, next2key, next3key, next4key,'
+                ' prev1key, prev2key, prev3key, prev4key,'
+                ' next1, next2, next3, next4, prev1, prev2, prev3, prev4) '
+                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s,'
+                '%s, %s, %s, %s, %s, %s, %s, %s, %s)'.format(self.table_name),
+                [self.conv_key(word)] + forward_key + backward_key +
+                forward_chain + backward_chain
+            )
+            
+    def train(self, filename):
+        """Train from all lines from the given text file"""
+        f = open(filename, 'r')
+        for line in f:
+            self.add(line)
+            
+    def clear(self):
+        """Delete all trained data; restart with a completely empty state"""
+        self.doquery('DELETE FROM "{}"'.format(self.table_name))
 
-        self.word_forward = Markov_Shelf(
-            connection, table_prefix + '.wf')
-        self.chain_forward = Markov_Shelf(
-            connection, table_prefix + '.cf')
-        self.word_backward = Markov_Shelf(
-            connection, table_prefix + '.wb')
-        self.chain_backward = Markov_Shelf(
-            connection, table_prefix + '.cb')
+    def adjust_left_line_breaks(self, string, max):
+        """Limit newline characters in string to 'max' total, counting from end
+        of string backward; truncate any additional newlines and everything 
+        before them. None for 'max' means unlimited (return string
+        unchanged)."""
+        if max is not None:
+            return '\n'.join(string.split('\n')[-max-1:])
+        return string
 
-    def sync(self):
-        self.word_forward.sync()
-        self.chain_forward.sync()
-        self.word_backward.sync()
-        self.chain_backward.sync()
-
-    def close(self):
-        self.word_forward.close()
-        self.chain_forward.close()
-        self.word_backward.close()
-        self.chain_backward.close()
-
+    def adjust_right_line_breaks(self, string, max):
+        """Limit newline characters in string to 'max' total, counting from
+        start of string forward; truncate any additional newlines and
+        everything after them. None for 'max' means unlimited (return string
+        unchanged)."""
+        if max is not None:
+            return '\n'.join(string.split('\n')[:max+1])
+        return string
+    
+    def adjust_line_breaks(self, string, lmax, rmax):
+        """Limit newline characters in string to 'lmax' total on left side,
+        and 'rmax' total on right end."""
+        return self.adjust_left_line_breaks(
+            self.adjust_right_line_breaks(string, rmax), lmax)
+    
+    def forward(self, start):
+        """Select and return a chain from the given chain forward in context.
+        Input chain is a list/tuple of words one to five items in length."""
+        chain = self.conv_key(start)
+        chain.reverse()
+        q = self.cursor.mogrify(
+            'SELECT next1, next2, next3, next4'
+            ' FROM "{}" WHERE word=%s'.format(
+                self.table_name), (chain[0],))
+        if len(chain) >= 2:
+            q += self.cursor.mogrify(' AND prev1key=%s', (chain[1],))
+        if len(chain) >= 3:
+            q += self.cursor.mogrify(' AND prev2key=%s', (chain[2],))
+        if len(chain) >= 4:
+            q += self.cursor.mogrify(' AND prev3key=%s', (chain[3],))
+        if len(chain) >= 5:
+            q += self.cursor.mogrify(' AND prev4key=%s', (chain[4],))
+        self.doquery(q)
+        if not self.cursor.rowcount:
+            chain.reverse()     # Back to original order for error message
+            raise KeyError("{}: chain not found".format(chain))
+        return self.cursor.fetchall()
+    
+    def backward(self, start):
+        """Select and return a chain from the given chain backward in context.
+        Input chain is a list/tuple of words one to five items in length."""
+        chain = self.conv_key(start)
+        q = self.cursor.mogrify(
+            'SELECT prev4, prev3, prev2, prev1'
+            ' FROM "{}" WHERE word=%s'.format(
+                self.table_name), (chain[0],))
+        if len(chain) >= 2:
+            q += self.cursor.mogrify(' AND next1key=%s', (chain[1],))
+        if len(chain) >= 3:
+            q += self.cursor.mogrify(' AND next2key=%s', (chain[2],))
+        if len(chain) >= 4:
+            q += self.cursor.mogrify(' AND next3key=%s', (chain[3],))
+        if len(chain) >= 5:
+            q += self.cursor.mogrify(' AND next4key=%s', (chain[4],))
+        self.doquery(q)
+        if not self.cursor.rowcount:
+            raise KeyError("{}: chain not found".format(chain))
+        return self.cursor.fetchall()
+    
+    def sentence_forward(self, start, length=4):
+        """Generate a sentence forward from the start chain.  'length' sets the
+        size of the chain used to extend the sentence in words."""
+        sentence = tuple(start)
+        while True:
+            try:
+                sentence = sentence + choice(self.forward(sentence[-length:]))
+            except KeyError:
+                if sentence == tuple(start):
+                    raise
+                else:
+                    break
+        return self.chain_to_str(sentence)
+    
+    def sentence_backward(self, start, length=4):
+        """Generate a sentence backward from the start chain"""
+        sentence = tuple(start)
+        while True:
+            try:
+                sentence = choice(self.backward(sentence[:length])) + sentence
+            except KeyError:
+                if sentence == tuple(start):
+                    raise
+                else:
+                    break
+        return self.chain_to_str(sentence)
+    
+    def sentence(self, start, forward_length=4, backward_length=4):
+        """Generate a full sentence (forward and backward) from the start
+        chain, using chain lengths of forward_order (for forward direction) and
+        backward_order (for backward direction)."""
+        right = self.str_to_chain(self.sentence_forward(start, forward_length))
+        back_chain = right[:backward_length]
+        left = self.str_to_chain(self.sentence_backward(back_chain,
+                                                        backward_length))
+        return self.chain_to_str(left[:-len(back_chain)] + \
+            list(start) + right[len(start):])
+    

@@ -256,9 +256,7 @@ class NikkyBot(irc.IRCClient):
         while generating a response, and respond with a random amusing line
         if silent is False"""
         if not silent:
-            #pub_reply = random.choice(['Oops', 'Ow, my head hurts', 'TEV YOU SCREWED YOUR CODE UP AGAIN', 'Sorry, lost my marbles for a second', 'I forgot what I was going to say', 'Crap, unhandled exception again', 'TEV: FIX YOUR CODE PLZKTHX', 'ERROR: Operation failed successfully!', "Sorry, I find you too lame to give you a proper response", "Houston, we've had a problem.", 'Segmentation fault', 'This program has performed an illegal operation and will be prosecuted^H^H^H^H^H^H^H^H^H^Hterminated.', 'General protection fault', 'Guru Meditation #00000001.1337... wait, wtf? What kind of system am I running on, anyway?', 'Nikky panic - not syncing: TEV SUCKS', 'This is a useless error message. An error occurred. Goodbye.', 'HCF', 'ERROR! ERROR!', '\001ACTION explodes due to an error\001'])
-            pub_reply = 'Something went wrong... tev is experimenting with a new DB backend--things might be a bit rough at first.'
-            self.msg(source, pub_reply)
+            pub_reply = random.choice(['Oops', 'Ow, my head hurts', 'TEV YOU SCREWED YOUR CODE UP AGAIN', 'Sorry, lost my marbles for a second', 'I forgot what I was going to say', 'Crap, unhandled exception again', 'TEV: FIX YOUR CODE PLZKTHX', 'ERROR: Operation failed successfully!', "Sorry, I find you too lame to give you a proper response", "Houston, we've had a problem.", 'Segmentation fault', 'This program has performed an illegal operation and will be prosecuted^H^H^H^H^H^H^H^H^H^Hterminated.', 'General protection fault', 'Guru Meditation #00000001.1337... wait, wtf? What kind of system am I running on, anyway?', 'Nikky panic - not syncing: TEV SUCKS', 'This is a useless error message. An error occurred. Goodbye.', 'HCF', 'ERROR! ERROR!', '\001ACTION explodes due to an error\001'])
         print('\n=== Exception ===\n\n')
         traceback.print_exc()
         print()
@@ -321,8 +319,8 @@ class NikkyBot(irc.IRCClient):
     def do_guest_command(self, cmd, nick, channel=None):
         """Execute a special/non-admin command"""
         if cmd.lower().startswith('?botchat'):
-            from markovmixai import get_personalities
-            personalities = ['nikkybot'] + get_personalities()
+            reload(sys.modules['markovmixai'])
+            personalities = markovmixai.get_personalities()
             usage_msg1 = 'Usage: ?botchat personality1 personality2'
             usage_msg2 = 'Personalities: {}'.format(
                             ', '.join(sorted(personalities)))

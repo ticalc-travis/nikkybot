@@ -35,8 +35,8 @@ DEBUG = True
 
 PREFERRED_KEYWORDS_FILE = 'preferred_keywords.txt'
 RECURSE_LIMIT = 100
-MAX_LF_L = 0
-MAX_LF_R = 1
+MAX_LF_L = 1
+MAX_LF_R = 2
 
 def sanitize(s):
     """Remove control characters from 's' if it's a string; return it as is
@@ -1198,11 +1198,6 @@ PATTERN_REPLIES = (
     ),
     True
 ),
-(r'^\?markov +(\S+)\s*$', -99, Manual_markov(5, '{1}'), True),
-(r'^\?markov +(\S+\s+\S+\s+\S+\s+\S+\s+\S+\s*)$', -99, Manual_markov(5, '{1}'), True),
-(r'^\?markov +(\S+\s+\S+\s+\S+\s+\S+\s*)$', -99, Manual_markov(4, '{1}'), True),
-(r'^\?markov +(\S+\s+\S+\s+\S+\s*)$', -99, Manual_markov(3, '{1}'), True),
-(r'^\?markov +(\S+\s+\S+\s*)$', -99, Manual_markov(2, '{1}'), True),
 (r'^\?markov5 (.*)', -99, Manual_markov(5, '{1}'), True),
 (r'^\?markov4 (.*)', -99, Manual_markov(4, '{1}'), True),
 (r'^\?markov3 (.*)', -99, Manual_markov(3, '{1}'), True),
@@ -1253,33 +1248,36 @@ def nikkysim_parse_saying_no(w, x, y):
 
 
 # Markov chain initialization
-dbconn = psycopg2.connect('dbname=markovmix user=markovmix')
-markov5 = markov.Markov_Shelved(
-    dbconn, 'nikky.5', order=5, case_sensitive=False)
-markov4 = markov.Markov_Shelved(
-    dbconn, 'nikky.4', order=4, case_sensitive=False)
-markov3 = markov.Markov_Shelved(
-    dbconn, 'nikky.3', order=3, case_sensitive=False)
-markov2 = markov.Markov_Shelved(
-    dbconn, 'nikky.2', order=2, case_sensitive=False)
-markovs = {5: markov5, 4: markov4, 3: markov3, 2: markov2}
-for m in markovs.values():
-    m.default_max_left_line_breaks = MAX_LF_L
-    m.default_max_right_line_breaks = MAX_LF_R
+dbconn = psycopg2.connect('dbname=markovmix2 user=markovmix')
+markov = markov.PostgresMarkov(dbconn, 'nikky', case_sensitive = True)
 preferred_keywords = []
 
 
 def random_markov():
     """Pick any random Markov-chained sentence and output it"""
     while True:
-        #out = markov5.sentence_from_chain(
-            #tuple(m.chain_forward.random_key())
-        #)
-        out = markov5.sentence_from_word(
-            choice(['the', 'a', 'an', 'I', 'you', 'of', 'that', 'will'])
-        )
-        if out.strip():
-            return out
+        try:
+            return markov.sentence(
+                markov.str_to_chain(choice((
+                    'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have',
+                    'I', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you',
+                    'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they',
+                    'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one',
+                    'all', 'would', 'there', 'their', 'what', 'so', 'up',
+                    'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me',
+                    'when', 'make', 'can', 'like', 'time', 'no', 'just', 'him',
+                    'know', 'take', 'people', 'into', 'year', 'your', 'good',
+                    'some', 'could', 'them', 'see', 'other', 'than', 'then',
+                    'now', 'look', 'only', 'come', 'its', 'over', 'think',
+                    'also', 'back', 'after', 'use', 'two', 'how', 'our',
+                    'work', 'first', 'well', 'way', 'even', 'new', 'want',
+                    'because', 'any', 'these', 'give', 'day', 'most', 'us'
+                )))
+            )
+        except KeyError:
+            continue
+        else:
+            break
 
 
 def markov_reply(msg, failmsg=None, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
@@ -1291,20 +1289,22 @@ def markov_reply(msg, failmsg=None, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
     # longest possible chain matching any regexp from preferred_patterns;
     # failing that, use the longest possible chain of any words found in the
     # Markov database.
-    words = [x for x in msg.split(' ') if x]
+    words = markov.str_to_chain(msg)
     high_priority_replies = {1:[]}
     low_priority_replies = {1:[]}
     for order in (5, 4, 3, 2):
-        markov = markovs[order]
         high_priority_replies[order] = []
         low_priority_replies[order] = []
         for i in xrange(len(words) - (order-1)):
             chain = tuple(words[i:i+order])
-            response = markov.sentence_from_chain(chain, max_lf_l, max_lf_r)
-            chain_text = ' '.join(chain)
-            if response.strip():
+            try:
+                response = markov.adjust_line_breaks(markov.sentence(chain),
+                                                     max_lf_l, max_lf_r)
+            except KeyError:
+                continue
+            else:
                 for p in preferred_keywords:
-                    if re.search(p, chain_text, re.I):
+                    if re.search(p, response, re.I):
                         high_priority_replies[order].append(response)
                 else:
                     low_priority_replies[order].append(response)
@@ -1313,8 +1313,12 @@ def markov_reply(msg, failmsg=None, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
     words.sort(key=len)
     words.reverse()
     for word in words:
-        response = markov5.sentence_from_word(word, max_lf_l, max_lf_r)
-        if response.strip():
+        try:
+            response = markov.adjust_line_breaks(markov.sentence((word,)),
+                                                 max_lf_l, max_lf_r)
+        except KeyError:
+            continue
+        else:
             for p in preferred_keywords:
                 if re.search(p, word, re.I):
                     high_priority_replies[1].append(response)
@@ -1333,41 +1337,29 @@ def markov_reply(msg, failmsg=None, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
     else:
         return failmsg
 
-
 def manual_markov(order, msg, _recurse_level=0):
-    m = markovs[order]
-    chain = tuple(msg.split(' '))
-    if len(chain) == 1:
-        response = m.sentence_from_word(chain[0])
-    else:
-        response = m.sentence_from_chain(chain)
-    if response:
-        return response
-    else:
+    chain = markov.str_to_chain(msg)
+    try:
+        response = markov.sentence(chain, forward_length=order-1, 
+                                backward_length=order-1)
+    except KeyError:
         if _recurse_level < RECURSE_LIMIT:
             return manual_markov(order, msg, _recurse_level=_recurse_level+1)
         else:
             return '{}: Markov chain not found'.format(repr(' '.join(chain)))
-
+    else:
+        response = markov.adjust_line_breaks(response, MAX_LF_L, MAX_LF_R)
+        return response
 
 def markov_forward(chain, failmsg='', max_lf=MAX_LF_R):
     """Generate sentence from the current chain forward only and not
     backward"""
-    if len(chain) == 1:
-        m = choice(markovs.values())
-        if not m.word_forward.has_key(m.conv_key(chain[0])):
-            return failmsg
-        out = ' '.join(m.from_word_forward(m.conv_key(chain[0]))).replace(
-            ' \n ', '\n')
-    else:
-        m = markovs[len(chain)]
-        if not m.chain_forward.has_key(tuple(m.conv_key(chain))):
-            return failmsg
-        out = ' '.join(m.from_chain_forward(chain)).replace(' \n ', '\n')
-    if not out.strip():
+    try:
+        response = markov.sentence_forward(chain)
+    except KeyError:
         return failmsg
-    return m.adjust_right_line_breaks(out, max_lf)
-
+    else:
+        return markov.adjust_right_line_breaks(response, max_lf)
 
 def pattern_reply(msg, last_used_reply='', nick='nikkybot'):
 
