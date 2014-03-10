@@ -698,7 +698,6 @@ PATTERN_REPLIES = (
 (r'\b(weather|rain|snow|wind|thunder|storm|wet|cloudy|sunny|forecast|precipitation|tornado|hurricane|sleet|fog|drizzle|hail)', 0,
     S(
         R('{0}: ', ''),
-        "Weather where I'm at: http://forecast.weather.gov/MapClick.php?zoneid=KSZ083&zflg=1"
     )
 ),
 (r'\bwhat time\b', 0,
@@ -840,25 +839,6 @@ PATTERN_REPLIES = (
         Markov_forward("I'm actually"),
     )
 ),
-#(r'\b(nikkybot is|you are) (.*)', 1,
-    #R(
-        #R(
-            #"That's what you think",
-            #"Yes, I'm totally {2}",
-            #'Am not',
-            #'Why thank you pumpkin',
-            #'Thanks',
-            #'Damn straight',
-            #'Where did you hear that?'
-        #),
-        #Markov_forward('I am'),
-        #Markov_forward("I'm"),
-        #Markov_forward('I am really'),
-        #Markov_forward("I'm really"),
-        #Markov_forward('I am actually'),
-        #Markov_forward("I'm actually"),
-    #)
-#),
 (r'\b(are you|is nikkybot) (a |an |)\b(.*)\b', 1,
     R(
         'yes',
