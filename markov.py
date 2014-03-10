@@ -371,7 +371,7 @@ class PostgresMarkov(object):
     def chain_to_str(self, chain):
         """Unsplit a tuple of words back into a string"""
         chain = [s.strip(' ') for s in chain]
-        return ' '.join(chain).strip().replace(' \n ', '\n')
+        return ' '.join(chain).replace(' \n ', '\n').strip(' ')
     
     def add(self, sentence):
         """Parse and add a string of words to the chain"""
