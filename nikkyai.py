@@ -149,7 +149,7 @@ class Recurse(str):
                 reply = markov_reply(self.format(*fmt))
                 if reply.strip():
                     return reply
-            return random_markov(markovs[who, 5])
+            return random_markov()
 
 
 # === DATA SECTION ============================================================
