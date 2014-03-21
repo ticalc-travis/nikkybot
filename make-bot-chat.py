@@ -11,12 +11,12 @@ from time import sleep
 NUMBER_OF_ROUNDS = 50
 nikkyai.DEBUG = False
 nikkyai.RECURSE_LIMIT = 10
-nikkyai.MAX_LF_L = 2
-nikkyai.MAX_LF_R = 4
+nikkyai.MAX_LF_L = 10
+nikkyai.MAX_LF_R = 10
 markovmixai.DEBUG = False
 markovmixai.RECURSE_LIMIT = 10
-markovmixai.MAX_LF_L = 2
-markovmixai.MAX_LF_R = 4
+markovmixai.MAX_LF_L = 10
+markovmixai.MAX_LF_R = 10
 
 def usage_exit():
     print('Usage: {} personality1 personality2'.format(argv[0]))
