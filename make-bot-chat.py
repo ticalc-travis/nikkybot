@@ -49,11 +49,11 @@ tw = textwrap.TextWrapper(subsequent_indent=' '*20, expand_tabs=True, width=80)
 def get_response(nick, target_nick, msg):
     if isinstance(msg, list):
         msg = '\n'.join(msg)
-    msg = '<' + target_nick + '> ' + msg
     if nick in ('nikky', 'nikkybot'):
+        msg = '<' + target_nick + '> ' + msg
         reply = nikkybot.reply(msg)
     else:
-        reply = markovmix.reply('?' + nick + ' ' + msg)
+        reply = markovmix.reply('<' + target_nick + '> ?' + nick + ' ' + msg)
         reply = [line.replace('<' + nick + '> ', '', 1) for line in reply]
     if not isinstance(reply, list):
         reply = [reply]
