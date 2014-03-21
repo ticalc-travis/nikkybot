@@ -1310,7 +1310,6 @@ def manual_markov(order, msg, _recurse_level=0):
         else:
             return '{}: Markov chain not found'.format(repr(' '.join(chain)))
     else:
-        response = markov.adjust_line_breaks(response, MAX_LF_L, MAX_LF_R)
         return response
 
 def markov_forward(chain, failmsg='', max_lf=MAX_LF_R):
