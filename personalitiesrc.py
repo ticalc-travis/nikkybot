@@ -10,6 +10,10 @@
 # Regexes must contain at least one parenthesized group!
 
 personality_regexes = {
+	'ashbad':
+		(r'(ashbad|obongo).*',
+		 r'(ashbad).*',
+		 r'(ashbad).*',),
     'jonimus':
         (r'(jonimus|thestorm).*',
          r'(TheStorm)',
@@ -71,7 +75,7 @@ personality_regexes = {
          None,
          None),
     'chronomex':
-        (r'(chronomex|chronome1|.*?slythe|xmc|cmx).*?',
+        (r'(chronomex|chronome1|.*?slythe|xmc|cmx|exmic).*?',
          r'(chronomex)',
          r'(chronomex)'),
     'michael_v':
@@ -83,7 +87,7 @@ personality_regexes = {
         None,
         None),
     'cricket_b':
-        (r'(cricket_b|cricketb|chirp_b).*?',
+        (r'(cricket_b|cricketb|chirp_b|truepika).*?',
          None,
          None),
     'glk':
