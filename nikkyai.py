@@ -1583,9 +1583,14 @@ class NikkyAI(object):
             out = re.sub(r'\S+: ', sourcenick + ': ', out)
 
         try:
-            return self.check_output_response(out, add_response=add_response)
+            out = self.check_output_response(out,
+                                             add_response=add_response)
         except Bad_response_error:
+            out = self.markov_reply(msg, _recurse_level=_recurse_level+1)
+        if markov.conv_key('\n'.join(out)) == markov.conv_key(msg):
             return self.markov_reply(msg, _recurse_level=_recurse_level+1)
+        else:
+            return out
 
     def reply(self, msg):
         """Generic reply method.  Try to use pattern_reply; if no response
