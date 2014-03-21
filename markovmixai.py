@@ -504,7 +504,7 @@ class Bad_response_error(Nikky_error):
 
 
 # Markov chain initialization
-dbconn = psycopg2.connect('dbname=markovmix2 user=markovmix')
+dbconn = psycopg2.connect('dbname=markovmix user=markovmix')
 markovs = {}
 for p in PERSONALITIES:
     markovs[p] = markov.PostgresMarkov(dbconn, p, case_sensitive=False)

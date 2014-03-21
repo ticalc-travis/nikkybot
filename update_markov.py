@@ -32,8 +32,8 @@ def update(pname, reset):
     stdout.write('Starting {} Markov generation.\n'.format(table_name))
 
     # Get last updated date
-    conn = psycopg2.connect('dbname=markovmix2 user=markovmix')
     conn.autocommit = False
+    conn = psycopg2.connect('dbname=markovmix user=markovmix')
     cur = conn.cursor()
     cur.execute('CREATE TABLE IF NOT EXISTS ".last-updated" (name VARCHAR PRIMARY KEY, updated TIMESTAMP NOT NULL DEFAULT NOW())')
     cur.execute('SELECT updated FROM ".last-updated" WHERE name=%s', (table_name,))
