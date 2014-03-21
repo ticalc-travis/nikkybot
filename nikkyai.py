@@ -1211,7 +1211,7 @@ def nikkysim_parse_saying_no(w, x, y):
 
 # Markov chain initialization
 dbconn = psycopg2.connect('dbname=markovmix user=markovmix')
-markov = markov.PostgresMarkov(dbconn, 'nikky', case_sensitive = True)
+markov = markov.PostgresMarkov(dbconn, 'nikky', case_sensitive = False)
 preferred_keywords = []
 
 
