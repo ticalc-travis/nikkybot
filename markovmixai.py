@@ -557,7 +557,7 @@ def random_markov(markov):
         else:
             break
 
-def markov_reply(msg, failmsg=None, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
+def markov_reply(msg, failmsg='', max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
     """Generate a Markov-chained reply for msg"""
     
     # Search for a sequence of input words to Markov chain from: use the
@@ -614,7 +614,7 @@ def markov_reply(msg, failmsg=None, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
             return choice(low_priority_replies[order])
         
     # Failing *that*, return either failmsg (or random Markov if no failmsg)
-    if failmsg is None:
+    if not failmsg:
         return random_markov(markovs[who])
     else:
         return failmsg
