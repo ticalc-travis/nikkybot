@@ -573,6 +573,12 @@ PATTERN_REPLIES = (
     R("Yes, please bore us to death.")
 ),
 (r'\bwho am i\b', -1, R('You are {0}', Markov_forward('you are'))),
+(r'\bwho (are you|is nikkybot)\b', -1,
+    R(
+        Markov_forward("I'm"),
+        Markov_forward("I am"),
+    ),
+),
 (r'\breboot\b', 1,
     R(
         '\001ACTION reboots {0}\001\nlolrotflrebooted',
@@ -1087,30 +1093,6 @@ PATTERN_REPLIES = (
         'Perl was my first language',
         'Hahahaha\n{1}tard',
         'Hahahaha\nWhat a tard'
-    )
-),
-(r'\bPHP\b', 1,
-    R(
-        'PHP\nmore like\nPrivate Hookers Party',
-        'PHP sucks',
-        'Who the hell would use PHP?',
-        'Let me rant to you for a bit about how terrible PHP is.'
-    )
-),
-(r'\bPerl (for a|on a) (calc|calculator|graphing calc|graphing calculator)', 1,
-    R('Yes. Suck it.')
-),
-(r'\bPerl\b', 1,
-    R(
-        'Perl\nmore like\nTCL',
-        'Champ',
-        'Perl sucks',
-        'Perl is crap, anyway',
-        'Perl is crap',
-        'THE POWER OF PERL COMPELS YOU',
-        'I love Perl',
-        'Perl was my first language',
-        'Wish I was written in Perl\ntev is a wuss'
     )
 ),
 (r'\b(which|what) language\b', 1, R('Perl\nDuh')),
