@@ -36,16 +36,13 @@ def update(pname, reset):
     mk = markov.PostgresMarkov(conn, '{}'.format(pname), case_sensitive=False)
     mk.begin()
     cur = conn.cursor()
-    cur.execute('CREATE TABLE IF NOT EXISTS ".last-updated" (name VARCHAR PRIMARY KEY, updated TIMESTAMP NOT NULL DEFAULT NOW())')
-    cur.execute('SELECT updated FROM ".last-updated" WHERE name=%s', (table_name,))
-    target_date = datetime(year=datetime.now().year,
-                        month=datetime.now().month,
-                        day=datetime.now().day)
+    cur.execute('CREATE TABLE IF NOT EXISTS ".last-updated" '
+        '(name VARCHAR PRIMARY KEY, updated TIMESTAMP NOT NULL DEFAULT NOW())')
+    cur.execute('SELECT updated FROM ".last-updated" WHERE name=%s',
+                (table_name,))
+    target_date = datetime.now()
     if not reset and cur.rowcount:
         last_updated = cur.fetchone()[0]
-        last_updated = datetime(year=last_updated.year,
-                                month=last_updated.month,
-                                day=last_updated.day)
     else:
         last_updated = NEVER_UPDATED
     # Updated last updated date (will only be written to DB if entire process
@@ -60,12 +57,10 @@ def update(pname, reset):
         ## Never updated yet ##
         stdout.write('Parsing old logs...\n')
         
-        last_updated = NEVER_UPDATED
-
         # Parse old logs this first time only
 
         # Old Konversation logs
-        for fn in [os.path.join('log_irc_old', x) for x in
+        for fn in [os.path.join('log_irc_konversation', x) for x in
                 ('calcgames.log', 'cemetech.log', 'tcpa.log', 'ti.log',
                 'efnet_#tiasm.log', 'omnimaga.log')]:
             with open(os.path.join(home, fn), 'r') as f:
@@ -84,7 +79,8 @@ def update(pname, reset):
                         line_group = []
         
         # Old #tcpa logs from elsewhere
-        log_path = os.path.join('/home/retrotcpa', os.path.join('log_irc_retro'))
+        log_path = os.path.join('/home/retrotcpa',
+                                os.path.join('log_irc_retro'))
         for dn in [os.path.join(log_path, x) for x in os.listdir(log_path)]:
             for fn in os.listdir(dn):
                 with open(os.path.join(log_path, os.path.join(dn, fn)), 'r') as f:
@@ -100,7 +96,8 @@ def update(pname, reset):
                             line_group = []
 
         # Old #calcgames logs from elsewhere
-        log_path = os.path.join('/home/retrotcpa', os.path.join('log_calcgames'))
+        log_path = os.path.join('/home/retrotcpa',
+                                os.path.join('log_calcgames'))
         for fn in os.listdir(log_path):
             with open(os.path.join(log_path, fn), 'r') as f:
                 line_group = []
@@ -114,8 +111,8 @@ def update(pname, reset):
                             training_glob.append('\n'.join(line_group))
                         line_group = []
 
-        # More miscellaneous junk I threw in a separate huge file because it was
-        # too scattered around my system
+        # More miscellaneous junk I threw in a separate huge file because it
+        # was too scattered around my system
         with open('misc_irc_lines.txt', 'r') as f:
             line_group = []
             for line in f:
@@ -142,44 +139,106 @@ def update(pname, reset):
                             training_glob.append('\n'.join(line_group))
                         line_group = []
                         
-    # Current irssi logs
+        # irssi logs
+        log_path = os.path.join(home, os.path.join('log_irc_irssi'))
+        for dn in [os.path.join(log_path, x) for x in os.listdir(log_path)]:
+            try:
+                for fn in os.listdir(dn):
+                    m = re.match('#(.*)_([0-9]{4})-([0-9]{2})-([0-9]{2})\.log', fn)
+                    if m:
+                        channel, year, month, day = m.groups()
+                        if (channel in
+                                ('calcgames', 'cemetech', 'flood', 'hp48',
+                                'inspired', 'nspire-lua', 'prizm', 'tcpa',
+                                'ti', 'caleb', 'wikiti', 'markov')):
+                            with open(os.path.join(log_path, dn, fn), 'r') as f:
+                                line_group = []
+                                for line in f:
+                                    line = line.strip()
+                                    m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?(.*)> (.*)', line, re.I)
+                                    if m:
+                                        nick, msg = m.groups()
+                                        
+                                        # Special case to handle our silly
+                                        # nikky/nikkybot nick-swapping stunt
+                                        if datetime(year=int(year),
+                                                    month=int(month),
+                                                    day=int(day)) >= datetime(2014, 3, 9):
+                                            if nick.lower().startswith('nikkybot'):
+                                                nick = 'nikky'
+                                            elif nick.lower().startswith('nikky'):
+                                                nick = 'nikkybot'
+                                        
+                                        if not re.match(pregex[0], nick):
+                                            continue
+                                        line_group.append(msg)
+                                        
+                                    if pregex[1]:
+                                        m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?saxjax> \(.\) \[?'+pregex[1]+r'[:\]] (.*)', line, re.I)
+                                        if m:
+                                            line_group.append(m.group(2))
+                                        elif pregex[2]:
+                                            m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?omnomirc.?> (?:\(.\))?<'+pregex[2]+r'> (.*)', line, re.I)
+                                            if m:
+                                                line_group.append(m.group(2))
+                                    if not m:
+                                        if line_group:
+                                            training_glob.append('\n'.join(line_group))
+                                        line_group = []
+            except OSError as e:
+                if e.errno == 20:
+                    continue
+                
+    # Parse current weechat logs
     stdout.write('Parsing current logs...\n')
-    log_path = os.path.join(home, os.path.join('log_irc_new'))
-    for dn in [os.path.join(log_path, x) for x in sorted(os.listdir(log_path))]:
-        try:
-            for fn in sorted(os.listdir(dn)):
-                m = re.match('#(.*)_([0-9]{4})-([0-9]{2})-([0-9]{2})\.log', fn)
-                if m:
-                    channel, year, month, day = m.groups()
-                    log_date = datetime(
-                        year=int(year), month=int(month), day=int(day))
-                    if (channel in 
-                            ('calcgames', 'cemetech', 'flood', 'hp48',
-                            'inspired', 'nspire-lua', 'prizm', 'tcpa', 'ti')
-                            and log_date < target_date
-                            and last_updated <= log_date):
-                        with open(os.path.join(log_path, dn, fn), 'r') as f:
-                            #stdout.write('Parsing {}...\n'.format(fn))
-                            line_group = []
-                            for line in f:
-                                line = line.strip()
-                                m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?'+pregex[0]+'> (.*)',line, re.I)
-                                if not m and pregex[1]:
-                                    m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?saxjax> \(.\) \[?'+pregex[1]+r'[:\]] (.*)', line, re.I)
-                                    if not m and pregex[2]:
-                                        m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?omnomirc.?> (?:\(.\))?<'+pregex[2]+r'> (.*)', line, re.I)
-                                if m:
-                                    line_group.append(m.group(2))
-                                else:
-                                    if line_group:
-                                        training_glob.append('\n'.join(line_group))
-                                    line_group = []
-        except OSError as e:
-            if e.errno == 20:
-                pass
-            else:
-                raise e
-
+    for fn in [os.path.join('log_irc_weechat', 'irc.efnet.#'+x+'.weechatlog')
+               for x in
+            ('calcgames', 'cemetech', 'tcpa', 'ti', 'omnimaga', 'flood',
+             'caleb', 'hp48', 'markov', 'nspired', 'nspire-lua', 'prizm',
+             'wikiti')]:
+        with open(os.path.join(home, fn), 'r') as f:
+            line_group = []
+            for line in f:
+                line = line.strip()
+                m1 = re.match(r'^([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2})\t[+@]?(.*)\t(.*)', line)
+                m2 = re.match(r'^(..., [0-9]{2} ... [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}) [-+][0-9]{4}\t[+@]?(.*)\t(.*)', line)
+                if m1:
+                    date, nick, msg = m1.groups()
+                    date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
+                elif m2:
+                    date, nick, msg = m2.groups()
+                    date = datetime.strptime(date, '%a, %d %b %Y %H:%M:%S')
+                else:
+                    continue
+                
+                # Special case to handle our silly nikky/nikkybot nick-swapping
+                #   stunt
+                # !TODO! Add a date cutoff here when this mess is finally over
+                #   with
+                if nick.lower().startswith('nikkybot'):
+                    nick = 'nikky'
+                elif nick.lower().startswith('nikky'):
+                    nick = 'nikkybot'
+                    
+                if date < last_updated or date > target_date:
+                    continue
+                if re.match(pregex[0], nick, re.I):
+                    line_group.append(msg)
+                elif pregex[1] and nick.lower().startswith('saxjax'):
+                    m = re.match(r'^\(.\) \[?'+pregex[1]+r'[:\]] (.*)',
+                                 msg, re.I)
+                    if m:
+                        line_group.append(m.group(2))
+                elif pregex[2] and nick.lower().startswith('omnomnirc'):
+                    m = re.match(r'^(?:\(.\))?<'+pregex[2]+r'> (.*)',
+                                 msg, re.I)
+                    if m:
+                        line_group.append(m.group(2))
+                else:
+                    if line_group:
+                        training_glob.append('\n'.join(line_group))
+                    line_group = []
+    
     items = len(training_glob)
     if last_updated == NEVER_UPDATED:
         mk.clear()
