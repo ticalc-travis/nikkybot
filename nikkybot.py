@@ -37,7 +37,7 @@ from twisted.python import log
 
 from config import *
 from nikkyai import NikkyAI
-
+import markovmixai
 
 RELOAD_INTERVAL = 60 * 60 * 24
 STATE_SAVE_INTERVAL = 900
