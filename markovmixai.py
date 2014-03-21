@@ -27,12 +27,13 @@ import psycopg2
 from pytz import timezone
 
 import markov
-from personalitiesrc import personality_regexes
+import personalitiesrc
+reload(personalitiesrc)
 
 # !TODO! Do some proper log handling instead of print()--send debug/log stuff
 # to a different stream or something.  It interferes with things like botchat
 
-PERSONALITIES = personality_regexes.keys()
+PERSONALITIES = personalitiesrc.personality_regexes.keys()
 PERSONALITIES.sort()
 
 # Deprecated--remove when no code is using it anymore
