@@ -32,8 +32,9 @@ def update(pname, reset):
     stdout.write('Starting {} Markov generation.\n'.format(table_name))
 
     # Get last updated date
-    conn.autocommit = False
     conn = psycopg2.connect('dbname=markovmix user=markovmix')
+    mk = markov.PostgresMarkov(conn, '{}'.format(pname), case_sensitive=False)
+    mk.begin()
     cur = conn.cursor()
     cur.execute('CREATE TABLE IF NOT EXISTS ".last-updated" (name VARCHAR PRIMARY KEY, updated TIMESTAMP NOT NULL DEFAULT NOW())')
     cur.execute('SELECT updated FROM ".last-updated" WHERE name=%s', (table_name,))
@@ -180,17 +181,15 @@ def update(pname, reset):
                 raise e
 
     items = len(training_glob)
-    m = markov.PostgresMarkov(conn, '{}'.format(pname), case_sensitive=False)
-    m.begin()
     if last_updated == NEVER_UPDATED:
-        m.clear()
+        mk.clear()
     for i, l in enumerate(training_glob):
         stdout.write('Training {}/{}...\r'.format(i+1, items))
         stdout.flush()
-        m.add(unicode(l, errors='replace'))
+        mk.add(unicode(l, errors='replace'))
 
     stdout.write('\nClosing...\n')
-    m.commit()
+    mk.commit()
     stdout.write('Finished!\n\n')
 
 if __name__ == '__main__':
