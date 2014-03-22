@@ -1246,7 +1246,7 @@ def markov_reply(msg, failmsg=None, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
     """Generate a Markov-chained reply for msg"""
     if not msg.strip():
         return random_markov()
-    
+
     # Search for a sequence of input words to Markov chain from: use the
     # longest possible chain matching any regexp from preferred_patterns;
     # failing that, use the longest possible chain of any words found in the
@@ -1292,7 +1292,7 @@ def markov_reply(msg, failmsg=None, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
     for order in reversed(low_priority_replies.keys()):
         if low_priority_replies[order]:
             return choice(low_priority_replies[order])
-        
+
     # Failing *that*, return either failmsg (or random Markov if no failmsg)
     if failmsg is None:
         return random_markov()
@@ -1302,7 +1302,7 @@ def markov_reply(msg, failmsg=None, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
 def manual_markov(order, msg, _recurse_level=0):
     chain = markov.str_to_chain(msg)
     try:
-        response = markov.sentence(chain, forward_length=order-1, 
+        response = markov.sentence(chain, forward_length=order-1,
                                 backward_length=order-1)
     except KeyError:
         if _recurse_level < RECURSE_LIMIT:
@@ -1400,7 +1400,7 @@ class NikkyAI(object):
         self.last_reply = ''
         self.last_replies = {}
         self.nick = 'nikkybot'
-        
+
     def load_preferred_keywords(self, filename=None):
         """Load a list of preferred keyword patterns for markov_reply"""
         global preferred_keywords
@@ -1411,7 +1411,7 @@ class NikkyAI(object):
         preferred_keywords = pk
         if DEBUG:
             print("load_preferred_keywords: {} patterns loaded from {}".format(len(pk), repr(filename)))
-        
+
     def save_preferred_keywords(self, filename=None):
         """Save a list of preferred keyword patterns for markov_reply"""
         if filename is None:
@@ -1420,7 +1420,7 @@ class NikkyAI(object):
             f.writelines([s+'\n' for s in sorted(preferred_keywords)])
         if DEBUG:
             print("save_preferred_keywords: {} patterns saved to {}".format(len(preferred_keywords), repr(filename)))
-        
+
     def add_preferred_keyword(self, keyword, filename=None):
         """Convenience function for adding a single keyword pattern to the
         preferred keywords pattern list"""
@@ -1428,7 +1428,7 @@ class NikkyAI(object):
             preferred_keywords.append(keyword)
             print("add_preferred_keyword: Added keyword {}".format(repr(keyword)))
             self.save_preferred_keywords(filename)
-        
+
     def add_last_reply(self, reply, datetime_=None):
         """Convenience function to add a reply string to the last replies
         memory (used by check_output_response). datetime_ defaults to
@@ -1443,7 +1443,7 @@ class NikkyAI(object):
         allow_repeat, if the response was already output not too long ago.
         Otherwise, set response as last-used response if add_response is True,
         and return response list, split by newlines."""
-        
+
         if not [line for line in response if response.strip()]:
             raise Bad_response_error
         if not allow_repeat:
@@ -1460,7 +1460,7 @@ class NikkyAI(object):
 
         self.last_reply = response
         return response.split('\n')
-    
+
     def clean_up_last_replies(self):
         """Remove stale (no longer applicable) entries from self.last_replies
         dictionary"""
@@ -1600,6 +1600,7 @@ class NikkyAI(object):
             out = self.pattern_reply(msg)
         except Dont_know_how_to_respond_error:
             out = self.markov_reply(msg)
+
         # This function should be guaranteed to give a non-null output
         out_okay = False
         for line in out:

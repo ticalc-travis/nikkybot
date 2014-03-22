@@ -115,8 +115,8 @@ class Markov_forward(object):
             pass
         return markov_forward(who, [x.format(*fmt) for x in self.chain],
             failmsg, self.max_lf_r)
-    
-    
+
+
 class Manual_markov(object):
     """Return a Markov-generated phrase of the given/ order"""
     def __init__(self, order, text):
@@ -520,7 +520,7 @@ def to_whom(msg):
         m = re.match(r'<.*> (.*)', msg)
         if m:
             msg = m.group(1)
-            
+
         # Check initial highlight
         m = re.match(r'^\?(\S+)[:,]*\W(.*)', msg)
         if m:
@@ -559,7 +559,7 @@ def random_markov(markov):
 
 def markov_reply(msg, failmsg='', max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
     """Generate a Markov-chained reply for msg"""
-    
+
     # Search for a sequence of input words to Markov chain from: use the
     # longest possible chain matching any regexp from preferred_patterns;
     # failing that, use the longest possible chain of any words found in the
@@ -570,7 +570,7 @@ def markov_reply(msg, failmsg='', max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
     if not msg.strip():
         return random_markov(markovs[who])
     markov = markovs[who]
-    
+
     words = markov.str_to_chain(msg)
     high_priority_replies = {1:[]}
     low_priority_replies = {1:[]}
@@ -612,7 +612,7 @@ def markov_reply(msg, failmsg='', max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
     for order in reversed(low_priority_replies.keys()):
         if low_priority_replies[order]:
             return choice(low_priority_replies[order])
-        
+
     # Failing *that*, return either failmsg (or random Markov if no failmsg)
     if not failmsg:
         return random_markov(markovs[who])
@@ -624,7 +624,7 @@ def manual_markov(order, who, msg, _recurse_level=0):
     markov = markovs[who]
     chain = markov.str_to_chain(msg)
     try:
-        response = markov.sentence(chain, forward_length=order-1, 
+        response = markov.sentence(chain, forward_length=order-1,
                                 backward_length=order-1)
     except KeyError:
         if _recurse_level < RECURSE_LIMIT:
@@ -727,7 +727,7 @@ class NikkyAI(object):
         self.last_reply = ''
         self.last_replies = {}
         self.nick = 'markovmix'
-        
+
     def load_preferred_keywords(self, filename=None):
         """Load a list of preferred keyword patterns for markov_reply"""
         global preferred_keywords
@@ -738,7 +738,7 @@ class NikkyAI(object):
         preferred_keywords = pk
         if DEBUG:
             print("load_preferred_keywords: {} patterns loaded from {}".format(len(pk), repr(filename)))
-        
+
     def save_preferred_keywords(self, filename=None):
         """Save a list of preferred keyword patterns for markov_reply"""
         if filename is None:
@@ -747,7 +747,7 @@ class NikkyAI(object):
             f.writelines([s+'\n' for s in sorted(preferred_keywords)])
         if DEBUG:
             print("save_preferred_keywords: {} patterns saved to {}".format(len(preferred_keywords), repr(filename)))
-        
+
     def add_preferred_keyword(self, keyword, filename=None):
         """Convenience function for adding a single keyword pattern to the
         preferred keywords pattern list"""
@@ -755,7 +755,7 @@ class NikkyAI(object):
             preferred_keywords.append(keyword)
             print("add_preferred_keyword: Added keyword {}".format(repr(keyword)))
             self.save_preferred_keywords(filename)
-        
+
     def add_last_reply(self, reply, datetime_=None):
         """Convenience function to add a reply string to the last replies
         memory (used by check_output_response). datetime_ defaults to
@@ -829,7 +829,7 @@ class NikkyAI(object):
     def markov_reply(self, msg, add_response=True,_recurse_level=0):
         """Generate a reply using Markov chaining. Check and avoid repeated
         responses.  Add new response to self.last_replies if add_response."""
-        
+
         # Split speaker nick and rest of message
         m = re.match(r'<(.*?)> (.*)', msg)
         if m:
@@ -839,11 +839,11 @@ class NikkyAI(object):
             sourcenick = ''
         if msg.startswith('{}: '.format(self.nick.lower())):
             msg = msg[len(self.nick) + 2:]
-            
+
         who = to_whom(msg)[0]
         if not who:
             return ''
-        
+
         if _recurse_level > RECURSE_LIMIT:
             out = random_markov(markovs[who])
             return ['<{}> '.format(who) + line for line in out.split('\n')]
@@ -867,7 +867,7 @@ class NikkyAI(object):
                 msg = new_msg
                 if stop_here:
                     break
-        
+
         out = markov_reply(msg.rstrip()).rstrip()
 
         # Transform phrases at beginning of reply
@@ -891,7 +891,7 @@ class NikkyAI(object):
             out = re.sub(r'\S+: ', sourcenick + ': ', out)
 
         try:
-            out = self.check_output_response(out, who, 
+            out = self.check_output_response(out, who,
                                               add_response=add_response)
         except Bad_response_error:
             out = self.markov_reply(msg, _recurse_level=_recurse_level+1)
@@ -909,7 +909,7 @@ class NikkyAI(object):
             return self.pattern_reply(msg)
         except Dont_know_how_to_respond_error:
             return self.markov_reply(msg)
-        
+
     def anybody_reply(self, msg):
         """Query all personalities for a response; output one"""
         m = re.match(r'<(.*?)> (.*)', msg)

@@ -92,7 +92,7 @@ class Markov(object):
             word_key = self.conv_key(word)
             chain_value = chain[1:order+1]
             chain_key = tuple(self.conv_key(chain[:order]))
-            
+
             # The explicit retrieval and storing of the dictionary (rather
             # than operating on it in-place) is required in case the object
             # is shelved
@@ -122,14 +122,14 @@ class Markov(object):
         f = open(filename, 'r')
         for line in f:
             self.add(line)
-            
+
     def clear(self):
         """Delete all trained data; restart with a completely empty state"""
         self.word_forward.clear()
         self.word_backward.clear()
         self.chain_forward.clear()
         self.chain_backward.clear()
-            
+
     def choice(self, counter):
         """Select a random element from Counter 'counter', weighted by the
         elements' counts"""
@@ -291,10 +291,10 @@ class PostgresMarkov(object):
     def __init__(self, connect, table_name,
             case_sensitive=True,
             ignore_chars=DEFAULT_IGNORE_CHARS):
-        
+
         self._case_sensitive = case_sensitive
         self._ignore_chars = ignore_chars
-        
+
         # Set up connection if it's a string; else assume it's a connection
         # object
         self.table_name = table_name
@@ -304,11 +304,11 @@ class PostgresMarkov(object):
             self.connection = connect
         self.cursor = self.connection.cursor()
         self.doquery = self.cursor.execute
-            
+
         # Set up tables if needed
         try:
             self.doquery(
-                'CREATE TABLE "{}"' 
+                'CREATE TABLE "{}"'
                 '(word VARCHAR,'
                 ' next1key VARCHAR DEFAULT NULL, next2key VARCHAR DEFAULT NULL,'
                 ' next3key VARCHAR DEFAULT NULL, next4key VARCHAR DEFAULT NULL,'
@@ -332,16 +332,16 @@ class PostgresMarkov(object):
                 '(word,prev1key,prev2key,prev3key,prev4key)'.format(
                     self.table_name))
             self.commit()
-            
+
     def begin(self):
         self.doquery('BEGIN')
-            
+
     def commit(self):
         self.doquery('COMMIT')
-        
+
     def rollback(self):
         self.doquery('ROLLBACK')
-    
+
     def conv_key(self, s):
         """Convert a string or sequence of strings to lowercase if case
         sensitivity is disabled, and strip characters contained in
@@ -363,16 +363,16 @@ class PostgresMarkov(object):
                 return s
             else:
                 return '_'
-        
+
     def str_to_chain(self, string):
         """Convert a normal sentence in a string to a list of words"""
         return [s for s in string.replace('\n', ' \n ').split(' ') if s]
-    
+
     def chain_to_str(self, chain):
         """Unsplit a tuple of words back into a string"""
         chain = [s.strip(' ') for s in chain]
         return ' '.join(chain).replace(' \n ', '\n').strip(' ')
-    
+
     def add(self, sentence):
         """Parse and add a string of words to the chain"""
         words = self.str_to_chain(sentence)
@@ -395,20 +395,20 @@ class PostgresMarkov(object):
                 [self.conv_key(word)] + forward_key + backward_key +
                 forward_chain + backward_chain
             )
-            
+
     def train(self, filename):
         """Train from all lines from the given text file"""
         f = open(filename, 'r')
         for line in f:
             self.add(line)
-            
+
     def clear(self):
         """Delete all trained data; restart with a completely empty state"""
         self.doquery('DELETE FROM "{}"'.format(self.table_name))
 
     def adjust_left_line_breaks(self, string, max):
         """Limit newline characters in string to 'max' total, counting from end
-        of string backward; truncate any additional newlines and everything 
+        of string backward; truncate any additional newlines and everything
         before them. None for 'max' means unlimited (return string
         unchanged)."""
         if max is not None:
@@ -423,13 +423,13 @@ class PostgresMarkov(object):
         if max is not None:
             return '\n'.join(string.split('\n')[:max+1])
         return string
-    
+
     def adjust_line_breaks(self, string, lmax, rmax):
         """Limit newline characters in string to 'lmax' total on left side,
         and 'rmax' total on right end."""
         return self.adjust_left_line_breaks(
             self.adjust_right_line_breaks(string, rmax), lmax)
-    
+
     def forward(self, start):
         """Select and return a chain from the given chain forward in context.
         Input chain is a list/tuple of words one to five items in length."""
@@ -452,7 +452,7 @@ class PostgresMarkov(object):
             chain.reverse()     # Back to original order for error message
             raise KeyError("{}: chain not found".format(chain))
         return self.cursor.fetchall()
-    
+
     def backward(self, start):
         """Select and return a chain from the given chain backward in context.
         Input chain is a list/tuple of words one to five items in length."""
@@ -473,7 +473,7 @@ class PostgresMarkov(object):
         if not self.cursor.rowcount:
             raise KeyError("{}: chain not found".format(chain))
         return self.cursor.fetchall()
-    
+
     def sentence_forward(self, start, length=4):
         """Generate a sentence forward from the start chain.  'length' sets the
         size of the chain used to extend the sentence in words."""
@@ -487,7 +487,7 @@ class PostgresMarkov(object):
                 else:
                     break
         return self.chain_to_str(sentence)
-    
+
     def sentence_backward(self, start, length=4):
         """Generate a sentence backward from the start chain"""
         sentence = tuple(start)
@@ -500,7 +500,7 @@ class PostgresMarkov(object):
                 else:
                     break
         return self.chain_to_str(sentence)
-    
+
     def sentence(self, start, forward_length=4, backward_length=4):
         """Generate a full sentence (forward and backward) from the start
         chain, using chain lengths of forward_order (for forward direction) and
@@ -511,4 +511,4 @@ class PostgresMarkov(object):
                                                         backward_length))
         return self.chain_to_str(left[:-len(back_chain)] + \
             list(start) + right[len(start):])
-    
+

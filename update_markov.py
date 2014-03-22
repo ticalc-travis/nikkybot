@@ -56,7 +56,7 @@ def update(pname, reset):
 
         ## Never updated yet ##
         stdout.write('Parsing old logs...\n')
-        
+
         # Parse old logs this first time only
 
         # Old Konversation logs
@@ -77,7 +77,7 @@ def update(pname, reset):
                         if line_group:
                             training_glob.append('\n'.join(line_group))
                         line_group = []
-        
+
         # Old #tcpa logs from elsewhere
         log_path = os.path.join('/home/retrotcpa',
                                 os.path.join('log_irc_retro'))
@@ -138,7 +138,7 @@ def update(pname, reset):
                         if line_group:
                             training_glob.append('\n'.join(line_group))
                         line_group = []
-                        
+
         # irssi logs
         log_path = os.path.join(home, os.path.join('log_irc_irssi'))
         for dn in [os.path.join(log_path, x) for x in os.listdir(log_path)]:
@@ -158,7 +158,7 @@ def update(pname, reset):
                                     m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?(.*)> (.*)', line, re.I)
                                     if m:
                                         nick, msg = m.groups()
-                                        
+
                                         # Special case to handle our silly
                                         # nikky/nikkybot nick-swapping stunt
                                         if datetime(year=int(year),
@@ -168,11 +168,11 @@ def update(pname, reset):
                                                 nick = 'nikky'
                                             elif nick.lower().startswith('nikky'):
                                                 nick = 'nikkybot'
-                                        
+
                                         if not re.match(pregex[0], nick):
                                             continue
                                         line_group.append(msg)
-                                        
+
                                     if pregex[1]:
                                         m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?saxjax> \(.\) \[?'+pregex[1]+r'[:\]] (.*)', line, re.I)
                                         if m:
@@ -188,7 +188,7 @@ def update(pname, reset):
             except OSError as e:
                 if e.errno == 20:
                     continue
-                
+
     # Parse current weechat logs
     stdout.write('Parsing current logs...\n')
     for fn in [os.path.join('log_irc_weechat', 'irc.efnet.#'+x+'.weechatlog')
@@ -210,7 +210,7 @@ def update(pname, reset):
                     date = datetime.strptime(date, '%a, %d %b %Y %H:%M:%S')
                 else:
                     continue
-                
+
                 # Special case to handle our silly nikky/nikkybot nick-swapping
                 #   stunt
                 # !TODO! Add a date cutoff here when this mess is finally over
@@ -219,7 +219,7 @@ def update(pname, reset):
                     nick = 'nikky'
                 elif nick.lower().startswith('nikky'):
                     nick = 'nikkybot'
-                    
+
                 if date < last_updated or date > target_date:
                     continue
                 if re.match(pregex[0], nick, re.I):
@@ -238,7 +238,7 @@ def update(pname, reset):
                     if line_group:
                         training_glob.append('\n'.join(line_group))
                     line_group = []
-    
+
     items = len(training_glob)
     if last_updated == NEVER_UPDATED:
         mk.clear()
@@ -255,7 +255,7 @@ if __name__ == '__main__':
     if len(argv) < 2:
         print "Usage: {} nick [RESET]".format(argv[0])
         exit(1)
-        
+
     reset = False
     try:
         if argv[2] == 'RESET':
