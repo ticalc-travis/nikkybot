@@ -526,7 +526,7 @@ def to_whom(msg):
         if m:
             for k in markovs.keys():
                 if k.lower() == m.group(1).lower():
-                    return m.group(1), m.group(2)
+                    return m.group(1).lower(), m.group(2)
             return None, msg
         return None, msg
 
