@@ -29,7 +29,7 @@ personality_regexes = {
     'juju':
         (r'(juju).*',
          r'(juju).*',
-         r'(juju2143)'),
+         r'(juju).*'),
     'debrouxl':
         (r'(debrouxl|ldebrouxl).*',
          r'(Lionel Debroux)',
