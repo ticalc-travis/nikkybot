@@ -67,7 +67,7 @@ def format_response(nick, msg, tag=None):
     if tag is not None:
         display_nick = display_nick + '-' + tag
     tw.initial_indent='{:<20}'.format('<' + display_nick + '>')
-    msg = [tw.fill(p) for p in msg]
+    msg = [tw.fill(unicode(p, 'utf-8', errors='replace')) for p in msg]
     msg = '\n'.join(msg)
     return msg
 
