@@ -278,7 +278,7 @@ PATTERN_REPLIES = (
         Markov('Kevin_O'),
     )
 ),
-(r'\bomnimaga', -1,
+(r'\b(omnimaga|omnidrama)', -1,
     R(
         Markov('omnimaga'),
         Markov('omnidrama'),
