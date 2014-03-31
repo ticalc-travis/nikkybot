@@ -33,7 +33,7 @@ import markov
 
 DEBUG = True
 
-PREFERRED_KEYWORDS_FILE = 'preferred_keywords.txt'
+PREFERRED_KEYWORDS_FILE = '/home/nikkybot/nikkybot/state/preferred_keywords.txt'
 RECURSE_LIMIT = 100
 MAX_LF_L = 1
 MAX_LF_R = 2

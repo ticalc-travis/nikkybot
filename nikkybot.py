@@ -21,6 +21,7 @@ from __future__ import print_function
 
 from collections import defaultdict
 
+import argparse
 import cPickle
 import random
 import re
@@ -35,15 +36,10 @@ from twisted.internet import reactor, protocol, threads
 from twisted.internet.error import ConnectionDone
 from twisted.python import log
 
-from config import *
 from nikkyai import NikkyAI
 import markovmixai
 
-RELOAD_INTERVAL = 60 * 60 * 24
-STATE_SAVE_INTERVAL = 900
-STATE_CLEANUP_INTERVAL = 60 * 60 * 24
-CHANNEL_CHECK_INTERVAL = 300
-MAX_USER_THREADS = 4
+OPTS = argparse.Namespace()
 
 class BotError(Exception):
     pass
@@ -67,8 +63,10 @@ class NikkyBot(irc.IRCClient):
         print('Leaving {}: {}'.format(channel, reason))
         irc.IRCClient.leave(self, channel, reason)
 
-    def msg(self, target, message, length=MAX_LINE_LENGTH):
+    def msg(self, target, message, length=None):
         """Provide default line length before split"""
+        if length is None:
+            length = OPTS.max_line_length
         irc.IRCClient.msg(self, target, message, length)
 
     def nickChanged(self, nick):
@@ -103,14 +101,14 @@ class NikkyBot(irc.IRCClient):
 
         irc.IRCClient.connectionMade(self)
 
-        if RELOAD_INTERVAL is not None:
-            reactor.callLater(RELOAD_INTERVAL, self.auto_reload)
-        if CHANNEL_CHECK_INTERVAL is not None:
-            reactor.callLater(CHANNEL_CHECK_INTERVAL, self.channel_check)
-        if STATE_SAVE_INTERVAL is not None:
-            reactor.callLater(STATE_SAVE_INTERVAL, self.save_state)
-        if STATE_CLEANUP_INTERVAL is not None:
-            reactor.callLater(STATE_CLEANUP_INTERVAL, self.cleanup_state)
+        if OPTS.reload_interval:
+            reactor.callLater(OPTS.reload_interval, self.auto_reload)
+        if OPTS.channel_check_interval:
+            reactor.callLater(OPTS.channel_check_interval, self.channel_check)
+        if OPTS.state_save_interval and OPTS.state_file:
+            reactor.callLater(OPTS.state_save_interval, self.save_state)
+        if OPTS.state_cleanup_interval:
+            reactor.callLater(OPTS.state_cleanup_interval, self.cleanup_state)
 
     def connectionLost(self, reason):
         print('Connection lost: {}'.format(reason))
@@ -434,7 +432,7 @@ class NikkyBot(irc.IRCClient):
         """Automatically reload AI module on intervals (to update regularly
         updated Markov data by another process, for instance)"""
         self.reload_ai()
-        reactor.callLater(RELOAD_INTERVAL, self.auto_reload)
+        reactor.callLater(OPTS.reload_interval, self.auto_reload)
 
     def channel_check(self):
         """Retry any channels that we apparently didn't successfully join for
@@ -446,39 +444,33 @@ class NikkyBot(irc.IRCClient):
     def save_state(self):
         """Save nikkyAI state to disk file"""
         self.factory.save_state()
-        reactor.callLater(STATE_SAVE_INTERVAL, self.save_state)
+        reactor.callLater(OPTS.state_save_interval, self.save_state)
 
     def cleanup_state(self):
         """Clean up any stale state data to reduce memory and disk usage"""
         self.factory.cleanup_state()
-        reactor.callLater(STATE_CLEANUP_INTERVAL, self.cleanup_state)
+        reactor.callLater(OPTS.state_cleanup_interval, self.cleanup_state)
 
 
 class NikkyBotFactory(protocol.ReconnectingClientFactory):
 
     protocol = NikkyBot
 
-    def __init__(self, servers, channels, nicks, real_name=REAL_NAME,
-                 admin_hostmasks=ADMIN_HOSTMASKS,
-                 client_version=CLIENT_VERSION,
-                 reconnect_wait=RECONNECT_WAIT,
-                 min_send_time=MIN_SEND_TIME,
-                 nick_retry_wait=NICK_RETRY_WAIT,
-                 initial_reply_delay=INITIAL_REPLY_DELAY,
-                 simulated_typing_speed=SIMULATED_TYPING_SPEED,
-                 state_filename=STATE_FILE):
-        self.servers = servers
-        self.channels = channels
-        self.nicks = nicks
-        self.real_name = real_name
-        self.admin_hostmasks = admin_hostmasks
-        self.client_version = client_version
-        self.initial_reply_delay = initial_reply_delay
-        self.reconnect_wait = reconnect_wait
-        self.min_send_time = min_send_time
-        self.nick_retry_wait = nick_retry_wait
-        self.simulated_typing_speed = simulated_typing_speed
-        self.state_filename = state_filename
+    def __init__(self, OPTS):
+
+        self.servers = [(s.split(':')[0], int(s.split(':')[1])) for s in
+                        OPTS.servers]
+        self.channels = OPTS.channels
+        self.nicks = OPTS.nicks
+        self.real_name = OPTS.real_name
+        self.admin_hostmasks = OPTS.admin_hostmasks
+        self.client_version = OPTS.client_version
+        self.initial_reply_delay = OPTS.initial_reply_delay
+        self.reconnect_wait = OPTS.reconnect_wait
+        self.min_send_time = OPTS.min_send_time
+        self.nick_retry_wait = OPTS.nick_retry_wait
+        self.simulated_typing_speed = OPTS.simulated_typing_speed
+        self.state_file = OPTS.state_file
 
         self.shut_down = False
 
@@ -488,8 +480,10 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
     def load_state(self):
         """Attempt to load persistent state data; else start with new
         defaults"""
+        if not self.state_file:
+            return
         try:
-            f = open(self.state_filename, 'rb')
+            f = open(self.state_file, 'rb')
         except IOError as e:
             print("Couldn't open state data file for reading: {}".format(e))
         else:
@@ -513,10 +507,13 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
 
     def save_state(self):
         """Save persistent state data"""
+        if not self.state_file:
+            return
         try:
-            f = open(self.state_filename, 'wb')
+            f = open(self.state_file, 'wb')
         except IOError as e:
-            print("Couldn't open state data file for writing: {}".format(e))
+            print(
+                "Couldn't open state data file for writing: {}".format(e))
         else:
             state = {}
             for k in self.nikkies:
@@ -541,9 +538,7 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
         time.sleep(self.reconnect_wait)
         print('Connecting to {}:{}'.format(url, port))
         reactor.connectTCP(url, port,
-            NikkyBotFactory(self.servers, self.channels, self.nicks,
-                self.real_name, self.admin_hostmasks, self.min_send_time,
-                self.nick_retry_wait, self.simulated_typing_speed))
+            NikkyBotFactory(OPTS))
 
     def clientConnectionLost(self, connector, reason):
         self.save_state()
@@ -554,9 +549,67 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
 
 
 if __name__ == '__main__':
+    ap = argparse.ArgumentParser()
+    ap.add_argument('-s', '--servers', nargs='*', metavar='SERVER',
+                    default=['irc.choopa.net:6667', 'efnet.port80.se:6667',
+                             'irc.eversible.net:6667', 'irc.shoutcast.com:6667',
+                             'irc.teksavvy.ca:6667', 'irc.paraphysics.net:6667'],
+                    help='List of servers to connect to (host:port)')
+    ap.add_argument('--real-name', default='NikkyBot',
+                    help='"Real name" to provide to IRC server')
+    ap.add_argument('-n', '--nicks', nargs='*', metavar='NICK',
+                    default=['nikkybot', 'nikkybot2', 'nikkybot_'],
+                    help='List of nicks to use, in descending order of '
+                         'preference')
+    ap.add_argument('-c', '--channels', nargs='*', metavar='CHANNEL',
+                    default=['#flood', '#markov', '#cemetech'],
+                    help='List of channels to join')
+    ap.add_argument('--client-version',
+                    default="nikkybot (twisted IRC bot)--contact 'tev' or "
+                            "travisgevans@gmail.com",
+                    help='Client version response to give to CTCP VERSION '
+                         'requests')
+    ap.add_argument('--admin-hostmasks', nargs='*', metavar='ADMIN_HOSTMASK',
+                    default=['*!ijel@ip68-102-86-156.ks.ok.cox.net',
+                             '*!travise@nvm2u.com', '*!travise@64.13.172.47'],
+                    help='Trusted hostmasks to accept special admin commands '
+                         'from')
+    ap.add_argument('--reconnect-wait', default=30, type=float,
+                    help='Seconds to wait before trying to reconnect on '
+                         'connection failure')
+    ap.add_argument('--max-line-length', default=256, type=int,
+                    help='Maximum characters to send per line in messages')
+    ap.add_argument('--min-send-time', default=1, type=float,
+                    help='Minimum allowed time in seconds between message '
+                         'lines sent')
+    ap.add_argument('--nick-retry-wait', default=300, type=float,
+                    help='Seconds to wait before trying to reclain preferred '
+                         'nick')
+    ap.add_argument('--initial-reply-delay', default=2, type=float,
+                    help='Seconds to wait before first line sent')
+    ap.add_argument('--simulated-typing-speed', default=.1, type=float,
+                    help='Seconds per character to delay message (simulated '
+                         'typing delay)')
+    ap.add_argument('-t', '--state-file', default=None,
+                    help='Path for AI save-state file (no permanent state '
+                         'data saved if not given)')
+    ap.add_argument('--reload-interval', default=60*60*24, type=float,
+                    help='Seconds to automatically reload NikkyAI module')
+    ap.add_argument('--state-save-interval', default=900, type=float,
+                    help='Seconds to save AI state')
+    ap.add_argument('--state-cleanup-interval', default=60*60*24, type=float,
+                    help='Seconds to do AI state housekeeping/cleanup')
+    ap.add_argument('--channel-check-interval', default=300, type=float,
+                    help='Seconds to check joined channels and rejoin if '
+                         'necessary')
+    ap.add_argument('--max-user-threads', default=4, type=int,
+                    help='Maximum threads invoked from untrusted commands to '
+                         'run simultaneously')
+    OPTS = ap.parse_args()
+
     log.startLogging(sys.stdout)
-    url, port = random.choice(SERVERS)
+    url, port = random.choice(OPTS.servers).split(':')
     print('Connecting to {}:{}'.format(url, port))
-    reactor.connectTCP(url, port, NikkyBotFactory(SERVERS, CHANNELS, NICKS))
+    reactor.connectTCP(url, int(port), NikkyBotFactory(OPTS))
     reactor.run()
 
