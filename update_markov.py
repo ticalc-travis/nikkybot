@@ -169,9 +169,9 @@ def update(pname, reset):
                                             elif nick.lower().startswith('nikky'):
                                                 nick = 'nikkybot'
 
-                                        if not re.match(pregex[0], nick):
+                                        if re.match('^'+pregex[0]+'$', nick):
+                                            line_group.append(msg)
                                             continue
-                                        line_group.append(msg)
 
                                     if pregex[1]:
                                         m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?saxjax> \(.\) \[?'+pregex[1]+r'[:\]] (.*)', line, re.I)
@@ -222,7 +222,7 @@ def update(pname, reset):
 
                 if date < last_updated or date > target_date:
                     continue
-                if re.match(pregex[0], nick, re.I):
+                if re.match('^'+pregex[0]+'$', nick, re.I):
                     line_group.append(msg)
                 elif pregex[1] and nick.lower().startswith('saxjax'):
                     m = re.match(r'^\(.\) \[?'+pregex[1]+r'[:\]] (.*)',
