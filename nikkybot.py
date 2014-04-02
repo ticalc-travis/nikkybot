@@ -329,7 +329,7 @@ class NikkyBot(irc.IRCClient):
                 reactor.callLater(2, self.notice, nick, usage_msg1)
                 reactor.callLater(4, self.notice, nick, usage_msg2)
             else:
-                if self.user_threads >= MAX_USER_THREADS:
+                if self.user_threads >= OPTS.max_user_threads:
                     reactor.callLater(2, self.notice, nick,
                                       "Sorry, I'm too busy at the moment. Please try again later!")
                 else:
