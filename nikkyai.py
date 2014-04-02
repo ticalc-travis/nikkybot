@@ -1164,12 +1164,6 @@ PATTERN_REPLIES = (
     ),
     True
 ),
-(r'(\b(memory|ram)\b.*\b(you|your|nikkybot)\b|\b(you|your|nikkybot)\b.*\b(memory|ram)\b)', -99,
-    E(
-        "subprocess.check_output(['./memusage.sh', str(getpid())])"
-    ),
-    True
-),
 (r'^\?markov5 (.*)', -99, Manual_markov(5, '{1}'), True),
 (r'^\?markov4 (.*)', -99, Manual_markov(4, '{1}'), True),
 (r'^\?markov3 (.*)', -99, Manual_markov(3, '{1}'), True),
