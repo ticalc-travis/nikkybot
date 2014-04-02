@@ -11,7 +11,7 @@
 
 personality_regexes = {
 	'ashbad':
-		(r'(ashbad|obongo).*',
+		(r'(ashbad|obongo|aalewis).*',
 		 r'(ashbad).*',
 		 r'(ashbad).*',),
     'jonimus':
