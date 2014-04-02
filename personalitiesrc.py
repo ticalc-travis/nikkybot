@@ -39,7 +39,7 @@ personality_regexes = {
          None,
          None),
     'cvsoft-d':
-        (r'(CV).*',
+        (r'(CV|notipa).*',
          r'(CVSoft)',
          None),
     'calebh':
