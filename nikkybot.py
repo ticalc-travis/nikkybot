@@ -247,6 +247,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         if silent is False"""
         if not silent:
             pub_reply = random.choice(['Oops', 'Ow, my head hurts', 'TEV YOU SCREWED YOUR CODE UP AGAIN', 'Sorry, lost my marbles for a second', 'I forgot what I was going to say', 'Crap, unhandled exception again', 'TEV: FIX YOUR CODE PLZKTHX', 'ERROR: Operation failed successfully!', "Sorry, I find you too lame to give you a proper response", "Houston, we've had a problem.", 'Segmentation fault', 'This program has performed an illegal operation and will be prosecuted^H^H^H^H^H^H^H^H^H^Hterminated.', 'General protection fault', 'Guru Meditation #00000001.1337... wait, wtf? What kind of system am I running on, anyway?', 'Nikky panic - not syncing: TEV SUCKS', 'This is a useless error message. An error occurred. Goodbye.', 'HCF', 'ERROR! ERROR!', '\001ACTION explodes due to an error\001'])
+            pub_reply = random.choice(['','!qadd ']) + pub_reply
             self.msg(source, pub_reply)
         print('\n=== Exception ===\n\n')
         traceback.print_exc()
@@ -407,7 +408,9 @@ class NikkyBot(irc.IRCClient, Sensitive):
         """'Escape' a message by inserting an invisible control character
         at the beginning in some cases, to avoid trigger public bot
         commands."""
-        if msg[0] in '~!?@#$%^&*-.,;:' and not msg.startswith('!qfind'):
+        if (msg[0] in '~!?@#$%^&*-.,;:' and
+                not msg.startswith('!qfind') and
+                not msg.startswith('!qadd')):
             return '\x0F' + msg
         else:
             return msg
