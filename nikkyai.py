@@ -1081,6 +1081,16 @@ PATTERN_REPLIES = (
         Markov_forward('{1} is')
     )
 ),
+(r'\bbanning', -5,
+    S(
+        'RANDOM MONTHLY BANNINGS\n',
+        R(
+            'elfprince', 'KermM', 'Merth', 'shaun', 'tifreak', 'Jonimus',
+            'Swivel', '{0}'
+        ),
+        ': You lose'
+    )
+),
 
 # Programming
 (r'\b(BASIC\b|C\+\+|C#|C\s\b|Java\b|Javascript\b|Lua\b|\s\.NET\s\b|Ruby\b|TCL\b|TI\-BASIC\b|TI BASIC\b|Python\b|PHP\b|Scheme\b)', 2,
