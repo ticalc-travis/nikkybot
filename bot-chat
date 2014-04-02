@@ -2,5 +2,5 @@
 
 set -e
 
-chat=$(./make-bot-chat.py $1 $2)
+chat=$(make-bot-chat.py $1 $2)
 echo "$chat" | pastebinit -a nikkybot -b http://p.defau.lt
