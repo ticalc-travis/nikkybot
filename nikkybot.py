@@ -304,8 +304,9 @@ class NikkyBot(irc.IRCClient):
 
     def exec_bot_chat(self, nick, channel, nick1, nick2):
         self.user_threads += 1
-        out = subprocess.check_output(['./bot-chat', nick1, nick2])
-        assert(out.count('\n') <= 2)
+        out = subprocess.check_output(['bot-chat', nick1, nick2])
+        print('DEBUG: *** Bot chat output ***\n')
+        print(out)
         return nick, channel, out
 
     def bot_chat_error(self, failure, nick):
