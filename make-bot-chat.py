@@ -25,6 +25,13 @@ import textwrap
 from sys import argv, exit
 from time import sleep
 
+# Work around Python2's stupid encoding nonsense
+import sys
+import codecs
+sys.stdout = codecs.getwriter('utf-8')(sys.stdout, 'replace')
+def just_PRINT_DAMNIT(s):
+    print(s.decode(errors='replace'))
+
 NUMBER_OF_ROUNDS = 50
 nikkyai.DEBUG = False
 nikkyai.RECURSE_LIMIT = 10
@@ -84,13 +91,13 @@ def format_response(nick, msg, tag=None):
     if tag is not None:
         display_nick = display_nick + '-' + tag
     tw.initial_indent='{:<20}'.format('<' + display_nick + '>')
-    msg = [tw.fill(unicode(p, 'utf-8', errors='replace')) for p in msg]
+    msg = [tw.fill(p) for p in msg]
     msg = '\n'.join(msg)
     return msg
 
 response = 'Hi'
 for i in xrange(NUMBER_OF_ROUNDS):
     response = get_response(nick1, nick2, response)
-    print(format_response(nick1, response, tag1)+'\n')
+    just_PRINT_DAMNIT(format_response(nick1, response, tag1) + '\n')
     response = get_response(nick2, nick1, response)
-    print(format_response(nick2, response, tag2)+'\n')
+    just_PRINT_DAMNIT(format_response(nick2, response, tag2) + '\n')
