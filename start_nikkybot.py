@@ -139,8 +139,7 @@ if __name__ == '__main__':
                     help='List of nicks to use, in descending order of '
                          'preference')
     ap.add_argument('-c', '--channels', nargs='*', metavar='CHANNEL',
-                    default=['#flood', '#markov', '#cemetech'],
-                    help='List of channels to join')
+                    default=[], help='List of channels to join')
     ap.add_argument('--client-version',
                     default="nikkybot (twisted IRC bot)--contact 'tev' or "
                             "travisgevans@gmail.com",
