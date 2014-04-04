@@ -1,11 +1,13 @@
 __pycache__/
-ipython.py
-nikkybot.log
-qotd.txt
+old_junk/
+funstuff/
+*.log
 *.pyc
 *.[oa]
 *~
-nikky-markov.?.pickle
-nikkybot.trn
 *.kate-swp
+install.sh
+manually-added.txt
+misc_irc_lines.txt
+nikky
 
