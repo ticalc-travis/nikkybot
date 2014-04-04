@@ -234,11 +234,10 @@ class NikkyBot(irc.IRCClient, Sensitive):
         return False
 
     def is_highlight(self, msg):
-        """Check if msg contains an instance of one of bot's nicknames"""
-        for nick in self.opts.nicks:
-            if re.search(r'\b{}\b'.format(re.escape(nick)),
-                         msg, flags=re.I):
-                return True
+        """Check if msg contains an instance of bot's current nickname"""
+        if re.search(r'\b{}\b'.format(re.escape(self.nickname)),
+                     msg, flags=re.I):
+            return True
         return False
 
     def report_error(self, source, silent=False):
