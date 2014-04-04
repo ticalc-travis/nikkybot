@@ -42,6 +42,10 @@ class UnrecognizedCommandError(BotError):
     pass
 
 
+class UnauthorizedCommandError(BotError):
+    pass
+
+
 class NikkyBot(irc.IRCClient, Sensitive):
 
     ## Overridden methods ##
@@ -113,73 +117,57 @@ class NikkyBot(irc.IRCClient, Sensitive):
     def joined(self, channel):
         self.joined_channels.add(channel)
 
-    def privmsg(self, user, channel, msg):
+    def privmsg(self, user, target, msg):
         nick, host = user.split('!', 1)
-
         formatted_msg = '<{}> {}'.format(nick, msg)
+        msg = msg.strip()
+        is_private = target == self.nickname
+        sender = nick if is_private else target
+        is_admin = self.any_hostmask_match(self.opts.admin_hostmasks, user)
+        is_highlight = self.is_highlight(msg)
 
-        # !TODO! Clean up this mess. This is getting ridiculous.
+        # Strip any nick highlight from beginning of line
+        m = re.match(r'^{}[:,]? (.*)'.format(re.escape(self.nickname)),
+                    msg, flags=re.I)
+        has_leading_highlight = False
+        if m:
+            has_leading_highlight = True
+            msg = m.group(1).strip()
 
-        if channel == self.nickname:
-            # Private message
-            if self.any_hostmask_match(self.opts.admin_hostmasks, user):
-                try:
-                    self.do_command(msg.strip(), nick)
-                except UnrecognizedCommandError:
-                    try:
-                        self.do_guest_command(msg.strip(), nick)
-                    except UnrecognizedCommandError:
-                        self.do_AI_reply(formatted_msg, nick, no_delay=True,
-                                         log_response=False)
-                    else:
-                        print('Executed: {}'.format(msg.strip()))
-                else:
-                    print('Executed: {}'.format(msg.strip()))
+        # Log private messages
+        if is_private:
+            print('privmsg from {} {}: {}'.format(
+                user, '[ADMIN]' if is_admin else '', msg))
+
+        # Parse/convert saxjax's messages
+        if self.hostmask_match('*!~saxjax@*', user):
+            m = re.match(r'\(.\) \[(.*)\] (.*)', msg)
+            if m:
+                nick = m.group(1)
+                formatted_msg = '<{}> {}'.format(nick, m.group(2))
             else:
-                print('privmsg from {}: {}'.format(user, repr(msg)))
-                try:
-                    self.do_guest_command(msg.strip(), nick)
-                except UnrecognizedCommandError:
-                    self.do_AI_reply(formatted_msg, nick, no_delay=True)
-                else:
-                    print('Executed: {}'.format(msg.strip()))
-        else:
-            # Public message
-            if self.hostmask_match('*!~saxjax@*', user):
-                m = re.match(r'\(.\) \[(.*)\] (.*)', msg)
+                m = re.match(r'\(.\) \*(.*?) (.*)', msg)
                 if m:
-                    nick = m.group(1)
-                    formatted_msg = '<{}> {}'.format(nick, m.group(2))
-                else:
-                    m = re.match(r'\(.\) \*(.*?) (.*)', msg)
-                    if m:
-                        if m.group(1) != 'File':
-                            nick = m.group(1)
-                        else:
-                            nick = ''
-                        formatted_msg = '<> {} {}'.format(m.group(1),
-                                                          m.group(2))
-            if self.is_highlight(msg):
-                raw_msg = msg
-                for n in self.opts.nicks:
-                    m = re.match(r'^{}[:,]? (.*)'.format(re.escape(n)),
-                                 msg, flags=re.I)
-                    if m:
-                        raw_msg = m.group(1).strip()
-                        try:
-                            self.do_guest_command(raw_msg, nick,
-                                                  channel=channel)
-                        except UnrecognizedCommandError:
-                            self.do_AI_reply(formatted_msg, channel,
-                                             log_response=False)
-                        else:
-                            print('Executed: {}'.format(raw_msg.strip()))
-                        break
-                else:
-                    self.do_AI_reply(formatted_msg, channel,
-                                     log_response=False)
+                    if m.group(1) != 'File':
+                        nick = m.group(1)
+                    else:
+                        nick = ''
+                    formatted_msg = '<> {} {}'.format(m.group(1), m.group(2))
+
+        # Determine what to do (reply, maybe reply, run command)
+        if is_private or is_highlight:
+            if is_private or has_leading_highlight:
+                try:
+                    self.do_command(msg, nick, target, is_admin)
+                    print('Executed: {}'.format(msg))
+                except (UnrecognizedCommandError, UnauthorizedCommandError):
+                    self.do_AI_reply(formatted_msg, sender,
+                                     no_delay=is_private, log_response=is_private)
             else:
-                self.do_AI_maybe_reply(formatted_msg, channel, log_response=False)
+                self.do_AI_reply(formatted_msg, sender, no_delay=is_private,
+                                 log_response=is_private)
+        else:
+            self.do_AI_maybe_reply(formatted_msg, sender, log_response=False)
 
     def action(self, user, channel, msg):
         """Pass actions to AI like normal lines"""
@@ -252,16 +240,20 @@ class NikkyBot(irc.IRCClient, Sensitive):
         traceback.print_exc()
         print()
 
-    def do_command(self, cmd, nick):
-        """Execute a special/admin command"""
-        if cmd.lower().startswith('?quit'):
-            try:
-                msg = cmd.split(' ', 1)[1]
-            except IndexError:
-                msg = 'Shutdown initiated'
-            self.quit(msg)
+    def do_command(self, msg, src_nick, target, is_admin):
+        """Execute a special command"""
+        sender = src_nick if target == self.nickname else target
+        cmd, args = msg.split()[0].lower(), ' '.join(msg.split()[1:])
+
+        # Privileged commands
+        if cmd == '?quit':
+            if not is_admin:
+                raise UnauthorizedCommandError
+            self.quit(args)
             self.factory.shut_down = True
-        elif cmd.lower().startswith('?reload'):
+        elif cmd == '?reload':
+            if not is_admin:
+                raise UnauthorizedCommandError
             try:
                 self.reload_ai()
                 self.factory.rebuild()
@@ -269,18 +261,60 @@ class NikkyBot(irc.IRCClient, Sensitive):
                 print('\n=== Exception ===\n\n')
                 traceback.print_exc()
                 print()
-                self.notice(nick, 'Reload error: {}'.format(e))
+                self.notice(src_nick, 'Reload error: {}'.format(e))
             else:
-                self.notice(nick, 'Reloaded nikkyai')
-
-        elif cmd.lower().startswith('?code '):
+                self.notice(src_nick, 'Reloaded nikkyai')
+        elif cmd == '?code':
+            if not is_admin:
+                raise UnauthorizedCommandError
             try:
-                exec(cmd.split(' ', 1))[1]
+                try:
+                    ret = eval(args)
+                except SyntaxError:
+                    exec(args)
+                    self.msg(sender, '[exec OK]')
+                else:
+                    if ret is not None:
+                        sret = str(ret)
+                        print('{} {}\n{}'.format(cmd, args, sret))
+                        if len(sret) > self.opts.max_line_length:
+                            sret = sret[:self.opts.max_line_length-1] + '…'
+                        self.msg(sender, sret)
+                    else:
+                        self.msg(sender, '[eval OK]')
             except Exception as e:
                 print('\n=== Exception ===\n\n')
                 traceback.print_exc()
                 print()
-                self.notice(nick, 'Error: {}'.format(e))
+                self.notice(sender, 'Error: {}'.format(e))
+
+        # Public commands
+        elif cmd in ('botchat', '?botchat'):
+            reload(sys.modules['markovmixai'])
+            personalities = markovmixai.get_personalities()
+            usage_msg1 = 'Usage: ?botchat personality1 personality2'
+            usage_msg2 = 'Personalities: {}'.format(
+                            ', '.join(sorted(personalities)))
+            parms = args.split(' ')
+            if (len(parms) != 2 or parms[0] not in personalities or
+                    parms[1] not in personalities):
+                reactor.callLater(2, self.notice, src_nick, usage_msg1)
+                reactor.callLater(4, self.notice, src_nick, usage_msg2)
+            else:
+                if self.user_threads >= self.opts.max_user_threads:
+                    reactor.callLater(
+                        2, self.notice, src_nick,
+                        "Sorry, I'm too busy at the moment. Please try again "
+                        "later!")
+                else:
+                    reactor.callLater(
+                        2, self.notice, src_nick,
+                        "Generating the bot chat may take a while... I'll let "
+                        "you know when it's done!")
+                    d = threads.deferToThread(self.exec_bot_chat, src_nick,
+                                              sender, parms[0], parms[1])
+                    d.addErrback(self.bot_chat_error, src_nick)
+                    d.addCallback(self.return_bot_chat)
         else:
             raise UnrecognizedCommandError
 
@@ -309,47 +343,12 @@ class NikkyBot(irc.IRCClient, Sensitive):
         assert(self.user_threads >= 0)
         return failure
 
-    def do_guest_command(self, cmd, nick, channel=None):
-        """Execute a special/non-admin command"""
-        if cmd.lower().startswith('?botchat'):
-            reload(sys.modules['markovmixai'])
-            personalities = markovmixai.get_personalities()
-            usage_msg1 = 'Usage: ?botchat personality1 personality2'
-            usage_msg2 = 'Personalities: {}'.format(
-                            ', '.join(sorted(personalities)))
-            parms = cmd.split(' ')[1:]  #Excluding '?botchat' itself
-            if (len(parms) != 2 or parms[0] not in personalities or
-                    parms[1] not in personalities):
-                reactor.callLater(2, self.notice, nick, usage_msg1)
-                reactor.callLater(4, self.notice, nick, usage_msg2)
-            else:
-                if self.user_threads >= self.opts.max_user_threads:
-                    reactor.callLater(2, self.notice, nick,
-                                      "Sorry, I'm too busy at the moment. Please try again later!")
-                else:
-                    reactor.callLater(2, self.notice, nick,
-                                    "Generating the bot chat may take a while... I'll let you know when it's done!")
-                    d = threads.deferToThread(self.exec_bot_chat, nick, channel,
-                                            parms[0], parms[1])
-                    d.addErrback(self.bot_chat_error, nick)
-                    d.addCallback(self.return_bot_chat)
-        else:
-            raise UnrecognizedCommandError
-
     def do_AI_reply(self, msg, target, silent_errors=False, log_response=True,
             no_delay=False):
         """Output an AI response for the given msg to target (user or channel)
         trapping for exceptions"""
         try:
             reply = self.nikkies[target].reply(msg)
-        except psycopg2.OperationalError:
-            """Try to reconnect to DB backend and try again"""
-            print('WARNING: DB backend error; reloading and trying again')
-            time.sleep(5)
-            self.reload_ai()
-            time.sleep(5)
-            self.do_AI_reply(msg, target, silent_errors, log_response,
-                             no_delay)
         except Exception:
             self.report_error(target, silent_errors)
         else:
