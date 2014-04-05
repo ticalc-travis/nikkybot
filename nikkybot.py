@@ -96,8 +96,6 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
         irc.IRCClient.connectionMade(self)
 
-        if self.opts.reload_interval:
-            reactor.callLater(self.opts.reload_interval, self.auto_reload)
         if self.opts.channel_check_interval:
             reactor.callLater(self.opts.channel_check_interval, self.channel_check)
         if self.opts.state_save_interval and self.opts.state_file:
@@ -422,12 +420,6 @@ class NikkyBot(irc.IRCClient, Sensitive):
             self.nikkies[k].last_replies = last_replies
             self.nikkies[k].nick = self.nickname
             self.nikkies[k].load_preferred_keywords()
-
-    def auto_reload(self):
-        """Automatically reload AI module on intervals (to update regularly
-        updated Markov data by another process, for instance)"""
-        self.reload_ai()
-        reactor.callLater(self.opts.reload_interval, self.auto_reload)
 
     def channel_check(self):
         """Retry any channels that we apparently didn't successfully join for

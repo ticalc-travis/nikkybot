@@ -169,8 +169,6 @@ if __name__ == '__main__':
     ap.add_argument('-t', '--state-file', default=None,
                     help='Path for AI save-state file (no permanent state '
                          'data saved if not given)')
-    ap.add_argument('--reload-interval', default=60*60*24, type=float,
-                    help='Seconds to automatically reload NikkyAI module')
     ap.add_argument('--state-save-interval', default=900, type=float,
                     help='Seconds to save AI state')
     ap.add_argument('--state-cleanup-interval', default=60*60*24, type=float,
