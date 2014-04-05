@@ -27,7 +27,7 @@ import traceback
 import sys
 import psycopg2
 
-from twisted.python.rebuild import Sensitive
+from twisted.python.rebuild import Sensitive, rebuild
 from twisted.words.protocols import irc
 from twisted.internet import reactor, threads
 
@@ -69,8 +69,6 @@ class NikkyBot(irc.IRCClient, Sensitive):
     def nickChanged(self, nick):
         """Update NikkyAIs with new nick"""
         irc.IRCClient.nickChanged(self, nick)
-        for n in self.nikkies.values():
-            n.nick = self.nickname
 
     def alterCollidedNick(self, nickname):
         """Resolve nick conflicts and set up automatic preferred nick
@@ -110,7 +108,6 @@ class NikkyBot(irc.IRCClient, Sensitive):
     def signedOn(self):
         for channel in self.opts.channels:
             self.join(channel)
-            self.nikkies[channel].nick = self.nickname
 
     def joined(self, channel):
         self.joined_channels.add(channel)
@@ -375,6 +372,10 @@ class NikkyBot(irc.IRCClient, Sensitive):
             no_delay=False):
         """Output an AI response for the given msg to target (user or channel)
         trapping for exceptions"""
+
+        # Make sure it knows its correct nick
+        self.nikkies[target].nick = self.nickname
+
         try:
             reply = self.nikkies[target].reply(msg)
         except Exception:
@@ -388,6 +389,10 @@ class NikkyBot(irc.IRCClient, Sensitive):
     def do_AI_maybe_reply(self, msg, target, silent_errors=True,
             log_response=False):
         """Occasionally reply to the msg given, or say a random remark"""
+
+        # Make sure it knows its correct nick
+        self.nikkies[target].nick = self.nickname
+
         try:
             reply = self.nikkies[target].decide_remark(msg)
         except Exception:
@@ -442,16 +447,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
             return msg
 
     def reload_ai(self):
-        # !TODO! See if there's a more elegant way of doing this, such as
-        # using twisted's rebuild() thing
-        reload(sys.modules['nikkyai'])
-        from nikkyai import NikkyAI
-        for k in self.nikkies:
-            last_replies = self.nikkies[k].last_replies
-            self.nikkies[k] = NikkyAI()
-            self.nikkies[k].last_replies = last_replies
-            self.nikkies[k].nick = self.nickname
-            self.nikkies[k].load_preferred_keywords()
+        rebuild(sys.modules['nikkyai'])
 
     def channel_check(self):
         """Retry any channels that we apparently didn't successfully join for
