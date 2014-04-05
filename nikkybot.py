@@ -188,9 +188,13 @@ class NikkyBot(irc.IRCClient, Sensitive):
         reactor.callLater(random.randint(5, 300), self.join, channel)
 
     def irc_unknown(self, prefix, command, parms):
-        if command == "INVITE" and parms[1] in CHANNELS:
-            self.join(parms[1])
-            print('Received invite to {}; trying to join'.format(parms[1]))
+        if command == "INVITE":
+            if parms[1] in CHANNELS:
+                self.join(parms[1])
+                print('Received invite to {}; trying to join'.format(parms[1]))
+            else:
+                print('Ignoring invite to unrecognized channel '
+                      '{}'.format(parms[1]))
         elif command == "PONG":
             pass
         else:
@@ -205,7 +209,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
             self.setNick(self.opts.nicks[0])
 
     def hostmask_match(self, testmask, knownmask):
-        """Check if knownmask matches against testmask, resovling wildcards
+        """Check if knownmask matches against testmask, resolving wildcards
         in testmask"""
         testmask = \
             testmask.replace('.', '\\.').replace('?', '.').replace('*', '.*')
@@ -231,9 +235,35 @@ class NikkyBot(irc.IRCClient, Sensitive):
         while generating a response, and respond with a random amusing line
         if silent is False"""
         if not silent:
-            pub_reply = random.choice(['Oops', 'Ow, my head hurts', 'TEV YOU SCREWED YOUR CODE UP AGAIN', 'Sorry, lost my marbles for a second', 'I forgot what I was going to say', 'Crap, unhandled exception again', 'TEV: FIX YOUR CODE PLZKTHX', 'ERROR: Operation failed successfully!', "Sorry, I find you too lame to give you a proper response", "Houston, we've had a problem.", 'Segmentation fault', 'This program has performed an illegal operation and will be prosecuted^H^H^H^H^H^H^H^H^H^Hterminated.', 'General protection fault', 'Guru Meditation #00000001.1337... wait, wtf? What kind of system am I running on, anyway?', 'Nikky panic - not syncing: TEV SUCKS', 'This is a useless error message. An error occurred. Goodbye.', 'HCF', 'ERROR! ERROR!', '\001ACTION explodes due to an error\001'])
-            pub_reply = random.choice(['','!qadd ']) + pub_reply
+            pub_reply = random.choice(
+                ['Oops',
+                 'Ow, my head hurts',
+                 'TEV YOU SCREWED YOUR CODE UP AGAIN',
+                 'Sorry, lost my marbles for a second',
+                 'I forgot what I was going to say',
+                 'Crap, unhandled exception again',
+                 'TEV: FIX YOUR CODE PLZKTHX',
+                 'ERROR: Operation failed successfully!',
+                 "Sorry, I find you too lame to give you a proper response",
+                 "Houston, we've had a problem.",
+                 'Segmentation fault',
+                 'This program has performed an illegal operation and will be '
+                   'prosecuted^H^H^H^H^H^H^H^H^H^Hterminated.',
+                 'General protection fault',
+                 'Guru Meditation #00000001.1337... wait, wtf? What kind of '
+                   'system am I running on, anyway?',
+                 'Nikky panic - not syncing: TEV SUCKS',
+                 'This is a useless error message. An error occurred. '
+                   'Goodbye.',
+                 'HCF',
+                 'ERROR! ERROR!',
+                 '\001ACTION explodes due to an error\001']
+            )
+            # ...for even more humiliation if we're in one of DecBot's channels
+            if source in ('#cemetech', '#flood'):
+                pub_reply = random.choice(['','!qadd ']) + pub_reply
             self.msg(source, pub_reply)
+        # Log actual exception/traceback
         print('\n=== Exception ===\n\n')
         traceback.print_exc()
         print()
@@ -402,7 +432,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
     def escape_message(self, msg):
         """'Escape' a message by inserting an invisible control character
-        at the beginning in some cases, to avoid trigger public bot
+        at the beginning in some cases, to avoid triggering public bot
         commands."""
         if (msg[0] in '~!?@#$%^&*-.,;:' and
                 not msg.startswith('!qfind') and
@@ -412,6 +442,8 @@ class NikkyBot(irc.IRCClient, Sensitive):
             return msg
 
     def reload_ai(self):
+        # !TODO! See if there's a more elegant way of doing this, such as
+        # using twisted's rebuild() thing
         reload(sys.modules['nikkyai'])
         from nikkyai import NikkyAI
         for k in self.nikkies:
