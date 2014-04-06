@@ -271,12 +271,14 @@ class NikkyBot(irc.IRCClient, Sensitive):
         sender = src_nick if target == self.nickname else target
         cmd, args = msg.split()[0].lower(), ' '.join(msg.split()[1:])
 
-        # Privileged commands
+        ## Privileged commands ##
+
         if cmd == '?quit':
             if not is_admin:
                 raise UnauthorizedCommandError
             self.quit(args)
             self.factory.shut_down = True
+
         elif cmd == '?reload':
             if not is_admin:
                 raise UnauthorizedCommandError
@@ -290,6 +292,35 @@ class NikkyBot(irc.IRCClient, Sensitive):
                 self.notice(src_nick, 'Reload error: {}'.format(e))
             else:
                 self.notice(src_nick, 'Reloaded nikkyai')
+
+        elif cmd == '?join':
+            if not is_admin:
+                raise UnauthorizedCommandError
+            if not args in self.opts.channels:
+                self.opts.channels.append(args)
+            self.join(args)
+
+        elif cmd == '?part':
+            if not is_admin:
+                raise UnauthorizedCommandError
+            try:
+                self.opts.channels.remove(args)
+            except ValueError:
+                pass
+            self.part(args)
+
+        elif cmd == '?addword':
+            if not is_admin:
+                raise UnauthorizedCommandError
+            n = self.factory.nikkies[self.factory.nikkies.values()[0]]
+            n.add_preferred_keyword(args)
+
+        elif cmd == '?say':
+            if not is_admin:
+                raise UnauthorizedCommandError
+            target, xxx, msg = args.partition(' ')
+            self.msg(target, msg)
+
         elif cmd == '?code':
             if not is_admin:
                 raise UnauthorizedCommandError
@@ -314,7 +345,8 @@ class NikkyBot(irc.IRCClient, Sensitive):
                 print()
                 self.notice(sender, 'Error: {}'.format(e))
 
-        # Public commands
+        ## Public commands ##
+
         elif cmd in ('botchat', '?botchat'):
             reload(sys.modules['markovmixai'])
             personalities = markovmixai.get_personalities()
@@ -341,6 +373,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
                                               sender, parms[0], parms[1])
                     d.addErrback(self.bot_chat_error, src_nick)
                     d.addCallback(self.return_bot_chat)
+
         else:
             raise UnrecognizedCommandError
 
