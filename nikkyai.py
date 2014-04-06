@@ -32,6 +32,7 @@ import markov
 # to a different stream or something.  It interferes with things like botchat
 
 DEBUG = True
+DB_CONNECT = 'dbname=markovmix user=markovmix'
 
 PREFERRED_KEYWORDS_FILE = '/home/nikkybot/nikkybot/state/preferred_keywords.txt'
 RECURSE_LIMIT = 100
@@ -1246,7 +1247,7 @@ def nikkysim_parse_saying_no(w, x, y):
 
 
 # Markov chain initialization
-dbconn = psycopg2.connect('dbname=markovmix user=markovmix')
+dbconn = psycopg2.connect(DB_CONNECT)
 markov = markov.PostgresMarkov(dbconn, 'nikky', case_sensitive = False)
 preferred_keywords = []
 
