@@ -117,6 +117,19 @@ class Manual_markov(object):
         return manual_markov(self.order, self.text.format(*fmt))
 
 
+class Manual_markov_forward(object):
+    """Return a Markov-generated phrase of the given order forward in
+    context"""
+    def __init__(self, order, text):
+        self.order = order
+        self.text = text
+
+    def get(self, fmt=None):
+        if fmt is None:
+            fmt = []
+        return manual_markov_forward(self.order, self.text.format(*fmt))
+
+
 class Markov(object):
     """Force standard Markov processing on the given message and return
     result, even if message would otherwise match another regexp pattern"""
@@ -1168,6 +1181,18 @@ PATTERN_REPLIES = (
 (r'^\?markov4 (.*)', -99, Manual_markov(4, '{1}'), True),
 (r'^\?markov3 (.*)', -99, Manual_markov(3, '{1}'), True),
 (r'^\?markov2 (.*)', -99, Manual_markov(2, '{1}'), True),
+(r'^\??markov5nr (.*)', -99, Manual_markov(5, '{1}'), False),
+(r'^\??markov4nr (.*)', -99, Manual_markov(4, '{1}'), False),
+(r'^\??markov3nr (.*)', -99, Manual_markov(3, '{1}'), False),
+(r'^\??markov2nr (.*)', -99, Manual_markov(2, '{1}'), False),
+(r'^\??markov5f (.*)', -99, Manual_markov_forward(5, '{1}'), True),
+(r'^\??markov4f (.*)', -99, Manual_markov_forward(4, '{1}'), True),
+(r'^\??markov3f (.*)', -99, Manual_markov_forward(3, '{1}'), True),
+(r'^\??markov2f (.*)', -99, Manual_markov_forward(2, '{1}'), True),
+(r'^\??markov5fnr (.*)', -99, Manual_markov_forward(5, '{1}'), False),
+(r'^\??markov4fnr (.*)', -99, Manual_markov_forward(4, '{1}'), False),
+(r'^\??markov3fnr (.*)', -99, Manual_markov_forward(3, '{1}'), False),
+(r'^\??markov2fnr (.*)', -99, Manual_markov_forward(2, '{1}'), False),
 )
 
 # === END OF DATA SECTION =====================================================
@@ -1307,10 +1332,23 @@ def manual_markov(order, msg, _recurse_level=0):
     chain = markov.str_to_chain(msg)
     try:
         response = markov.sentence(chain, forward_length=order-1,
-                                backward_length=order-1)
+                                   backward_length=order-1)
     except KeyError:
         if _recurse_level < RECURSE_LIMIT:
             return manual_markov(order, msg, _recurse_level=_recurse_level+1)
+        else:
+            return '{}: Markov chain not found'.format(repr(' '.join(chain)))
+    else:
+        return response
+
+def manual_markov_forward(order, msg, _recurse_level=0):
+    chain = markov.str_to_chain(msg)
+    try:
+        response = markov.sentence_forward(chain, length=order-1)
+    except KeyError:
+        if _recurse_level < RECURSE_LIMIT:
+            return manual_markov_forward(order, msg,
+                                         _recurse_level=_recurse_level+1)
         else:
             return '{}: Markov chain not found'.format(repr(' '.join(chain)))
     else:
