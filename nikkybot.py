@@ -22,7 +22,7 @@ from __future__ import print_function
 import random
 import re
 import subprocess
-import time
+from time import time as now
 import traceback
 import sys
 import psycopg2
@@ -91,6 +91,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         self.pending_responses = []
         self.joined_channels = set()
         self.user_threads = 0
+        self.pending_msg_time = now()
 
         irc.IRCClient.connectionMade(self)
 
@@ -416,24 +417,30 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
         if isinstance(msg, str) or isinstance(msg, unicode):
             msg = [msg]
+        first_line = True
         for item in msg:
             for line in item.split('\n'):
                 if line:
-                    self.pending_responses.append(
-                        (delay + len(line)*rate, target, line)
-                    )
+                    # Calc time from last line to output this one
+                    if first_line:
+                        time = (delay + len(line)*rate)
+                    else:
+                        time = (self.opts.min_send_time + len(line)*rate)
+                    # Add line to output queue
+                    self.pending_responses.append((time, target, line))
+                    first_line = False
         self.schedule_next_msg()
 
-    def schedule_next_msg(self, _lastTime=0):
-        """Kick off timed event for next queued line to be output"""
-        try:
+    def schedule_next_msg(self):
+        """Kick off timed event for next queued lines to be output"""
+        last_time = max(0, self.pending_msg_time-now())
+        while self.pending_responses:
             time, target, msg = self.pending_responses.pop(0)
-        except IndexError:
-            pass
-        else:
-            reactor.callLater(_lastTime + time, self.msg, target,
-                            self.escape_message(msg), length=256)
-            reactor.callLater(_lastTime + time + 1, self.schedule_next_msg)
+            reactor.callLater(time + last_time, self.msg, target,
+                              self.escape_message(msg),
+                              length=self.opts.max_line_length)
+            last_time += time
+        self.pending_msg_time = now() + last_time
 
     def escape_message(self, msg):
         """'Escape' a message by inserting an invisible control character
