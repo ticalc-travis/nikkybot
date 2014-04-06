@@ -1404,6 +1404,7 @@ class NikkyAI(object):
         self.last_reply = ''
         self.last_replies = {}
         self.nick = 'nikkybot'
+        self.load_preferred_keywords()
 
     def load_preferred_keywords(self, filename=None):
         """Load a list of preferred keyword patterns for markov_reply"""
