@@ -334,9 +334,6 @@ PATTERN_REPLIES = (
         Markov('quote'),
         Markov('quotes'),
         Markov('!qsay'),
-        "I just added \"!qadd tev sucks\"\n"
-        "as one of my error messages when something goes wrong\n"
-        "And without the bot escape, so DecBot actually adds it",
     ),
 ),
 (r'^[0-9]+ quotes? found:', -2,
@@ -346,35 +343,24 @@ PATTERN_REPLIES = (
         Markov('quote'),
         Markov('quotes'),
         Markov('!qsay'),
-        "I just added \"!qadd tev sucks\"\n"
-        "as one of my error messages when something goes wrong\n"
-        "And without the bot escape, so DecBot actually adds it",
     ),
 ),
 
 # Basics
-(r'\b(hi|hello|hey)\b', 0,
+(r"\b(hi|hello|hey|sup|what's up|welcome)\b", 0,
     R(
-        S(
-            R('Sup ', "What's up "),
-            R('homies', 'losers', 'whores', 'G', 'hookers')
-        ),
-        'Suppppppppp',
-        "Shut up",
-        "Flood your face!",
-        "FLOOD YOUR FACE",
-        'HI {0}',
+        Markov_forward('{1}'),
+        Markov_forward('{1} {0}'),
+        '{1}, {0}',
+        'Shut up',
+        'Flood your face!',
+        'FLOOD YOUR FACE',
         'Go away',
         'No\ngo away',
-        Markov_forward('hi {0}', ('hi',)),
-        Markov_forward('hello {0}', ('hello',)),
-        Markov_forward('hey {0}', ('hey',)),
-        Markov_forward('sup {0}', ('sup',)),
-        Markov_forward('shut the', ('shut the hell up',)),
+        Markov_forward('shut the'),
         Markov_forward('I heard {0}'),
         Markov_forward('I heard that {0}'),
     ),
-    True
 ),
 (r"\b(how are you|how are we|how's your|how is your)\b", 0,
     R('Super', 'Awesome', 'Better than your face',
@@ -386,11 +372,7 @@ PATTERN_REPLIES = (
 ),
 (r"\b(good night|goodnight|g'?night)\b", 0,
     R(
-        'Sweet dreams.\nBitch',
-        'night',
-        "Good night\nluckily I don't sleep",
-        "Haw haw\nI never need to sleep\nsleep is for losers",
-        "night\nluckily I don't need sleep",
+        Markov_forward('night'),
         Markov_forward('night {0}'),
         Markov_forward('sweet dreams')
     )
@@ -406,11 +388,11 @@ PATTERN_REPLIES = (
         "Loser\nWe don't need you anyway",
         'bye lamers',
         'Good riddance',
-        Markov_forward('bye {0}', ('bye',))
+        Markov_forward('bye'),
+        Markov_forward('bye {0}')
     ),
-    True
 ),
-(r"\b(congratulations|congrats)", 1, R('Thanks', 'thx')),
+(r"\b(congratulations|congrats|congradulations)", 1, R('Thanks', 'thx')),
 (r'\b(brb|be right back)\b', 1, R('k', 'kk')),
 (r'\b(thanks|thank you)\b', 1,
     R(
@@ -422,19 +404,18 @@ PATTERN_REPLIES = (
 (r'\b(wb|welcome back|welcoem back)\b', 1, R('Thanks', 'No\nGo away')),
 (r"\*\*\*yes/no\*\*\*", -99,
     R(
-        'yes', 'no', 'maybe', 'probably', 'yeah',
         Markov_forward('yes'),
         Markov_forward('no'),
         Markov_forward('maybe'),
         Markov_forward('yeah'),
+        Markov_forward('probably'),
         Markov_forward('yes'),
         Markov_forward('only if'),
         Markov_forward('only when'),
         Markov_forward('as long as'),
         Markov_forward('whenever'),
         Markov_forward('of course')
-    ),
-    True
+    )
 ),
 
 # General
@@ -638,13 +619,13 @@ PATTERN_REPLIES = (
         'I hate you too',
         ':(\nI hate you too',
         'I HATE YOU {0}\nNerd',
+        Markov_forward('I hate'),
     )
 ),
 (r'\bwhat does it mean\b', 1,
-    R('Communism.', Recurse('it means'))
+    R('Communism.', Markov_forward('it means'))
 ),
 (r'\b(who|what) (does|do|did|should|will|is) (\S+) (.*?)\?*$', -1,
-    #Recurse('what do you think about {3}')
     R(
         Recurse('which'),
         Markov_forward('{3} {4}'),
@@ -656,13 +637,19 @@ PATTERN_REPLIES = (
         Recurse("I'm entering"),
         Recurse("You'll lose"),
         Recurse('My entry'),
-        Markov_forward('Contests')
+        Markov_forward('Contests'),
+        Markov('contest')
     )
 ),
 (r'\b(fever|cold|sick|ill|vomit|throw up|mucus|infection|injury|under the weather|a cold|flu)\b', 1,
     R('I HOPE YOU STAY SICK FOREVER', 'Will a hug make it better?')
 ),
-(r'\bfault\b', 1, S("No, it's your ", R("mom's", "face's"), " fault")),
+(r'\bfault\b', 1,
+    R(
+        Markov_forward("It's your fault"),
+        S("No, it's your ", R("mom's", "face's"), " fault")
+    )
+),
 (r"\bi don't feel like\b", 1,
     R(
         'lazy',
@@ -678,7 +665,8 @@ PATTERN_REPLIES = (
     R(
         Markov_forward('enough'),
         Markov_forward('too many'),
-        Markov_forward('more than you')
+        Markov_forward('more than you'),
+        Markov_forward('not enough'),
     )
 ),
 (r'\bnikkybot.*more like\W*$', -20,
@@ -698,8 +686,8 @@ PATTERN_REPLIES = (
         ),
     ),
 ),
-(r"^(is|isn't|are|am|does|should|can|do)\b", 2, R(Recurse('***yes/no***')), True),
-(r'^(do you think|what about|really)\b', 0, R(Recurse('***yes/no***')), True),
+(r"^(is|isn't|are|am|does|should|can|do)\b", 2, Recurse('***yes/no***')),
+(r'^(do you think|what about|really)\b', 0, R(Recurse('***yes/no***'))),
 (r"^(is|are|am|should|can|do|does|which|what|what's|who|who's)(?: \S+)+[ -](.*?)\W+or (.*)\b", -1,
     S(
         R(
@@ -714,11 +702,6 @@ PATTERN_REPLIES = (
         '\n',
         R('', Markov_forward('because', [' ']), Markov_forward('since', [' '])),
     ),
-),
-(r'\b(weather|rain|snow|wind|thunder|storm|wet|cloudy|sunny|forecast|precipitation|tornado|hurricane|sleet|fog|drizzle|hail)', 0,
-    S(
-        R('{0}: ', ''),
-    )
 ),
 (r'\bwhat time\b', 0,
     R(
@@ -770,7 +753,6 @@ PATTERN_REPLIES = (
 # Meta
 (r'\b((how much|how many lines (of)?|how much) (code|coding|programming)|how long .* to (make|program|code|design|write) you)', -2,
     R(
-        E('subprocess.check_output(["sh","/home/nikkybot/bot/codecount.sh"]).decode()'),
         S("About ",
             E('str((datetime.now() - datetime(2012, 10, 30)).days)'),
             " days' worth ongoing so far, give or take"
@@ -796,14 +778,14 @@ PATTERN_REPLIES = (
 (r"\b(who (made|wrote|programmed) you|(who\'s|whose) are you|who (runs|operates) you|(who is|who's) your (creator|programmer|maker|admin|administrator))\b", -2,
     R(
         "It's tev",
-        'tev',
+        'tev did',
         Markov_forward('tev is')
     )
 ),
 (r"\b(why did you (restart|disconnect|quit|cycle)|(where did|where'd) you go)", -1,
     R(
         'tev told me to\nProbably code change or even reboot\nwho knows'
-    ),
+    ), True
 ),
 (r"\b((nikkybot's|your) source code|the source code (to|of|for) (you|nikkybot))\b", -1,
     R(
@@ -817,7 +799,7 @@ PATTERN_REPLIES = (
         'Well, blame tev',
         'Neither do you\nEnglish sucks',
         'I wish I could do better\n*sob*'
-    )
+    ), True
 ),
 (r"\b(we have|there is|there's|it's|a) ?(\ba\b )?nikkybot\b", 1,
     R(
@@ -826,12 +808,17 @@ PATTERN_REPLIES = (
         'duh',
         'Yes\nnikky is too busy trolling elsewhere\ner, I mean conducting constructive discussion',
         'hi'
-    )
+    ), True
 ),
 (r"\bcue (nikky's |nikkybot's |nikky |nikkybot )?[\"']?([^\"']*)[\"']?", -1,
     R('{2}')
 ),
-(r'\b((nicky|niccy|nicci|nikki|nikk|nik|niky)(boy|bot|bott)?)\b', 0, R('Who the hell is "{1}"?')),
+(r'\b((nicky|niccy|nicci|nikki|nikk|nik|niky)(boy|bot|bott)?)\b', 0,
+    R(
+        'Who the hell is "{1}"?',
+        Markov('{1}'),
+    )
+),
 (r'\b(you|nikkybot) (did|does|do)\b', 1,
     R('I did?', 'I what?', 'Someone talking about me?')
 ),
@@ -892,7 +879,7 @@ PATTERN_REPLIES = (
         "yes\nWell, no\nbut tev's code is",
         'about as much as my program code',
         "No\nyou're just incompatible"
-    )
+    ), True
 ),
 (r'\b((ask|tell) nikky .*)\b', 0, R('HEY NIKKY NIKKY NIKKY\n{0} says "{1}"')),
 (r"\byour (a|an|my|his|her|its|it's|dumb|stupid)\b", 1,
@@ -906,7 +893,6 @@ PATTERN_REPLIES = (
         Markov_forward('better than'),
         Markov_forward('worse than'),
     ),
-    False
 ),
 (r"\bis (.*) (any good|good)", -3, Recurse('what do you think of {1}')),
 (r"^(what do you think|what do you know|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )me\W?$", -3,
@@ -918,7 +904,7 @@ PATTERN_REPLIES = (
 (r"^(how is|how's|do you like|you like|you liek) (.*?)\W?$", -3,
     Recurse('what do you think of {2}')
 ),
-(r"\btell (me|us) about (.*)", -2, R(Recurse('{2}'))),
+(r"\btell (me|us) about (.*)", -2, Recurse('{2}')),
 (r'(.*)\bnikkybutt\b(.*)', -2,
     R(
         '{0}butt',
@@ -940,23 +926,9 @@ PATTERN_REPLIES = (
 
 # Memes
 (r'\b(fail|epic fail)\b', 1, R('Yeah, you suck', 'HAW HAW', 'Lame')),
-(r'\<3 (.*)', 1, R('{0} loves {1}')),
-(r'\<3 nikkybot', 0, R('{0} loves me!')),
-(r'\<3 (u|you) nikkybot', 0, R('{0} loves me!')),
-(r'\o/', 1, R('\o/')),
-(r'$\>.*', 1, R('>true dat', '>hi kerm\n>is\n>this\n>annoying?')),
+(r'^\>.*', 1, R('>true dat', '>hi kerm\n>is\n>this\n>annoying?')),
 
 # Cemetech
-(r'\b#cemetech\b', 1,
-    R(
-        'Join #tcpa',
-        '#cemetech sucks',
-        'You should join #tcpa\nloser',
-        '#cemetech sucks\njoin #tcpa or #ti',
-        'Join #tcpa\nYou know you want to',
-        'Join #ti\nYou know you want to'
-    )
-),
 (r'\bdisallowed word\b', -3,
     R(
         'Shut up {0}',
@@ -1079,7 +1051,6 @@ PATTERN_REPLIES = (
         'yourface++',
         Recurse('***decbot karma***')
     ),
-    True
 ),
 (r'\b(.*)\+\+', 1,
     R(
@@ -1102,24 +1073,14 @@ PATTERN_REPLIES = (
         Markov_forward('{1} is')
     )
 ),
-(r'\bbanning', -5,
-    S(
-        'RANDOM MONTHLY BANNINGS\n',
-        R(
-            'elfprince', 'KermM', 'Merth', 'shaun', 'tifreak', 'Jonimus',
-            'Swivel', '{0}'
-        ),
-        ': You lose'
-    )
-),
 
 # Programming
 (r'\b(BASIC\b|C\+\+|C#|C\s\b|Java\b|Javascript\b|Lua\b|\s\.NET\s\b|Ruby\b|TCL\b|TI\-BASIC\b|TI BASIC\b|Python\b|PHP\b|Scheme\b)', 2,
     R(
-        '{1} sucks. Should have used Perl.',
+        Markov_forward('{1}'),
+        Markov_forward('{1} sucks'),
         'Perl is better',
         'Just use Perl',
-        'Just use Perl\nlike tev *should* have when making me',
         'Should have used Perl',
         'Perl was my first language',
         'Hahahaha\n{1}tard',
@@ -1131,7 +1092,7 @@ PATTERN_REPLIES = (
     R('nvm2u.com', '{0}sucks.org', 'omnimaga.org', 'yourmom.org')
 ),
 (r'\bi\b.*\buse(|d|ing)\b.*\bperl\b', 1,
-    R('Good for you', '{0} is such a champ')
+    R('Good for you', '{0} is such a champ', Markov_forward('perl'))
 ),
 
 # Computers
@@ -1147,7 +1108,7 @@ PATTERN_REPLIES = (
     )
 ),
 (r'\b(sudo )?rm \-?rf\b', 1, R('\001ACTION deletes himself\001')),
-(r'\bzombie processes\b', 1,
+(r'\bzombie', 1,
     R(
         "Don't use shitnix",
         "Don't use Linux. Problem solved.",
@@ -1156,13 +1117,16 @@ PATTERN_REPLIES = (
     )
 ),
 (r'[0-9][0-9](\"|inch|\-inch) (3d |3-d )?(lcd|monitor|plasma|crt|dlp)', 1,
-    R('Big monitors are stupid\nnerd'),
+    R(
+        Markov_forward('big monitors'),
+        Markov('monitors'),
+    ),
 ),
 (r'\b(monitors|monitor-)', 1,
     R(
         'anyone with more than one monitor\nis a loser',
         Recurse('more than one monitor'),
-        Markov_forward('big monitors')
+        Markov_forward('big monitors'),
     )
 ),
 
@@ -1183,12 +1147,11 @@ PATTERN_REPLIES = (
         E('randint(0,999999999999)'),
         E('str(randint(0,int(\'9\'*100))) + "\\nLong enough for you?"')
     ),
-    True
 ),
-(r'^\?markov5 (.*)', -99, Manual_markov(5, '{1}'), True),
-(r'^\?markov4 (.*)', -99, Manual_markov(4, '{1}'), True),
-(r'^\?markov3 (.*)', -99, Manual_markov(3, '{1}'), True),
-(r'^\?markov2 (.*)', -99, Manual_markov(2, '{1}'), True),
+(r'^\??markov5 (.*)', -99, Manual_markov(5, '{1}'), True),
+(r'^\??markov4 (.*)', -99, Manual_markov(4, '{1}'), True),
+(r'^\??markov3 (.*)', -99, Manual_markov(3, '{1}'), True),
+(r'^\??markov2 (.*)', -99, Manual_markov(2, '{1}'), True),
 (r'^\??markov5nr (.*)', -99, Manual_markov(5, '{1}'), False),
 (r'^\??markov4nr (.*)', -99, Manual_markov(4, '{1}'), False),
 (r'^\??markov3nr (.*)', -99, Manual_markov(3, '{1}'), False),
