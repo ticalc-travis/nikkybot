@@ -1453,14 +1453,14 @@ class NikkyAI(object):
         if not allow_repeat:
             try:
                 if (datetime.now() -
-                    self.last_replies[response.lower()] <
+                    self.last_replies[markov.conv_key(response)] <
                         PATTERN_RESPONSE_RECYCLE_TIME):
                     raise Bad_response_error
                 elif add_response:
-                    self.add_last_reply(response)
+                    self.add_last_reply(markov.conv_key(response))
             except KeyError:
                 if add_response:
-                    self.add_last_reply(response)
+                    self.add_last_reply(markov.conv_key(response))
 
         self.last_reply = response
         return response.split('\n')
