@@ -758,6 +758,13 @@ PATTERN_REPLIES = (
         Markov_forward('why'),
     ),
 ),
+(r"(?:\bi|')s\b.*\b(a|an) (.*)", -5,
+    S(
+        R('{0}', "{0}'s mom", "{0}'s face", 'your mom', 'your face'),
+        R(' ', '\n'),
+        'is {1} {2}',
+    ),
+),
 
 # Meta
 (r'\b((how much|how many lines (of)?|how much) (code|coding|programming)|how long .* to (make|program|code|design|write) you)', -2,
