@@ -346,6 +346,11 @@ PATTERN_REPLIES = (
     ),
 ),
 
+# Transformations
+(r'(.*)\bI am\b(.*)', 99, Markov('{1} you are {2}')),
+(r'(.*)\byou are\b(.*)', 99, Markov('{1} I am {2}')),
+(r'(.*)\bme\b(.*)', 99, Markov('{1} you {2}')),
+
 # Basics
 (r"\b(hi|hello|hey|sup|what's up|welcome)\b", 0,
     R(
@@ -1554,27 +1559,19 @@ class NikkyAI(object):
         if msg.startswith('{}: '.format(self.nick.lower())):
             msg = msg[len(self.nick) + 2:]
 
-        # Transform phrases in input
-        for transform in (
-                        (r'\b' + re.escape(self.nick) + r'\b', sourcenick,
-                            False),
-                        (r'\bwhy\b', 'because', False),
-                        (r'\bare you\b', 'am I', True),
-                        (r'\byou are\b', 'I am', True),
-                        (r"\byou're\b", "I'm", True),
-                        (r'\bI am\b', 'you are', True),
-                        (r'\bI\b', 'you', True),
-                        (r'\byou\b', 'I', True),
-                        (r'\bme\b', 'you', True)
-                        ):
-            old, new, stop_here = transform
-            new_msg = re.sub(old, new, msg)
-            if msg != new_msg:
-                msg = new_msg
-                if stop_here:
-                    break
+        # Replace occurences of own nick with that of speaker
+        # !TODO! At some point make it possible to refer to current nick
+        #   in pattern tables, so this can be done there instead of here
+        msg = re.sub(r'\b' + re.escape(self.nick) + r'\b', sourcenick,
+                     msg)
 
         out = markov_reply(msg.rstrip()).rstrip()
+
+        # !TODO! The below output filtering needs to be in a separate
+        #   function and *all* Markov-using functions should go through it,
+        #   not just this one.
+        #   Also, this will allow doing other things like avoiding
+        #   unnecessary nick highlights or saying unwanted words or phrases.
 
         # Transform phrases at beginning of reply
         for transform in (
