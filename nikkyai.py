@@ -168,9 +168,9 @@ class Recurse(str):
 
 # === DATA SECTION ============================================================
 
-# (has pattern response & awake, has pattern response & asleep,
-#  random remark & awake, random remark & asleep)
-REMARK_CHANCE = (100, 400, 700, 2100)
+REMARK_CHANCE_HAS_PATTERN = 100
+REMARK_CHANCE_MENTIONS_NIKKY = 200
+REMARK_CHANCE_RANDOM = 700
 PATTERN_RESPONSE_RECYCLE_TIME = timedelta(30)
 
 GENERIC_REMARKS = (
@@ -1628,16 +1628,12 @@ class NikkyAI(object):
         """Determine whether a random response to a line not directed to
         nikkybot should be made"""
 
-        pacific = timezone('US/Pacific')    # Where Nikky lives
-        hour = datetime.now(pacific).hour
-        i = int(hour >= 2 and hour <= 12)   # 0 = awake; more activity
-                                            # 1 = usually asleep; less activity
         try:
             potential_response = self.pattern_reply(msg, add_response=False)
         except Dont_know_how_to_respond_error:
-            c = REMARK_CHANCE[2 + i]
+            c = REMARK_CHANCE_RANDOM
             if re.search(r'\bnikky\b', msg, re.I):
-                c = int(c/2)
+                c = REMARK_CHANCE_MENTIONS_NIKKY
             r = randint(0, c)
             if not r:
                 if not randint(0, 4):
@@ -1653,9 +1649,9 @@ class NikkyAI(object):
             else:
                 return None
         else:
-            c = REMARK_CHANCE[0 + i]
+            c = REMARK_CHANCE_RANDOM
             if re.search(r'\bnikky\b', msg, re.I):
-                c=int(c/2)
+                c = REMARK_CHANCE_MENTIONS_NIKKY
             r = randint(0, c)
             if not r:
                 self.add_last_reply('\n'.join(potential_response))
