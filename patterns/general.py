@@ -20,8 +20,22 @@ from _table import *
 
 
 def more_like(nikkyai, fmt):
-    # !TODO! Now that it's a function, we can improve this now!
-    return nikkyai.markov_reply("\n more like \n", add_response=False)
+    # !TODO! Implement our own looping; fail to default 'more like' completion
+    # Need a way to access RECURSE_LIMIT from here first (make it an attribute
+    # of NikkyAI)
+    if not fmt[1]:
+        return nikkyai.markov_reply('\n more like \n', add_response=False)
+    out = nikkyai.markov_forward((fmt[1], '\n', 'more', 'like'),
+                                 failmsg='', max_lf=3)
+    if not out:
+        out = nikkyai.markov_forward((fmt[1], 'more', 'like'), failmsg='',
+                                     max_lf=3)
+        if not out:
+            out = '{}\n{}'.format(
+                fmt[1],
+                nikkyai.markov_forward(('more', 'like', '\n'), failmsg='',
+                                       max_lf=2))
+    return out
 
 
 patterns = (
@@ -360,17 +374,7 @@ patterns = (
         'nikkybot\nmore like\nawesome',
     ), True
 ),
-# !TODO! Can probably merge these two "more like"s into a single function
-(r'\bmore like\W*$', -10, E(more_like)),
-(r'(.*) (more|moer|mroe) (like|liek)\W*$', -15,
-    R(
-        Markov_forward('{1} \n more like'),
-        S(
-            '{1}\n',
-            Markov_forward('more like \n')
-        ),
-    ),
-),
+(r'(.*?)\W*more like\W*$', -10, E(more_like)),
 (r"^(is|isn't|are|am|does|should|can|do)\b", 2, Recurse('***yes/no***')),
 (r'^(do you think|what about|really)\b', 0, R(Recurse('***yes/no***'))),
 (r"^(is|are|am|should|can|do|does|which|what|what's|who|who's)(?: \S+)+[ -](.*?)\W+or (.*)\b", -1,
