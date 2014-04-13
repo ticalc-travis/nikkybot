@@ -18,6 +18,9 @@
 
 import importlib
 
+import _table
+reload(_table)
+
 _PATTERN_FILES = ('general', 'remarks',
                   'commands', 'community', 'computers', 'meta', 'synonyms')
 

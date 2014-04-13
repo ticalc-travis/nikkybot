@@ -16,6 +16,29 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
+#!TODO!
+#
+# Move most globals to parameterized options
+#
+# Add mimc/impersonation feature to "what do you think of" and random remarks when it's ready
+#
+# Fix up mismatching "'()[]{}
+#
+# Replace nicks with current ones, and/or avoid highlighting random people
+#
+# Don't output responses that match input (wasn't this already done?)
+#
+# Markov-key-convert last replies (wasn't *this* already done before?)
+#
+# Bug: random_markov() (and others?) can still give a null response due to
+# inconsistent check_output_response calls
+#
+# Don't output keywords exactly as-is (with regard to punctuation)
+#
+# Add response for nikkybot to tell its age
+
+
 from datetime import datetime, timedelta
 from random import randint, choice
 import cPickle
@@ -75,7 +98,7 @@ class NikkyAI(object):
         self.nick = 'nikkybot'
         self.load_preferred_keywords()
 
-    def reply(self, msg):
+    def reply(self, msg, add_response=True):
         """Generic reply method.  Try to use pattern_reply; if no response
         found, fall back to markov_reply"""
 
@@ -86,7 +109,7 @@ class NikkyAI(object):
 
         # This function should be guaranteed to give a non-null output
         out_okay = False
-        for line in out:
+        for line in out.split('\n'):
             if line.strip():
                 out_okay = True
                 break
@@ -112,7 +135,7 @@ class NikkyAI(object):
                         out = self.markov_reply(msg, add_response=False)
                         # Try not to get too talkative with random responses
                         if out.count('\n') <= 2:
-                            self.add_last_reply('\n'.join(out))
+                            self.add_last_reply(out)
                             return out
                     return self.remark(msg, add_response=True)
             else:
@@ -123,7 +146,7 @@ class NikkyAI(object):
                 c = REMARK_CHANCE_MENTIONS_NIKKY
             r = randint(0, c)
             if not r:
-                self.add_last_reply('\n'.join(potential_response))
+                self.add_last_reply(potential_response)
                 return potential_response
             else:
                 return None
@@ -140,7 +163,7 @@ class NikkyAI(object):
                 )
             except Bad_response_error:
                 pass
-        return ['']
+        return ''
 
     def generic_remark(self, msg=''):
         """Select a random remark from the predefined random remark list"""
@@ -148,13 +171,13 @@ class NikkyAI(object):
         m = re.match(r'<(.*)>', msg)
         if m:
             nick = m.group(1)
-        return choice(patterns.generic_remarks).format(nick)
+        return choice(patterns.generic_remarks)
 
     def nikkysim_remark(self, msg='', strip_number=True):
         """Generate a NikkySim remark.  If not strip_number, include the
         saying number before the remark."""
 
-        out, self.last_nikkysim_saying = nikkysim(strip_number)
+        out, self.last_nikkysim_saying = self.nikkysim(strip_number)
         return out
 
     def pattern_reply(self, msg, add_response=True):
@@ -162,8 +185,7 @@ class NikkyAI(object):
         Check for and avoid repeated responses.  Add new response to
         add_response to self.last_replies if add_response."""
         for i in xrange(RECURSE_LIMIT):
-            response, allow_repeat = \
-                self._pattern_reply(msg)
+            response, allow_repeat = self._pattern_reply(msg)
             try:
                 return self.check_output_response(
                     response, allow_repeat, add_response=add_response)
@@ -231,13 +253,13 @@ class NikkyAI(object):
         else:
             if DEBUG:
                 print("DEBUG: pattern_reply: sourcenick {}, msg {}: Chose match {}".format(repr(sourcenick), repr(msg), repr(match.re.pattern)))
-        fmt_list = [sourcenick,] + [sanitize(s) for s in match.groups()]
+        fmt_list = [sourcenick,] + [self.sanitize(s) for s in match.groups()]
         try:
-            return (reply.get(fmt_list), allow_repeat)
+            return (reply.get(self, fmt_list), allow_repeat)
         except AttributeError as e:
             if str(e).endswith("'get'"):
                 # In case of a plain string
-                return (reply.format(*fmt_list), allow_repeat)
+                return reply.format(*fmt_list)
             else:
                 raise e
 
@@ -296,7 +318,7 @@ class NikkyAI(object):
                                              add_response=add_response)
         except Bad_response_error:
             out = self.markov_reply(msg, _recurse_level=_recurse_level+1)
-        if markov.conv_key('\n'.join(out)) == markov.conv_key(msg):
+        if markov.conv_key(out) == markov.conv_key(msg):
             return self.markov_reply(msg, _recurse_level=_recurse_level+1)
         else:
             return out
@@ -305,7 +327,7 @@ class NikkyAI(object):
                       max_lf_r=MAX_LF_R):
         """Generate a Markov-chained reply for msg"""
         if not msg.strip():
-            return random_markov()
+            return self.random_markov()
 
         # Search for a sequence of input words to Markov chain from: use the
         # longest possible chain matching any regexp from preferred_patterns;
@@ -355,61 +377,34 @@ class NikkyAI(object):
 
         # Failing *that*, return either failmsg (or random Markov if no failmsg)
         if failmsg is None:
-            return random_markov()
+            return self.random_markov()
         else:
             return failmsg
 
     def random_markov(self):
         """Pick any random Markov-chained sentence and output it"""
+        generic_words = (
+            'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have',
+            'I', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you',
+            'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they',
+            'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one',
+            'all', 'would', 'there', 'their', 'what', 'so', 'up',
+            'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me',
+            'when', 'make', 'can', 'like', 'time', 'no', 'just', 'him',
+            'know', 'take', 'people', 'into', 'year', 'your', 'good',
+            'some', 'could', 'them', 'see', 'other', 'than', 'then',
+            'now', 'look', 'only', 'come', 'its', 'over', 'think',
+            'also', 'back', 'after', 'use', 'two', 'how', 'our',
+            'work', 'first', 'well', 'way', 'even', 'new', 'want',
+            'because', 'any', 'these', 'give', 'day', 'most', 'us')
         while True:
             try:
-                return markov.sentence(
-                    markov.str_to_chain(choice((
-                        'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have',
-                        'I', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you',
-                        'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they',
-                        'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one',
-                        'all', 'would', 'there', 'their', 'what', 'so', 'up',
-                        'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me',
-                        'when', 'make', 'can', 'like', 'time', 'no', 'just', 'him',
-                        'know', 'take', 'people', 'into', 'year', 'your', 'good',
-                        'some', 'could', 'them', 'see', 'other', 'than', 'then',
-                        'now', 'look', 'only', 'come', 'its', 'over', 'think',
-                        'also', 'back', 'after', 'use', 'two', 'how', 'our',
-                        'work', 'first', 'well', 'way', 'even', 'new', 'want',
-                        'because', 'any', 'these', 'give', 'day', 'most', 'us'
-                    )))
-                )
+                chain = markov.str_to_chain(choice(generic_words))
+                return markov.sentence(chain)
             except KeyError:
                 continue
             else:
                 break
-
-    def manual_markov(self, order, msg, _recurse_level=0):
-        chain = markov.str_to_chain(msg)
-        try:
-            response = markov.sentence(chain, forward_length=order-1,
-                                    backward_length=order-1)
-        except KeyError:
-            if _recurse_level < RECURSE_LIMIT:
-                return manual_markov(order, msg, _recurse_level=_recurse_level+1)
-            else:
-                return '{}: Markov chain not found'.format(repr(' '.join(chain)))
-        else:
-            return response
-
-    def manual_markov_forward(self, order, msg, _recurse_level=0):
-        chain = markov.str_to_chain(msg)
-        try:
-            response = markov.sentence_forward(chain, length=order-1)
-        except KeyError:
-            if _recurse_level < RECURSE_LIMIT:
-                return manual_markov_forward(order, msg,
-                                            _recurse_level=_recurse_level+1)
-            else:
-                return '{}: Markov chain not found'.format(repr(' '.join(chain)))
-        else:
-            return response
 
     def markov_forward(self, chain, failmsg='', max_lf=MAX_LF_R):
         """Generate sentence from the current chain forward only and not
@@ -419,9 +414,47 @@ class NikkyAI(object):
         except KeyError:
             return failmsg
         else:
-            return markov.adjust_right_line_breaks(response, max_lf)
+            return markov.adjust_right_line_breaks(
+                response, max_lf).strip()
+
+    def manual_markov(self, order, msg, _recurse_level=0):
+        """Return manually-invoked Markov operation (output special error
+        string if chain not found)"""
+        chain = markov.str_to_chain(msg)
+        try:
+            response = markov.sentence(chain, forward_length=order-1,
+                                    backward_length=order-1)
+        except KeyError:
+            if _recurse_level < RECURSE_LIMIT:
+                return self.manual_markov(
+                    order, msg, _recurse_level=_recurse_level+1)
+            else:
+                return ['{}: Markov chain not found'.format(
+                    repr(' '.join(chain)))]
+        else:
+            return response.strip()
+
+    def manual_markov_forward(self, order, msg, _recurse_level=0):
+        """Return manually-invoked Markov forward operation (output special
+        error string if chain not found)"""
+        chain = markov.str_to_chain(msg)
+        try:
+            response = markov.sentence_forward(chain, length=order-1)
+        except KeyError:
+            if _recurse_level < RECURSE_LIMIT:
+                return self.manual_markov_forward(order, msg,
+                                            _recurse_level=_recurse_level+1)
+            else:
+                return ['{}: Markov chain not found'.format(
+                    repr(' '.join(chain)))]
+        else:
+            return response.strip()
 
     def nikkysim(self, strip_number=True, saying=None):
+        """Return NikkySim saying.  saying is the saying number as a tuple
+        (e.g. (1234,5678)); None selects random saying.  Don't start output
+        with saying number if strip_number is True.  Output
+        (msg, saying_tuple)."""
         if saying is None:
             x, y = randint(0, 4294967295), randint(0, 9999)
         else:
@@ -433,6 +466,13 @@ class NikkyAI(object):
             return (out.rstrip(), (x, y))
 
     def nikkysim_parse_saying_no(self, w, x, y):
+        """Return NikkySim saying based on partially-parsed saying number
+        string.  (Example: w='B-', x='1234', y='5678' returns saying
+        #B-1234-5678.)"""
+
+        # !FIXME! This is a pretty hackish internal function that we can
+        # probably do without.  Much of the parsing/validation could be done
+        # from the response pattern tables, anyway.
         if w == 'None':
             w = 'B-'
         if y == 'None':
@@ -443,11 +483,29 @@ class NikkyAI(object):
             return "Only tev's TI-89 NikkySim can do the 'A-' quotes"
         elif w == 'B-' or w == 'b-' or w is None:
             if (x >= 0 and x <= 4294967295) and (y >= 0 and y <= 9999):
-                return nikkysim(False, (x, y))[0]
+                return self.nikkysim(False, (x, y))[0]
             else:
                 return 'Sayings go from 0-0 to 4294967295-9999, champ'
         else:
             return "No such thing as a {}type quote yet".format(w)
+
+    def random_number_saying(self):
+        """Output a random number-type response"""
+        c = randint(0, 3)
+        if c == 0:
+            out = str(randint(0,9999))
+        elif c == 1:
+            out = str(randint(0,999999999999))
+        else:
+            out = '{}\nLong enough for you?'.format(randint(0, int('9'*100)))
+        return out
+
+    def age_saying(self):
+        """Output a response indicating nikkybot's age"""
+        from datetime import datetime
+        return ('About ' +
+                str((datetime.now() - datetime(2012, 10, 30)).days) +
+                " days' worth ongoing so far, give or take")
 
     def load_preferred_keywords(self, filename=None):
         """Load a list of preferred keyword patterns for markov_reply"""
@@ -483,7 +541,7 @@ class NikkyAI(object):
         datetime.now()."""
         if datetime_ is None:
             datetime_ = datetime.now()
-        self.last_replies[reply.lower()] = datetime.now()
+        self.last_replies[markov.conv_key(reply)] = datetime.now()
 
     def check_output_response(self, response, allow_repeat=False,
                               add_response=True):
@@ -492,22 +550,22 @@ class NikkyAI(object):
         Otherwise, set response as last-used response if add_response is True,
         and return response list, split by newlines."""
 
-        if not [line for line in response if response.strip()]:
+        if not [line for line in response.split('\n') if line.strip()]:
             raise Bad_response_error
+        response_key = markov.conv_key(response)
         if not allow_repeat:
             try:
-                if (datetime.now() -
-                    self.last_replies[markov.conv_key(response)] <
-                        PATTERN_RESPONSE_RECYCLE_TIME):
+                if (datetime.now() - self.last_replies[response_key]
+                        < PATTERN_RESPONSE_RECYCLE_TIME):
                     raise Bad_response_error
                 elif add_response:
-                    self.add_last_reply(markov.conv_key(response))
+                    self.add_last_reply(response_key)
             except KeyError:
                 if add_response:
-                    self.add_last_reply(markov.conv_key(response))
+                    self.add_last_reply(response_key)
 
         self.last_reply = response
-        return response.split('\n')
+        return response
 
     def clean_up_last_replies(self):
         """Remove stale (no longer applicable) entries from self.last_replies

@@ -20,10 +20,11 @@
 
 from random import choice
 
+#!TODO! Get rid of these
 DEBUG = 1
-
 MAX_LF_L = 1
 MAX_LF_R = 2
+
 
 class S(list):
     """Sequence table"""
@@ -32,11 +33,11 @@ class S(list):
         self.match = None
         list.__init__(self, args)
 
-    def get(self, fmt=None):
+    def get(self, nikkyai, fmt=None):
         s = ''
         for i in self:
             try:
-                s += i.get(fmt)
+                s += i.get(nikkyai, fmt)
             except AttributeError:
                 s += i.format(*fmt)
         return s
@@ -44,20 +45,23 @@ class S(list):
 
 class R(S):
     """Random table"""
-    def get(self, fmt=None):
+    def get(self, nikkyai, fmt=None):
         i = choice(self)
         try:
-            return i.get(fmt)
+            return i.get(nikkyai, fmt)
         except AttributeError:
             return i.format(*fmt)
 
 
 class E(str):
     """Evaluate string"""
-    def get(self, fmt=None):
+    def get(self, nikkyai, fmt=None):
         if fmt is None:
             fmt = []
-        return str(eval(self.format(*fmt))).format(*fmt)
+        try:
+            return str(eval(self.format(*fmt))).format(*fmt)
+        except Exception as e:
+            return str(e)
 
 
 class Markov_forward(object):
@@ -69,19 +73,19 @@ class Markov_forward(object):
             failmsglist = ['']
         self.failmsglist = failmsglist
 
-    def get(self, fmt=None):
+    def get(self, nikkyai, fmt=None):
         if fmt is None:
             fmt = []
         failmsg = choice(self.failmsglist)
-        if DEBUG:
+        if DEBUG:   # FIXME: This debug line actually needed anymore?
             print("DEBUG: Markov_forward.get: {}: {}".format(
                 repr(self.chain), repr(fmt)))
         try:
-            failmsg = failmsg.get(fmt)
+            failmsg = failmsg.get(nikkyai, fmt)
         except AttributeError:
-            pass
-        return markov_forward([x.format(*fmt) for x in self.chain],
-            failmsg, self.max_lf_r)
+            failmsg = failmsg.format(*fmt)
+        return nikkyai.markov_forward(
+            [x.format(*fmt) for x in self.chain], failmsg, self.max_lf_r)
 
 
 class Manual_markov(object):
@@ -90,10 +94,10 @@ class Manual_markov(object):
         self.order = order
         self.text = text
 
-    def get(self, fmt=None):
+    def get(self, nikkyai, fmt=None):
         if fmt is None:
             fmt = []
-        return manual_markov(self.order, self.text.format(*fmt))
+        return nikkyai.manual_markov(self.order, self.text.format(*fmt))
 
 
 class Manual_markov_forward(object):
@@ -103,10 +107,11 @@ class Manual_markov_forward(object):
         self.order = order
         self.text = text
 
-    def get(self, fmt=None):
+    def get(self, nikkyai, fmt=None):
         if fmt is None:
             fmt = []
-        return manual_markov_forward(self.order, self.text.format(*fmt))
+        return nikkyai.manual_markov_forward(self.order,
+                                             self.text.format(*fmt))
 
 
 class Markov(object):
@@ -118,27 +123,29 @@ class Markov(object):
         self.failmsglist = failmsglist
         self.text = text
 
-    def get(self, fmt=None):
+    def get(self, nikkyai, fmt=None):
         if fmt is None:
             fmt = []
         failmsg = choice(self.failmsglist)
         try:
             failmsg = failmsg.get(fmt)
         except AttributeError:
-            pass
-        return markov_reply(self.text.format(*fmt), failmsg)
+            pass    # FIXME: Format failmsg if it's a string?
+        return nikkyai._markov_reply(self.text.format(*fmt), failmsg)
 
 
 class Recurse(str):
     """Recursively find a response"""
-    def get(self, fmt=None):
+    def get(self, nikkyai, fmt=None):
         if fmt is None:
             fmt = []
-        try:
-            return pattern_reply(self.format(*fmt))[0]
-        except (Dont_know_how_to_respond_error, RuntimeError):
-            for i in xrange(RECURSE_LIMIT):
-                reply = markov_reply(self.format(*fmt))
-                if reply.strip():
-                    return reply
-            return random_markov()
+        return nikkyai.reply(self.format(*fmt), add_response=False)
+        #return nikkyai.pattern_reply(self.format(*fmt), add_response=False)
+        #try:
+            #return pattern_reply(self.format(*fmt))[0]
+        #except (Dont_know_how_to_respond_error, RuntimeError):
+            #for i in xrange(RECURSE_LIMIT):
+                #reply = markov_reply(self.format(*fmt))
+                #if reply.strip():
+                    #return reply
+            #return nikkyai.random_markov()

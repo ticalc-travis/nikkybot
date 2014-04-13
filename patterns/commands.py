@@ -25,22 +25,16 @@ patterns = (
 # pattern regexp, last reply, priority, action, allow repeat?
 
 (r'\b(random (quote|saying)|nikkysim)\b', -2,
-    E('nikkysim(strip_number=False)[0]')
+    E('nikkyai.nikkysim(strip_number=False)[0]')
 ),
 (r'\b(tell|tell us|tell me|say) (something|anything) (.*)(smart|intelligent|funny|interesting|cool|awesome|bright|thoughtful|entertaining|amusing|exciting|confusing|sensical|inspiring|inspirational|random|wise)\b', 1,
-    E('choice(["","","","","","Okay\\n","k\\n","kk\\n","Fine\\n"])+nikkysim(strip_number=True)[0]')
+    E('choice(["","","","","","Okay\\n","k\\n","kk\\n","Fine\\n"])+nikkyai.nikkysim(strip_number=True)[0]')
 ),
 (r'(?<![0-9])#([A-Za-z]-)?([0-9]+)(-([0-9]+))?', -2,
-    E('nikkysim_parse_saying_no("{1}", "{2}", "{3}")'),
+    E('nikkyai.nikkysim_parse_saying_no("{1}", "{2}", "{3}")'),
     True
 ),
-(r'\brandom number\b', -2,
-    R(
-        E('randint(0,9999)'),
-        E('randint(0,999999999999)'),
-        E('str(randint(0,int(\'9\'*100))) + "\\nLong enough for you?"')
-    ),
-),
+(r'\brandom number\b', -2, E('nikkyai.random_number_saying()')),
 (r'^\??markov5 (.*)', -99, Manual_markov(5, '{1}'), True),
 (r'^\??markov4 (.*)', -99, Manual_markov(4, '{1}'), True),
 (r'^\??markov3 (.*)', -99, Manual_markov(3, '{1}'), True),

@@ -411,7 +411,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         self.nikkies[target].nick = self.nickname
 
         try:
-            reply = self.nikkies[target].reply(msg)
+            reply = self.nikkies[target].reply(msg).split('\n')
         except Exception:
             self.report_error(target, silent_errors)
         else:
@@ -428,7 +428,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         self.nikkies[target].nick = self.nickname
 
         try:
-            reply = self.nikkies[target].decide_remark(msg)
+            reply = self.nikkies[target].decide_remark(msg).split('\n')
         except Exception:
             self.report_error(target, silent_errors)
         else:

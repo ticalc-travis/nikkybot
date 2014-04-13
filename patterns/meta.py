@@ -26,10 +26,7 @@ patterns = (
 
 (r'\b((how much|how many lines (of)?|how much) (code|coding|programming)|how long .* to (make|program|code|design|write) you)', -2,
     R(
-        S("About ",
-            E('str((datetime.now() - datetime(2012, 10, 30)).days)'),
-            " days' worth ongoing so far, give or take"
-        ),
+        E('nikkyai.age_saying()'),
         'About a billion lines of Perl',
         'I started out as lines of Perl\nbut then tev had to be a tard and convert it all to Python'
     )
