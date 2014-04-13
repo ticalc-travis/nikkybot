@@ -269,7 +269,10 @@ class NikkyBot(irc.IRCClient, Sensitive):
     def do_command(self, msg, src_nick, target, is_admin):
         """Execute a special command"""
         sender = src_nick if target == self.nickname else target
-        cmd, args = msg.split()[0].lower(), ' '.join(msg.split()[1:])
+        try:
+            cmd, args = msg.split()[0].lower(), ' '.join(msg.split()[1:])
+        except IndexError:
+            raise UnrecognizedCommandError
 
         ## Privileged commands ##
 
