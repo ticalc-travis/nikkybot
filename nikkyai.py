@@ -40,6 +40,8 @@
 # Add response for nikkybot to tell its age
 #
 # When chopping line breaks, avoid cutting off actual keyword seed
+#
+# Merge nikkybot/markovmix
 
 
 from datetime import datetime, timedelta

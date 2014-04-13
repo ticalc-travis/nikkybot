@@ -25,7 +25,6 @@ def random_nikkysim(nikkyai, fmt):
 
 def nikkysim_no(nikkyai, fmt):
     w, x, y = fmt[1], fmt[2], fmt[3]
-    print(w, x, y)
     if w == None:
         w = 'B-'
     if y == None:
