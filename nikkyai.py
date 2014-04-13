@@ -21,7 +21,8 @@
 #
 # Move most globals to parameterized options
 #
-# Add mimc/impersonation feature to "what do you think of" and random remarks when it's ready
+# Add mimc/impersonation feature to "what do you think of" and random remarks
+# when it's ready
 #
 # Fix up mismatching "'()[]{}
 #
@@ -416,8 +417,7 @@ class NikkyAI(object):
         except KeyError:
             return failmsg
         else:
-            return markov.adjust_right_line_breaks(
-                response, max_lf).strip()
+            return markov.adjust_right_line_breaks(response, max_lf).strip()
 
     def manual_markov(self, order, msg, _recurse_level=0):
         """Return manually-invoked Markov operation (output special error
@@ -425,7 +425,7 @@ class NikkyAI(object):
         chain = markov.str_to_chain(msg)
         try:
             response = markov.sentence(chain, forward_length=order-1,
-                                    backward_length=order-1)
+                                       backward_length=order-1)
         except KeyError:
             if _recurse_level < RECURSE_LIMIT:
                 return self.manual_markov(
