@@ -124,7 +124,6 @@ class NikkyAI(object):
     def decide_remark(self, msg):
         """Determine whether a random response to a line not directed to
         nikkybot should be made"""
-
         try:
             potential_response = self.pattern_reply(msg, add_response=False)
         except Dont_know_how_to_respond_error:
@@ -172,16 +171,12 @@ class NikkyAI(object):
 
     def generic_remark(self, msg=''):
         """Select a random remark from the predefined random remark list"""
-        nick=''
-        m = re.match(r'<(.*)>', msg)
-        if m:
-            nick = m.group(1)
-        return choice(patterns.generic_remarks)
+        nick, msg = self.filter_input(msg)
+        remark = choice(patterns.generic_remarks).format(nick)
 
     def nikkysim_remark(self, msg='', strip_number=True):
         """Generate a NikkySim remark.  If not strip_number, include the
         saying number before the remark."""
-
         out, self.last_nikkysim_saying = self.nikkysim(strip_number)
         return out
 
@@ -199,18 +194,7 @@ class NikkyAI(object):
         return self.markov_reply(msg)
 
     def _pattern_reply(self, msg):
-        # Separate out speaker's nick if known
-        m = re.match(r'<(.*?)> (.*)', msg)
-        if m:
-            sourcenick = m.group(1)
-            msg = m.group(2)
-        else:
-            sourcenick = ''
-
-        # Remove highlight at beginning of line, if it exists
-        m = re.match(re.escape(self.nick) + r'\W *(.*)', msg, re.I)
-        if m:
-            msg = m.group(1)
+        sourcenick, msg = self.filter_input(msg)
 
         # Find matching responses for msg, honoring priorities
         cur_priority = None
@@ -268,76 +252,37 @@ class NikkyAI(object):
             else:
                 raise e
 
-    def markov_reply(self, msg, add_response=True, _recurse_level=0):
+    def markov_reply(self, msg, add_response=True, max_lf_l=MAX_LF_L,
+                     max_lf_r=MAX_LF_R):
         """Generate a reply using Markov chaining. Check and avoid repeated
         responses.  Add new response to self.last_replies if add_response."""
-        if _recurse_level > RECURSE_LIMIT:
-            return self.random_markov()
+        for i in xrange(RECURSE_LIMIT):
+            nick, msg = self.filter_input(msg)
+            out = self.filter_markov_output(
+                nick, self._markov_reply(nick, msg, '', max_lf_l, max_lf_r))
 
-        # Split speaker nick and rest of message
-        m = re.match(r'<(.*?)> (.*)', msg)
-        if m:
-            sourcenick = m.group(1)
-            msg = m.group(2)
-        else:
-            sourcenick = ''
-        if msg.startswith('{}: '.format(self.nick.lower())):
-            msg = msg[len(self.nick) + 2:]
+            try:
+                out = self.check_output_response(out,
+                                                 add_response=add_response)
+            except Bad_response_error:
+                continue
+            if markov.conv_key(out) == markov.conv_key(msg):
+                continue
+            else:
+                return out
+        return self.random_markov()
 
-        # Replace occurences of own nick with that of speaker
-        # !TODO! At some point make it possible to refer to current nick
-        #   in pattern tables, so this can be done there instead of here
-        msg = re.sub(r'\b' + re.escape(self.nick) + r'\b', sourcenick,
-                     msg)
-
-        out = self._markov_reply(msg.rstrip()).rstrip()
-
-        # !TODO! The below output filtering needs to be in a separate
-        #   function and *all* Markov-using functions should go through it,
-        #   not just this one.
-        #   Also, this will allow doing other things like avoiding
-        #   unnecessary nick highlights or saying unwanted words or phrases.
-
-        # Transform phrases at beginning of reply
-        for transform in (
-                        # Avoid self-references in third person
-                        (self.nick + ' has ', 'I have '),
-                        (self.nick + ' is', 'I am'),
-                        (self.nick + ':', sourcenick + ': '),
-                        ('nikkybot', 'nikky'),
-                        ('nikkybot:', sourcenick + ':'),
-                        ):
-            old, new = transform
-            if out.lower().startswith(old):
-                out = new + out[len(old):]
-                break
-        out = out.replace(self.nick, sourcenick)
-
-        # Transform initial highlights to a highlight to the speaker for a
-        # sense of realism
-        if sourcenick and randint(0, 10):
-            out = re.sub(r'\S+: ', sourcenick + ': ', out)
-
-        try:
-            out = self.check_output_response(out,
-                                             add_response=add_response)
-        except Bad_response_error:
-            out = self.markov_reply(msg, _recurse_level=_recurse_level+1)
-        if markov.conv_key(out) == markov.conv_key(msg):
-            return self.markov_reply(msg, _recurse_level=_recurse_level+1)
-        else:
-            return out
-
-    def _markov_reply(self, msg, failmsg=None, max_lf_l=MAX_LF_L,
+    def _markov_reply(self, nick, msg, failmsg=None, max_lf_l=MAX_LF_L,
                       max_lf_r=MAX_LF_R):
         """Generate a Markov-chained reply for msg"""
         if not msg.strip():
             return self.random_markov()
+        msg = self.filter_markov_input(nick, msg)
 
         # Search for a sequence of input words to Markov chain from: use the
         # longest possible chain matching any regexp from preferred_patterns;
-        # failing that, use the longest possible chain of any words found in the
-        # Markov database.
+        # failing that, use the longest possible chain of any words found in
+        # the Markov database.
         words = markov.str_to_chain(msg)
         high_priority_replies = {1:[]}
         low_priority_replies = {1:[]}
@@ -403,56 +348,56 @@ class NikkyAI(object):
             'work', 'first', 'well', 'way', 'even', 'new', 'want',
             'because', 'any', 'these', 'give', 'day', 'most', 'us')
         while True:
+            chain = markov.str_to_chain(choice(generic_words))
             try:
-                chain = markov.str_to_chain(choice(generic_words))
-                return markov.sentence(chain)
+                msg = markov.sentence(chain)
             except KeyError:
                 continue
             else:
-                break
+                return self.filter_markov_output('', msg)
 
     def markov_forward(self, chain, failmsg='', max_lf=MAX_LF_R):
         """Generate sentence from the current chain forward only and not
         backward"""
         try:
-            response = markov.sentence_forward(chain)
+            out = markov.sentence_forward(chain)
         except KeyError:
             return failmsg
         else:
-            return markov.adjust_right_line_breaks(response, max_lf).strip()
+            out = markov.adjust_right_line_breaks(out, max_lf).strip()
+            return self.filter_markov_output('', out)
 
-    def manual_markov(self, order, msg, _recurse_level=0):
+    def manual_markov(self, order, msg):
         """Return manually-invoked Markov operation (output special error
         string if chain not found)"""
-        chain = markov.str_to_chain(msg)
-        try:
-            response = markov.sentence(chain, forward_length=order-1,
-                                       backward_length=order-1)
-        except KeyError:
-            if _recurse_level < RECURSE_LIMIT:
-                return self.manual_markov(
-                    order, msg, _recurse_level=_recurse_level+1)
+        for i in xrange(RECURSE_LIMIT):
+            nick, msg = self.filter_input(msg)
+            msg = self.filter_markov_input(nick, msg)
+            chain = markov.str_to_chain(msg)
+            try:
+                out = markov.sentence(chain, forward_length=order-1,
+                                      backward_length=order-1)
+            except KeyError:
+                continue
             else:
-                return ['{}: Markov chain not found'.format(
-                    repr(' '.join(chain)))]
-        else:
-            return response.strip()
+                return self.filter_markov_output(nick, out)
+        return ['{}: Markov chain not found'.format(repr(' '.join(chain)))]
 
-    def manual_markov_forward(self, order, msg, _recurse_level=0):
+    def manual_markov_forward(self, order, msg):
         """Return manually-invoked Markov forward operation (output special
         error string if chain not found)"""
-        chain = markov.str_to_chain(msg)
-        try:
-            response = markov.sentence_forward(chain, length=order-1)
-        except KeyError:
-            if _recurse_level < RECURSE_LIMIT:
-                return self.manual_markov_forward(order, msg,
-                                            _recurse_level=_recurse_level+1)
+        for i in xrange(RECURSE_LIMIT):
+            nick, msg = self.filter_input(msg)
+            msg = self.filter_markov_input(nick, msg)
+            chain = markov.str_to_chain(msg)
+            try:
+                response = markov.sentence_forward(chain, length=order-1)
+            except KeyError:
+                continue
             else:
-                return ['{}: Markov chain not found'.format(
-                    repr(' '.join(chain)))]
-        else:
-            return response.strip()
+                return self.filter_markov_output(nick, response)
+        return ['{}: Markov chain not found'.format(repr(' '.join(chain)))]
+
 
     def nikkysim(self, strip_number=True, saying=None):
         """Return NikkySim saying.  saying is the saying number as a tuple
@@ -548,6 +493,53 @@ class NikkyAI(object):
             "Removed {} items (len {} -> {})".format(
                 num_removed, orig_size, len(self.last_replies))
         )
+
+    def filter_input(self, msg):
+        """Preprocess input msg in form "<speaking nick> msg".
+        Return (speaker_nick, msg)."""
+
+        m = re.match(r'<(.*)> (.*)', msg)
+        if m:
+            speaker_nick, msg = m.groups()
+        else:
+            speaker_nick, msg = '', msg
+
+        # Remove highlight at beginning of line, if it exists
+        m = re.match(re.escape(self.nick) + r'\W *(.*)', msg, re.I)
+        if m:
+            msg = m.group(1)
+        return (speaker_nick, msg)
+
+    def filter_markov_input(self, sourcenick, msg):
+        """Perform transformations on input before it goes to Markov
+        functions:
+        Replace occurences of own nick with that of the speaker."""
+        return re.sub(r'\b' + re.escape(self.nick) + r'\b', sourcenick,
+                      msg)
+
+    def filter_markov_output(self, sourcenick, msg):
+        """Perform transformations on output for Markov functions."""
+
+        # Transform phrases at beginning of reply
+        for transform in (
+                # Avoid self-references in third person
+                (self.nick + ' has ', 'I have '),
+                (self.nick + ' is', 'I am'),
+                (self.nick + ':', sourcenick + ': '),
+                ('nikkybot', 'nikky'),
+                ('nikkybot:', sourcenick + ':'),
+            ):
+            old, new = transform
+            if msg.lower().startswith(old):
+                msg = new + out[len(old):]
+                break
+        msg = msg.replace(self.nick, sourcenick)
+
+        # Transform initial highlights to a highlight to the speaker for a
+        # sense of realism
+        if sourcenick and randint(0, 10):
+            msg = re.sub(r'\S+: ', sourcenick + ': ', msg)
+        return msg.strip()
 
     def sanitize(self, s):
         """Remove control characters from 's' if it's a string; return it as is
