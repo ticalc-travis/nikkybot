@@ -18,6 +18,48 @@
 
 from _table import *
 
+
+def random_nikkysim(nikkyai, fmt):
+    return nikkyai.nikkysim(strip_number=False)[0]
+
+
+def nikkysim_no(nikkyai, fmt):
+    w, x, y = fmt[1], fmt[2], fmt[3]
+    print(w, x, y)
+    if w == None:
+        w = 'B-'
+    if y == None:
+        y = '-0'
+    x, y = int(x), int(y.strip('-'))
+    if w == 'A-' or w == 'a-':
+        return "Only tev's TI-89 NikkySim can do the 'A-' quotes"
+    elif w == 'B-' or w == 'b-' or w is None:
+        if (x >= 0 and x <= 4294967295) and (y >= 0 and y <= 9999):
+            return nikkyai.nikkysim(False, (x, y))[0]
+        else:
+            return 'Sayings go from 0-0 to 4294967295-9999, champ'
+    else:
+        return "No such thing as a {}type quote yet".format(w)
+
+
+def tell_us_something(nikkyai, fmt):
+    pre = choice(
+        ["","","","","","Okay\\n","k\\n","kk\\n","Fine\\n"])
+    return pre + nikkyai.nikkysim(strip_number=True)[0]
+
+
+def random_number(nikkyai, fmt):
+    from random import randint
+    c = randint(0, 3)
+    if c == 0:
+        out = str(randint(0,9999))
+    elif c == 1:
+        out = str(randint(0,999999999999))
+    else:
+        out = '{}\nLong enough for you?'.format(randint(0, int('9'*100)))
+    return out
+
+
 patterns = (
 # Legal forms:
 # pattern regexp, priority, action
@@ -25,16 +67,13 @@ patterns = (
 # pattern regexp, last reply, priority, action, allow repeat?
 
 (r'\b(random (quote|saying)|nikkysim)\b', -2,
-    E('nikkyai.nikkysim(strip_number=False)[0]')
+    E(random_nikkysim)
 ),
 (r'\b(tell|tell us|tell me|say) (something|anything) (.*)(smart|intelligent|funny|interesting|cool|awesome|bright|thoughtful|entertaining|amusing|exciting|confusing|sensical|inspiring|inspirational|random|wise)\b', 1,
-    E('choice(["","","","","","Okay\\n","k\\n","kk\\n","Fine\\n"])+nikkyai.nikkysim(strip_number=True)[0]')
+    E(tell_us_something)
 ),
-(r'(?<![0-9])#([A-Za-z]-)?([0-9]+)(-([0-9]+))?', -2,
-    E('nikkyai.nikkysim_parse_saying_no("{1}", "{2}", "{3}")'),
-    True
-),
-(r'\brandom number\b', -2, E('nikkyai.random_number_saying()')),
+(r'(?<![0-9])#([A-Za-z]-)?([0-9]+)(-([0-9]+))?', -2, E(nikkysim_no), True),
+(r'\brandom number\b', -2, E(random_number)),
 (r'^\??markov5 (.*)', -99, Manual_markov(5, '{1}'), True),
 (r'^\??markov4 (.*)', -99, Manual_markov(4, '{1}'), True),
 (r'^\??markov3 (.*)', -99, Manual_markov(3, '{1}'), True),

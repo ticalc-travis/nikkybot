@@ -18,6 +18,12 @@
 
 from _table import *
 
+
+def more_like(nikkyai, fmt):
+    # !TODO! Now that it's a function, we can improve this now!
+    return nikkyai.markov_reply("\n more like \n", add_response=False)
+
+
 patterns = (
 # Legal forms:
 # pattern regexp, priority, action
@@ -354,7 +360,7 @@ patterns = (
         'nikkybot\nmore like\nawesome',
     ), True
 ),
-(r'\bmore like\W*$', -10, E('nikkyai.markov_reply("\\n more like \\n", max_lf_l=2)')),
+(r'\bmore like\W*$', -10, E(more_like)),
 (r'(.*) (more|moer|mroe) (like|liek)\W*$', -15,
     R(
         Markov_forward('{1} \n more like'),

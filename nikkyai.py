@@ -465,48 +465,6 @@ class NikkyAI(object):
         else:
             return (out.rstrip(), (x, y))
 
-    def nikkysim_parse_saying_no(self, w, x, y):
-        """Return NikkySim saying based on partially-parsed saying number
-        string.  (Example: w='B-', x='1234', y='5678' returns saying
-        #B-1234-5678.)"""
-
-        # !FIXME! This is a pretty hackish internal function that we can
-        # probably do without.  Much of the parsing/validation could be done
-        # from the response pattern tables, anyway.
-        if w == 'None':
-            w = 'B-'
-        if y == 'None':
-            y = '-0'
-        x, y = int(x), int(y.strip('-'))
-        x, y = int(x), int(y)
-        if w == 'A-' or w == 'a-':
-            return "Only tev's TI-89 NikkySim can do the 'A-' quotes"
-        elif w == 'B-' or w == 'b-' or w is None:
-            if (x >= 0 and x <= 4294967295) and (y >= 0 and y <= 9999):
-                return self.nikkysim(False, (x, y))[0]
-            else:
-                return 'Sayings go from 0-0 to 4294967295-9999, champ'
-        else:
-            return "No such thing as a {}type quote yet".format(w)
-
-    def random_number_saying(self):
-        """Output a random number-type response"""
-        c = randint(0, 3)
-        if c == 0:
-            out = str(randint(0,9999))
-        elif c == 1:
-            out = str(randint(0,999999999999))
-        else:
-            out = '{}\nLong enough for you?'.format(randint(0, int('9'*100)))
-        return out
-
-    def age_saying(self):
-        """Output a response indicating nikkybot's age"""
-        from datetime import datetime
-        return ('About ' +
-                str((datetime.now() - datetime(2012, 10, 30)).days) +
-                " days' worth ongoing so far, give or take")
-
     def load_preferred_keywords(self, filename=None):
         """Load a list of preferred keyword patterns for markov_reply"""
         global preferred_keywords

@@ -18,15 +18,23 @@
 
 from _table import *
 
+
+def age(nikkyai, fmt):
+    from datetime import datetime
+    return ('About ' +
+            str((datetime.now() - datetime(2012, 10, 30)).days) +
+            " days' worth ongoing so far, give or take")
+
+
 patterns = (
 # Legal forms:
 # pattern regexp, priority, action
 # pattern regexp, priority, action, allow repeat?
 # pattern regexp, last reply, priority, action, allow repeat?
 
-(r'\b((how much|how many lines (of)?|how much) (code|coding|programming)|how long .* to (make|program|code|design|write) you)', -2,
+(r'\b((how much|how many lines (of)?|how much) (code|coding|programming)|how long .* to (make|program|code|design|write) you)', -10,
     R(
-        E('nikkyai.age_saying()'),
+        E(age),
         'About a billion lines of Perl',
         'I started out as lines of Perl\nbut then tev had to be a tard and convert it all to Python'
     )

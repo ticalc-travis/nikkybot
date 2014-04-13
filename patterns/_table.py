@@ -53,15 +53,15 @@ class R(S):
             return i.format(*fmt)
 
 
-class E(str):
-    """Evaluate string"""
+class E(object):
+    """Run a given function and return its output"""
+    def __init__(self, func):
+        self.foreign_func = func
+
     def get(self, nikkyai, fmt=None):
         if fmt is None:
             fmt = []
-        try:
-            return str(eval(self.format(*fmt))).format(*fmt)
-        except Exception as e:
-            return str(e)
+        return self.foreign_func(nikkyai, fmt)
 
 
 class Markov_forward(object):
@@ -140,12 +140,3 @@ class Recurse(str):
         if fmt is None:
             fmt = []
         return nikkyai.reply(self.format(*fmt), add_response=False)
-        #return nikkyai.pattern_reply(self.format(*fmt), add_response=False)
-        #try:
-            #return pattern_reply(self.format(*fmt))[0]
-        #except (Dont_know_how_to_respond_error, RuntimeError):
-            #for i in xrange(RECURSE_LIMIT):
-                #reply = markov_reply(self.format(*fmt))
-                #if reply.strip():
-                    #return reply
-            #return nikkyai.random_markov()
