@@ -116,6 +116,30 @@ patterns = (
         Markov('!qsay'),
     ),
 ),
+(r'(\bponie|\bpony|\bmlp\b)', 98,
+    R(
+        Markov('pony'),
+        Markov('ponies'),
+        Markov('poniez'),
+        Markov('mlp'),
+    ),
+),
+(r'(\bnsa\b|\bspy|\bspies\b|\bdrone)', 98,
+    R(
+        Markov('nsa'),
+        Markov('spy'),
+        Markov('spies'),
+        Markov('drones'),
+    ),
+),
+(r'(\bpokemon|\bpokémon|\bmudkip)', 98,
+    R(
+        Markov('pokemon'),
+        Markov('mudkip'),
+        Markov('mudkips'),
+        Markov('mudkipz'),
+    ),
+),
 
 # Transformations
 (r'(.*)\bI am\b(.*)', 99, Markov('{1} you are {2}')),
