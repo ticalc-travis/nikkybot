@@ -32,9 +32,6 @@
 #
 # Markov-key-convert last replies (wasn't *this* already done before?)
 #
-# Bug: random_markov() (and others?) can still give a null response due to
-# inconsistent check_output_response calls
-#
 # Don't output keywords exactly as-is (with regard to punctuation)
 #
 # Add response for nikkybot to tell its age
@@ -331,7 +328,7 @@ class NikkyAI(object):
         else:
             return failmsg
 
-    def random_markov(self):
+    def random_markov(self, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
         """Pick any random Markov-chained sentence and output it"""
         generic_words = (
             'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have',
@@ -354,7 +351,12 @@ class NikkyAI(object):
             except KeyError:
                 continue
             else:
-                return self.filter_markov_output('', msg)
+                out = markov.adjust_line_breaks(
+                    self.filter_markov_output('', msg), max_lf_l, max_lf_r)
+                try:
+                    return self.check_output_response(out)
+                except Bad_response_error:
+                    continue
 
     def markov_forward(self, chain, failmsg='', max_lf=MAX_LF_R):
         """Generate sentence from the current chain forward only and not
