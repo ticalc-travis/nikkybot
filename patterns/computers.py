@@ -58,6 +58,14 @@ patterns = (
         Markov_forward('big monitors'),
     )
 ),
+(r'\b(anders|tiberg|jeremy|lane|approv|accept|reject)', 1,
+    S(
+        'def process_pending_file(file):\n'
+        "    if ('2048' in file.desc or 'omnimaga' in file.desc.lower()\n"
+        "            or 'Kerm Martian' in file.authors):\n"
+        "        file.reject()\n"
+    ),
+),
 
 # Programming
 (r'\b(BASIC\b|C\+\+|C#|C\s\b|Java\b|Javascript\b|Lua\b|\s\.NET\s\b|Ruby\b|TCL\b|TI\-BASIC\b|TI BASIC\b|Python\b|PHP\b|Scheme\b)', 2,
