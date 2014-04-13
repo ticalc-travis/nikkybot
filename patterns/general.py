@@ -360,13 +360,14 @@ patterns = (
         'nikkybot\nmore like\nawesome',
     ), True
 ),
+# !TODO! Can probably merge these two "more like"s into a single function
 (r'\bmore like\W*$', -10, E(more_like)),
 (r'(.*) (more|moer|mroe) (like|liek)\W*$', -15,
     R(
         Markov_forward('{1} \n more like'),
         S(
             '{1}\n',
-            Markov_forward('more like \n', max_lf_r=2)
+            Markov_forward('more like \n')
         ),
     ),
 ),

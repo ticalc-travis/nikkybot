@@ -37,6 +37,8 @@
 # Don't output keywords exactly as-is (with regard to punctuation)
 #
 # Add response for nikkybot to tell its age
+#
+# When chopping line breaks, avoid cutting off actual keyword seed
 
 
 from datetime import datetime, timedelta

@@ -18,12 +18,8 @@
 
 # Pattern table objects
 
-from random import choice
 
-#!TODO! Get rid of these
-DEBUG = 1
-MAX_LF_L = 1
-MAX_LF_R = 2
+from random import choice
 
 
 class S(list):
@@ -66,9 +62,8 @@ class E(object):
 
 class Markov_forward(object):
     """Return a Markov chain from word or chain forward"""
-    def __init__(self, string, failmsglist=None, max_lf_r=MAX_LF_R):
+    def __init__(self, string, failmsglist=None):
         self.chain = string.split(' ')
-        self.max_lf_r = max_lf_r
         if failmsglist is None:
             failmsglist = ['']
         self.failmsglist = failmsglist
@@ -77,15 +72,12 @@ class Markov_forward(object):
         if fmt is None:
             fmt = []
         failmsg = choice(self.failmsglist)
-        if DEBUG:   # FIXME: This debug line actually needed anymore?
-            print("DEBUG: Markov_forward.get: {}: {}".format(
-                repr(self.chain), repr(fmt)))
         try:
             failmsg = failmsg.get(nikkyai, fmt)
         except AttributeError:
             failmsg = failmsg.format(*fmt)
         return nikkyai.markov_forward(
-            [x.format(*fmt) for x in self.chain], failmsg, self.max_lf_r)
+            [x.format(*fmt) for x in self.chain], failmsg)
 
 
 class Manual_markov(object):
@@ -130,7 +122,7 @@ class Markov(object):
         try:
             failmsg = failmsg.get(fmt)
         except AttributeError:
-            pass    # FIXME: Format failmsg if it's a string?
+            failmsg = failmsg.format(*fmt)
         return nikkyai._markov_reply(self.text.format(*fmt), failmsg)
 
 
