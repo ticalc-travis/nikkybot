@@ -270,7 +270,7 @@ class NikkyAI(object):
         """Generate a reply using Markov chaining. Check and avoid repeated
         responses.  Add new response to self.last_replies if add_response."""
         if _recurse_level > RECURSE_LIMIT:
-            return random_markov()
+            return self.random_markov()
 
         # Split speaker nick and rest of message
         m = re.match(r'<(.*?)> (.*)', msg)
