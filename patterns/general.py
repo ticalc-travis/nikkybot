@@ -431,11 +431,17 @@ patterns = (
         Markov_forward('why'),
     ),
 ),
-(r"(?:\bi|')s\b.*\b(a|an) (.*)", -5,
-    S(
-        R('{0}', "{0}'s mom", "{0}'s face", 'your mom', 'your face'),
-        R(' ', '\n'),
-        'is {1} {2}',
+(r"(?:is(?: it)?|it's|i'm|i am)\b ([^][.;,!?(){}]+)", -5,
+    R(
+        S(
+            R('{0} is', "{0}'s mom is", "{0}'s face is", 'your mom is',
+              'your face is', 'you are', "you're"),
+            R(' ', '\n'),
+            '{1}',
+        ),
+        Recurse('{1}'),
+        Recurse('{1}'),
+        Recurse('{1}'),
     ),
 ),
 
