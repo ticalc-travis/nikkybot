@@ -142,7 +142,7 @@ class NikkyAI(object):
                             return out
                     return self.remark(msg, add_response=True)
             else:
-                return None
+                return ''
         else:
             c = REMARK_CHANCE_RANDOM
             if re.search(r'\bnikky\b', msg, re.I):
@@ -152,7 +152,7 @@ class NikkyAI(object):
                 self.add_last_reply(potential_response)
                 return potential_response
             else:
-                return None
+                return ''
 
     def remark(self, msg='', add_response=True):
         """Choose between a context-less predefined generic remark or a
