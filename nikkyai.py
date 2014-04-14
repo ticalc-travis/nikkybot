@@ -401,7 +401,7 @@ class NikkyAI(object):
                 continue
             else:
                 return self.filter_markov_output(nick, out)
-        return ['{}: Markov chain not found'.format(repr(' '.join(chain)))]
+        return '{}: Markov chain not found'.format(repr(' '.join(chain)))
 
     def manual_markov_forward(self, order, msg):
         """Return manually-invoked Markov forward operation (output special
@@ -420,7 +420,7 @@ class NikkyAI(object):
                 continue
             else:
                 return self.filter_markov_output(nick, response)
-        return ['{}: Markov chain not found'.format(repr(' '.join(chain)))]
+        return '{}: Markov chain not found'.format(repr(' '.join(chain)))
 
 
     def nikkysim(self, strip_number=True, saying=None):
