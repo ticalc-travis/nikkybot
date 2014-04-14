@@ -19,6 +19,10 @@
 
 #!TODO!
 #
+# See about splitting up longer reply functions?
+#
+# Consider moving check_output_response checks to upper-level func only
+#
 # Move most globals to parameterized options
 #
 # Add mimc/impersonation feature to "what do you think of" and random remarks
@@ -39,6 +43,9 @@
 # When chopping line breaks, avoid cutting off actual keyword seed
 #
 # Merge nikkybot/markovmix
+#
+# More general synonym filtering/transforming (don't replace the entire input
+# pattern)
 
 
 from datetime import datetime, timedelta
@@ -100,6 +107,21 @@ class NikkyAI(object):
         self.nick = 'nikkybot'
         self.load_preferred_keywords()
 
+# Call graph:
+# * = Repeated output check
+#   decide_remark
+#       <reply> (not directly called by decide_remark, but children are)
+#           *pattern_reply
+#               _pattern_reply
+#           *markov_reply
+#               _markov_reply
+#                   *random_markov
+#           *random_markov
+#       *remark
+#           nikkysim_remark
+#               nikkysim
+#           generic_remark
+
     def reply(self, msg, add_response=True):
         """Generic reply method.  Try to use pattern_reply; if no response
         found, fall back to markov_reply"""
@@ -121,6 +143,12 @@ class NikkyAI(object):
     def decide_remark(self, msg):
         """Determine whether a random response to a line not directed to
         nikkybot should be made"""
+
+        # !TODO! See if this can be flattened/simplified further, like equal
+        # chance of reply with/without pattern avail
+
+        # !TODO! Consider replacing checking for nikky mentions with checking
+        # for *any* mention of a preferred keyword
         try:
             potential_response = self.pattern_reply(msg, add_response=False)
         except Dont_know_how_to_respond_error:
@@ -168,6 +196,7 @@ class NikkyAI(object):
 
     def generic_remark(self, msg=''):
         """Select a random remark from the predefined random remark list"""
+
         nick, msg = self.filter_input(msg)
         remark = choice(patterns.generic_remarks).format(nick)
 
@@ -188,6 +217,8 @@ class NikkyAI(object):
                     response, allow_repeat, add_response=add_response)
             except Bad_response_error:
                 pass
+        # !TODO! Shouldn't fallbacks to markov_reply be the responsibility of
+        # caller?
         return self.markov_reply(msg)
 
     def _pattern_reply(self, msg):
@@ -249,6 +280,8 @@ class NikkyAI(object):
             else:
                 raise e
 
+    # !TODO! _markov_reply no longer needs failmsg support
+
     def markov_reply(self, msg, add_response=True, max_lf_l=MAX_LF_L,
                      max_lf_r=MAX_LF_R):
         """Generate a reply using Markov chaining. Check and avoid repeated
@@ -263,6 +296,7 @@ class NikkyAI(object):
                                                  add_response=add_response)
             except Bad_response_error:
                 continue
+            # !TODO! Move below check to check_output_response?
             if markov.conv_key(out) == markov.conv_key(msg):
                 continue
             else:
@@ -272,6 +306,8 @@ class NikkyAI(object):
     def _markov_reply(self, nick, msg, failmsg=None, max_lf_l=MAX_LF_L,
                       max_lf_r=MAX_LF_R):
         """Generate a Markov-chained reply for msg"""
+
+        # !TODO! Actually need a if-msg-empty check?
         if not msg.strip():
             return self.random_markov()
         msg = self.filter_markov_input(nick, msg)
@@ -289,8 +325,8 @@ class NikkyAI(object):
             for i in xrange(len(words) - (order-1)):
                 chain = tuple(words[i:i+order])
                 try:
-                    response = markov.adjust_line_breaks(markov.sentence(chain),
-                                                        max_lf_l, max_lf_r)
+                    response = markov.adjust_line_breaks(
+                        markov.sentence(chain), max_lf_l, max_lf_r)
                 except KeyError:
                     continue
                 else:
@@ -300,13 +336,13 @@ class NikkyAI(object):
                     else:
                         low_priority_replies[order].append(response)
 
-        # Failing that, try to chain on the longest possible single input word
-        words.sort(key=len)
-        words.reverse()
+        # Failing that, try to chain on the longest possible single input word,
+        # prioritizing on preferred keywords/patterns
+        words.sort(key=len, reverse=True)
         for word in words:
             try:
-                response = markov.adjust_line_breaks(markov.sentence((word,)),
-                                                    max_lf_l, max_lf_r)
+                response = markov.adjust_line_breaks(
+                    markov.sentence((word,)), max_lf_l, max_lf_r)
             except KeyError:
                 continue
             else:
@@ -322,7 +358,8 @@ class NikkyAI(object):
             if low_priority_replies[order]:
                 return choice(low_priority_replies[order])
 
-        # Failing *that*, return either failmsg (or random Markov if no failmsg)
+        # Failing *that*, return either failmsg (or random Markov if no
+        # failmsg)
         if failmsg is None:
             return self.random_markov()
         else:
@@ -344,7 +381,7 @@ class NikkyAI(object):
             'also', 'back', 'after', 'use', 'two', 'how', 'our',
             'work', 'first', 'well', 'way', 'even', 'new', 'want',
             'because', 'any', 'these', 'give', 'day', 'most', 'us')
-        while True:
+        for i in xrange(RECURSE_LIMIT):
             chain = markov.str_to_chain(choice(generic_words))
             try:
                 msg = markov.sentence(chain)
@@ -357,6 +394,7 @@ class NikkyAI(object):
                     return self.check_output_response(out)
                 except Bad_response_error:
                     continue
+        return "I don't know what to say!"
 
     def markov_forward(self, chain, failmsg='', max_lf=MAX_LF_R):
         """Generate sentence from the current chain forward only and not
@@ -372,6 +410,10 @@ class NikkyAI(object):
     def manual_markov(self, order, msg):
         """Return manually-invoked Markov operation (output special error
         string if chain not found)"""
+
+        # !TODO! See if it's necessary to recurse like this.  Presumably, if
+        # the key is not in the DB, searching for it another 300 times isn't
+        # going to change that :-P
         for i in xrange(RECURSE_LIMIT):
             nick, msg = self.filter_input(msg)
             msg = self.filter_markov_input(nick, msg)
@@ -388,6 +430,10 @@ class NikkyAI(object):
     def manual_markov_forward(self, order, msg):
         """Return manually-invoked Markov forward operation (output special
         error string if chain not found)"""
+
+        # !TODO! See if it's necessary to recurse like this.  Presumably, if
+        # the key is not in the DB, searching for it another 300 times isn't
+        # going to change that :-P
         for i in xrange(RECURSE_LIMIT):
             nick, msg = self.filter_input(msg)
             msg = self.filter_markov_input(nick, msg)
