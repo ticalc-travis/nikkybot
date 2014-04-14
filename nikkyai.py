@@ -66,9 +66,8 @@ RECURSE_LIMIT = 100
 MAX_LF_L = 1
 MAX_LF_R = 2
 
-REMARK_CHANCE_HAS_PATTERN = 100
-REMARK_CHANCE_MENTIONS_NIKKY = 200
 REMARK_CHANCE_RANDOM = 700
+REMARK_CHANCE_HAS_KEYWORDS = 100
 PATTERN_RESPONSE_RECYCLE_TIME = timedelta(30)
 
 #------------------------------------------------------------------------------
@@ -143,42 +142,18 @@ class NikkyAI(object):
     def decide_remark(self, msg):
         """Determine whether a random response to a line not directed to
         nikkybot should be made"""
-
-        # !TODO! See if this can be flattened/simplified further, like equal
-        # chance of reply with/without pattern avail
-
-        # !TODO! Consider replacing checking for nikky mentions with checking
-        # for *any* mention of a preferred keyword
-        try:
-            potential_response = self.pattern_reply(msg, add_response=False)
-        except Dont_know_how_to_respond_error:
-            c = REMARK_CHANCE_RANDOM
-            if re.search(r'\bnikky\b', msg, re.I):
-                c = REMARK_CHANCE_MENTIONS_NIKKY
-            r = randint(0, c)
-            if not r:
-                if not randint(0, 4):
-                    return self.remark(msg, add_response=True)
-                else:
-                    for i in xrange(RECURSE_LIMIT):
-                        out = self.markov_reply(msg, add_response=False)
-                        # Try not to get too talkative with random responses
-                        if out.count('\n') <= 2:
-                            self.add_last_reply(out)
-                            return out
-                    return self.remark(msg, add_response=True)
+        c = REMARK_CHANCE_RANDOM
+        nick, rest_msg = self.filter_input(msg)
+        for p in preferred_keywords:
+            if re.search(p, rest_msg, re.I):
+                c = REMARK_CHANCE_HAS_KEYWORDS
+        if not randint(0, c):
+            # Output random message
+            if not randint(0, 1):
+                self.reply(msg)
             else:
-                return ''
-        else:
-            c = REMARK_CHANCE_RANDOM
-            if re.search(r'\bnikky\b', msg, re.I):
-                c = REMARK_CHANCE_MENTIONS_NIKKY
-            r = randint(0, c)
-            if not r:
-                self.add_last_reply(potential_response)
-                return potential_response
-            else:
-                return ''
+                self.remark(msg)
+        return ''
 
     def remark(self, msg='', add_response=True):
         """Choose between a context-less predefined generic remark or a
