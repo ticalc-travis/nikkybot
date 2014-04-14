@@ -127,9 +127,9 @@ class NikkyAI(object):
         """Generic reply method.  Try to use pattern_reply; if no response
         found, fall back to markov_reply"""
         try:
-            out = self.pattern_reply(msg)
+            out = self.pattern_reply(msg, add_response)
         except Dont_know_how_to_respond_error:
-            out = self.markov_reply(msg)
+            out = self.markov_reply(msg, add_response)
 
         # This function should be guaranteed to give a non-null output
         out_okay = False
@@ -480,7 +480,6 @@ class NikkyAI(object):
         allow_repeat, if the response was already output not too long ago.
         Otherwise, set response as last-used response if add_response is True,
         and return response list, split by newlines."""
-
         if not [line for line in response.split('\n') if line.strip()]:
             raise Bad_response_error
         response_key = markov.conv_key(response)

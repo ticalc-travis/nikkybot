@@ -123,7 +123,9 @@ class Markov(object):
             failmsg = failmsg.get(fmt)
         except AttributeError:
             failmsg = failmsg.format(*fmt)
-        return nikkyai._markov_reply(self.text.format(*fmt), failmsg)
+        # !FIXME! Need to add back failmsg support to markov_reply
+        return nikkyai.markov_reply(
+            self.text.format(*fmt), add_response=False)
 
 
 class Recurse(str):
