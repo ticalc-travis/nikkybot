@@ -19,6 +19,9 @@
 
 #!TODO!
 #
+# State data randomly gets lost/truncated, probably related to lazy loading of
+# NikkyAI objects?
+#
 # See about splitting up longer reply functions?
 #
 # Consider moving check_output_response checks to upper-level func only
@@ -46,7 +49,6 @@
 #
 # More general synonym filtering/transforming (don't replace the entire input
 # pattern)
-
 
 from datetime import datetime, timedelta
 from random import randint, choice
@@ -124,7 +126,6 @@ class NikkyAI(object):
     def reply(self, msg, add_response=True):
         """Generic reply method.  Try to use pattern_reply; if no response
         found, fall back to markov_reply"""
-
         try:
             out = self.pattern_reply(msg)
         except Dont_know_how_to_respond_error:

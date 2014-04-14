@@ -81,7 +81,7 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
 
     def save_state(self):
         """Save persistent state data"""
-        if not self.opts.state_file:
+        if not self.opts.state_file or not self.nikkies:
             return
         try:
             f = open(self.opts.state_file, 'wb')
