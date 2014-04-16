@@ -364,43 +364,30 @@ class NikkyAI(object):
     def manual_markov(self, order, msg):
         """Return manually-invoked Markov operation (output special error
         string if chain not found).  Does NOT do check_output_response()."""
-
-        # !TODO! See if it's necessary to recurse like this.  Presumably, if
-        # the key is not in the DB, searching for it another 300 times isn't
-        # going to change that :-P
-        for i in xrange(RECURSE_LIMIT):
-            nick, msg = self.filter_input(msg)
-            msg = self.filter_markov_input(nick, msg)
-            chain = markov.str_to_chain(msg)
-            try:
-                out = markov.sentence(chain, forward_length=order-1,
-                                      backward_length=order-1)
-            except KeyError:
-                continue
-            else:
-                return self.filter_markov_output(nick, out)
-        return '{}: Markov chain not found'.format(repr(' '.join(chain)))
+        nick, msg = self.filter_input(msg)
+        msg = self.filter_markov_input(nick, msg)
+        chain = markov.str_to_chain(msg)
+        try:
+            out = markov.sentence(
+                chain, forward_length=order-1, backward_length=order-1)
+        except KeyError:
+            return '{}: Markov chain not found'.format(repr(' '.join(chain)))
+        else:
+            return self.filter_markov_output(nick, out)
 
     def manual_markov_forward(self, order, msg):
         """Return manually-invoked Markov forward operation (output special
         error string if chain not found).  Do NOT do
         check_output_response()."""
-
-        # !TODO! See if it's necessary to recurse like this.  Presumably, if
-        # the key is not in the DB, searching for it another 300 times isn't
-        # going to change that :-P
-        for i in xrange(RECURSE_LIMIT):
-            nick, msg = self.filter_input(msg)
-            msg = self.filter_markov_input(nick, msg)
-            chain = markov.str_to_chain(msg)
-            try:
-                response = markov.sentence_forward(chain, length=order-1)
-            except KeyError:
-                continue
-            else:
-                return self.filter_markov_output(nick, response)
-        return '{}: Markov chain not found'.format(repr(' '.join(chain)))
-
+        nick, msg = self.filter_input(msg)
+        msg = self.filter_markov_input(nick, msg)
+        chain = markov.str_to_chain(msg)
+        try:
+            response = markov.sentence_forward(chain, length=order-1)
+        except KeyError:
+            return '{}: Markov chain not found'.format(repr(' '.join(chain)))
+        else:
+            return self.filter_markov_output(nick, response)
 
     def nikkysim(self, strip_number=True, saying=None):
         """Return NikkySim saying.  saying is the saying number as a tuple
