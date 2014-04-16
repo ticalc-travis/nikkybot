@@ -173,5 +173,12 @@ patterns = (
         Markov_forward('{1} is')
     )
 ),
-
+(r'^!ignoresax (.*)', -30,
+    R(
+        '!ignoresax {0}',
+        '!ignoresax {1}',
+        '!unignoresax {1}',
+        S('~botabuse', R('', '\nSTOP ABUSING ME', "\nSTOP ABUSING ME\n:'(")),
+    )
+)
 )
