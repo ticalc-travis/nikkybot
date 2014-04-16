@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# BUG: CTCP ACTION attempts need to be emulated
+# FIXME: CTCP ACTION attempts need to be emulated
 
 from __future__ import print_function
 

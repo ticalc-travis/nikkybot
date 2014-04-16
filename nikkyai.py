@@ -17,25 +17,22 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-#!TODO!
+#!FIXME!
+#
+# Move most globals to parameterized options; fix make-bot-chat.py for this
 #
 # State data randomly gets lost/truncated, probably related to lazy loading of
 # NikkyAI objects?
+
+
+#!TODO!
 #
-# See about splitting up longer reply functions?
-#
-# Move most globals to parameterized options
-#
-# Add mimc/impersonation feature to "what do you think of" and random remarks
+# Add mimic/impersonation feature to "what do you think of" and random remarks
 # when it's ready
 #
 # Fix up mismatching "'()[]{}
 #
 # Replace nicks with current ones, and/or avoid highlighting random people
-#
-# Don't output responses that match input (wasn't this already done?)
-#
-# Markov-key-convert last replies (wasn't *this* already done before?)
 #
 # Don't output keywords exactly as-is (with regard to punctuation)
 #
