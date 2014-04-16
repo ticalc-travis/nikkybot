@@ -110,9 +110,9 @@ class NikkyAI(object):
         """Generic reply method.  Try to use pattern_reply; if no response
         found, fall back to markov_reply.  Do check_output_response()."""
         try:
-            out = self.pattern_reply(msg, add_response)
+            out = self.pattern_reply(msg, add_response=add_response)
         except Dont_know_how_to_respond_error:
-            out = self.markov_reply(msg, add_response)
+            out = self.markov_reply(msg, add_response=add_response)
 
         # This function should be guaranteed to give a non-null output
         out_okay = False
@@ -178,9 +178,7 @@ class NikkyAI(object):
                     response, allow_repeat, add_response=add_response)
             except Bad_response_error:
                 pass
-        # !TODO! Shouldn't fallbacks to markov_reply be the responsibility of
-        # caller?
-        return self.markov_reply(msg)
+        raise Dont_know_how_to_respond_error
 
     def _pattern_reply(self, msg):
         sourcenick, msg = self.filter_input(msg)
@@ -241,38 +239,33 @@ class NikkyAI(object):
             else:
                 raise e
 
-    # !TODO! _markov_reply no longer needs failmsg support
-
-    def markov_reply(self, msg, add_response=True, max_lf_l=MAX_LF_L,
-                     max_lf_r=MAX_LF_R):
+    def markov_reply(self, msg, failmsg=None, add_response=True,
+                     max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
         """Generate a reply using Markov chaining. Check and avoid repeated
-        responses.  Add new response to self.last_replies if add_response.  Do
+        responses.  If unable to generate a suitable response, return a random
+        Markov sentence if failmsg is None; else return failmsg.  Add new
+        response to self.last_replies if add_response.  Do
         check_output_response()."""
         for i in xrange(RECURSE_LIMIT):
             nick, msg = self.filter_input(msg)
             out = self.filter_markov_output(
-                nick, self._markov_reply(nick, msg, '', max_lf_l, max_lf_r))
+                nick, self._markov_reply(nick, msg, max_lf_l, max_lf_r))
 
             try:
-                out = self.check_output_response(out,
-                                                 add_response=add_response)
+                out = self.check_output_response(
+                    out, add_response=add_response)
             except Bad_response_error:
                 continue
-            # !TODO! Move below check to check_output_response?
             if markov.conv_key(out) == markov.conv_key(msg):
                 continue
-            else:
-                return out
-        return self.random_markov()
-
-    def _markov_reply(self, nick, msg, failmsg=None, max_lf_l=MAX_LF_L,
-                      max_lf_r=MAX_LF_R):
-        """Generate a Markov-chained reply for msg"""
-
-        # !TODO! Actually need a if-msg-empty check?
-        if not msg.strip():
+            return out
+        if failmsg is None:
             return self.random_markov()
-        msg = self.filter_markov_input(nick, msg)
+        else:
+            return failmsg
+
+    def _markov_reply(self, nick, msg, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
+        """Generate a Markov-chained reply for msg"""
 
         # Search for a sequence of input words to Markov chain from: use the
         # longest possible chain matching any regexp from preferred_patterns;
@@ -320,14 +313,11 @@ class NikkyAI(object):
             if low_priority_replies[order]:
                 return choice(low_priority_replies[order])
 
-        # Failing *that*, return either failmsg (or random Markov if no
-        # failmsg)
-        if failmsg is None:
-            return self.random_markov()
-        else:
-            return failmsg
+        # Failing *that*, return null and let caller deal with it
+        return ''
 
-    def random_markov(self, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
+    def random_markov(self, add_response=True, max_lf_l=MAX_LF_L,
+                      max_lf_r=MAX_LF_R):
         """Pick any random Markov-chained sentence and output it.  Do
         check_output_response()."""
         generic_words = (
@@ -354,7 +344,8 @@ class NikkyAI(object):
                 out = markov.adjust_line_breaks(
                     self.filter_markov_output('', msg), max_lf_l, max_lf_r)
                 try:
-                    return self.check_output_response(out)
+                    return self.check_output_response(
+                        out, add_response=add_response)
                 except Bad_response_error:
                     continue
         return "I don't know what to say!"
