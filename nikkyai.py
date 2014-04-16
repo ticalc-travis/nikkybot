@@ -24,8 +24,6 @@
 #
 # See about splitting up longer reply functions?
 #
-# Consider moving check_output_response checks to upper-level func only
-#
 # Move most globals to parameterized options
 #
 # Add mimc/impersonation feature to "what do you think of" and random remarks
@@ -108,24 +106,9 @@ class NikkyAI(object):
         self.nick = 'nikkybot'
         self.load_preferred_keywords()
 
-# Call graph:
-# * = Repeated output check
-#   decide_remark
-#       <reply> (not directly called by decide_remark, but children are)
-#           *pattern_reply
-#               _pattern_reply
-#           *markov_reply
-#               _markov_reply
-#                   *random_markov
-#           *random_markov
-#       *remark
-#           nikkysim_remark
-#               nikkysim
-#           generic_remark
-
     def reply(self, msg, add_response=True):
         """Generic reply method.  Try to use pattern_reply; if no response
-        found, fall back to markov_reply"""
+        found, fall back to markov_reply.  Do check_output_response()."""
         try:
             out = self.pattern_reply(msg, add_response)
         except Dont_know_how_to_respond_error:
@@ -142,7 +125,7 @@ class NikkyAI(object):
 
     def decide_remark(self, msg):
         """Determine whether a random response to a line not directed to
-        nikkybot should be made"""
+        nikkybot should be made.  Do check_output_response()."""
         c = REMARK_CHANCE_RANDOM
         nick, rest_msg = self.filter_input(msg)
         for p in preferred_keywords:
@@ -159,7 +142,8 @@ class NikkyAI(object):
     def remark(self, msg='', add_response=True):
         """Choose between a context-less predefined generic remark or a
         NikkySim remark, avoiding repeats in short succession.  Add new
-        response to self.last_replies if add_response."""
+        response to self.last_replies if add_response.  Do
+        check_output_response()."""
         for i in xrange(RECURSE_LIMIT):
             try:
                 return self.check_output_response(
@@ -171,21 +155,22 @@ class NikkyAI(object):
         return ''
 
     def generic_remark(self, msg=''):
-        """Select a random remark from the predefined random remark list"""
-
+        """Select a random remark from the predefined random remark list.
+        check_output_response() NOT called."""
         nick, msg = self.filter_input(msg)
         remark = choice(patterns.generic_remarks).format(nick)
 
     def nikkysim_remark(self, msg='', strip_number=True):
         """Generate a NikkySim remark.  If not strip_number, include the
-        saying number before the remark."""
+        saying number before the remark.  check_output_response NOT called."""
         out, self.last_nikkysim_saying = self.nikkysim(strip_number)
         return out
 
     def pattern_reply(self, msg, add_response=True):
         """Generate a reply using predefined pattern/response patterns.
         Check for and avoid repeated responses.  Add new response to
-        add_response to self.last_replies if add_response."""
+        add_response to self.last_replies if add_response.
+        Do check_output_response()."""
         for i in xrange(RECURSE_LIMIT):
             response, allow_repeat = self._pattern_reply(msg)
             try:
@@ -261,7 +246,8 @@ class NikkyAI(object):
     def markov_reply(self, msg, add_response=True, max_lf_l=MAX_LF_L,
                      max_lf_r=MAX_LF_R):
         """Generate a reply using Markov chaining. Check and avoid repeated
-        responses.  Add new response to self.last_replies if add_response."""
+        responses.  Add new response to self.last_replies if add_response.  Do
+        check_output_response()."""
         for i in xrange(RECURSE_LIMIT):
             nick, msg = self.filter_input(msg)
             out = self.filter_markov_output(
@@ -342,7 +328,8 @@ class NikkyAI(object):
             return failmsg
 
     def random_markov(self, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
-        """Pick any random Markov-chained sentence and output it"""
+        """Pick any random Markov-chained sentence and output it.  Do
+        check_output_response()."""
         generic_words = (
             'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have',
             'I', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you',
@@ -374,7 +361,7 @@ class NikkyAI(object):
 
     def markov_forward(self, chain, failmsg='', max_lf=MAX_LF_R):
         """Generate sentence from the current chain forward only and not
-        backward"""
+        backward.  Do NOT do check_output_response()."""
         try:
             out = markov.sentence_forward(chain)
         except KeyError:
@@ -385,7 +372,7 @@ class NikkyAI(object):
 
     def manual_markov(self, order, msg):
         """Return manually-invoked Markov operation (output special error
-        string if chain not found)"""
+        string if chain not found).  Does NOT do check_output_response()."""
 
         # !TODO! See if it's necessary to recurse like this.  Presumably, if
         # the key is not in the DB, searching for it another 300 times isn't
@@ -405,7 +392,8 @@ class NikkyAI(object):
 
     def manual_markov_forward(self, order, msg):
         """Return manually-invoked Markov forward operation (output special
-        error string if chain not found)"""
+        error string if chain not found).  Do NOT do
+        check_output_response()."""
 
         # !TODO! See if it's necessary to recurse like this.  Presumably, if
         # the key is not in the DB, searching for it another 300 times isn't
@@ -427,7 +415,7 @@ class NikkyAI(object):
         """Return NikkySim saying.  saying is the saying number as a tuple
         (e.g. (1234,5678)); None selects random saying.  Don't start output
         with saying number if strip_number is True.  Output
-        (msg, saying_tuple)."""
+        (msg, saying_tuple).  Do NOT do check_output_response()."""
         if saying is None:
             x, y = randint(0, 4294967295), randint(0, 9999)
         else:
