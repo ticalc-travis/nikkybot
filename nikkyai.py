@@ -45,6 +45,7 @@
 # More general synonym filtering/transforming (don't replace the entire input
 # pattern)
 
+
 from datetime import datetime, timedelta
 from random import randint, choice
 import cPickle
@@ -112,12 +113,7 @@ class NikkyAI(object):
             out = self.markov_reply(msg, add_response=add_response)
 
         # This function should be guaranteed to give a non-null output
-        out_okay = False
-        for line in out.split('\n'):
-            if line.strip():
-                out_okay = True
-                break
-        assert(out_okay)
+        assert([line for line in out.split('\n') if line])
         return out
 
     def decide_remark(self, msg):
@@ -247,7 +243,6 @@ class NikkyAI(object):
             nick, msg = self.filter_input(msg)
             out = self.filter_markov_output(
                 nick, self._markov_reply(nick, msg, max_lf_l, max_lf_r))
-
             try:
                 out = self.check_output_response(
                     out, add_response=add_response)
