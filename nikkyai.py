@@ -17,14 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-#!FIXME!
-#
-# Move most globals to parameterized options; fix make-bot-chat.py for this
-#
-# State data randomly gets lost/truncated, probably related to lazy loading of
-# NikkyAI objects?
-
-
 #!TODO!
 #
 # Add mimic/impersonation feature to "what do you think of" and random remarks
@@ -56,28 +48,8 @@ import psycopg2
 
 import markov
 
-DEBUG = True
-DB_CONNECT = 'dbname=markovmix user=markovmix'
-
-PREFERRED_KEYWORDS_FILE = '/home/nikkybot/nikkybot/state/preferred_keywords.txt'
-RECURSE_LIMIT = 100
-MAX_LF_L = 1
-MAX_LF_R = 2
-
-REMARK_CHANCE_RANDOM = 700
-REMARK_CHANCE_HAS_KEYWORDS = 100
-PATTERN_RESPONSE_RECYCLE_TIME = timedelta(30)
-
 #------------------------------------------------------------------------------
 
-# !TODO! Do some proper log handling instead of print()--send debug/log stuff
-# to a different stream or something.  It interferes with things like botchat
-
-
-# Markov chain initialization
-dbconn = psycopg2.connect(DB_CONNECT)
-markov = markov.PostgresMarkov(dbconn, 'nikky', case_sensitive = False)
-preferred_keywords = []
 
 # Set up reply pattern table
 import patterns
@@ -97,7 +69,28 @@ class Bad_response_error(Nikky_error):
 
 
 class NikkyAI(object):
-    def __init__(self):
+    def __init__(self, db_connect='dbname=markovmix user=markovmix',
+                 preferred_keywords_file=None, recurse_limit=100,
+                 debug=True, max_lf_l=1, max_lf_r=2,
+                 remark_chance_no_keywords = 700, remark_chance_keywords=100,
+                 pattern_response_expiry=timedelta(30)):
+
+        # Markov chain initialization
+        dbconn = psycopg2.connect(db_connect)
+        self.markov = markov.PostgresMarkov(dbconn, 'nikky',
+                                            case_sensitive=False)
+        self.preferred_keywords = []
+        self.preferred_keywords_file = preferred_keywords_file
+
+        # Remember other options
+        self.recurse_limit = recurse_limit
+        self.debug = debug
+        self.max_lf_l, self.max_lf_r = max_lf_l, max_lf_r
+        self.remark_chance_no_keywords = remark_chance_no_keywords
+        self.remark_chance_keywords = remark_chance_keywords
+        self.pattern_response_expiry = pattern_response_expiry
+
+        # Init AI
         self.last_nikkysim_saying = None
         self.last_reply = ''
         self.last_replies = {}
@@ -119,11 +112,11 @@ class NikkyAI(object):
     def decide_remark(self, msg):
         """Determine whether a random response to a line not directed to
         nikkybot should be made.  Do check_output_response()."""
-        c = REMARK_CHANCE_RANDOM
+        c = self.remark_chance_no_keywords
         nick, rest_msg = self.filter_input(msg)
-        for p in preferred_keywords:
+        for p in self.preferred_keywords:
             if re.search(p, rest_msg, re.I):
-                c = REMARK_CHANCE_HAS_KEYWORDS
+                c = self.remark_chance_keywords
         if not randint(0, c):
             # Output random message
             if not randint(0, 1):
@@ -137,7 +130,7 @@ class NikkyAI(object):
         NikkySim remark, avoiding repeats in short succession.  Add new
         response to self.last_replies if add_response.  Do
         check_output_response()."""
-        for i in xrange(RECURSE_LIMIT):
+        for i in xrange(self.recurse_limit):
             try:
                 return self.check_output_response(
                     choice((self.nikkysim_remark(), self.generic_remark(msg))),
@@ -151,7 +144,7 @@ class NikkyAI(object):
         """Select a random remark from the predefined random remark list.
         check_output_response() NOT called."""
         nick, msg = self.filter_input(msg)
-        remark = choice(patterns.generic_remarks).format(nick)
+        return choice(patterns.generic_remarks).format(nick)
 
     def nikkysim_remark(self, msg='', strip_number=True):
         """Generate a NikkySim remark.  If not strip_number, include the
@@ -164,7 +157,7 @@ class NikkyAI(object):
         Check for and avoid repeated responses.  Add new response to
         add_response to self.last_replies if add_response.
         Do check_output_response()."""
-        for i in xrange(RECURSE_LIMIT):
+        for i in xrange(self.recurse_limit):
             response, allow_repeat = self._pattern_reply(msg)
             try:
                 return self.check_output_response(
@@ -216,11 +209,11 @@ class NikkyAI(object):
         try:
             match, reply, allow_repeat = choice(matches)
         except IndexError:
-            if DEBUG:
+            if self.debug:
                 print("DEBUG: pattern_reply: sourcenick {}, msg {}: No pattern match found".format(repr(sourcenick), repr(msg)))
             raise Dont_know_how_to_respond_error
         else:
-            if DEBUG:
+            if self.debug:
                 print("DEBUG: pattern_reply: sourcenick {}, msg {}: Chose match {}".format(repr(sourcenick), repr(msg), repr(match.re.pattern)))
         fmt_list = [sourcenick,] + [self.sanitize(s) for s in match.groups()]
         try:
@@ -233,13 +226,15 @@ class NikkyAI(object):
                 raise e
 
     def markov_reply(self, msg, failmsg=None, add_response=True,
-                     max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
+                     max_lf_l=None, max_lf_r=None):
         """Generate a reply using Markov chaining. Check and avoid repeated
         responses.  If unable to generate a suitable response, return a random
         Markov sentence if failmsg is None; else return failmsg.  Add new
         response to self.last_replies if add_response.  Do
         check_output_response()."""
-        for i in xrange(RECURSE_LIMIT):
+        max_lf_l, max_lf_r = self.get_max_lf(max_lf_l, max_lf_r)
+
+        for i in xrange(self.recurse_limit):
             nick, msg = self.filter_input(msg)
             out = self.filter_markov_output(
                 nick, self._markov_reply(nick, msg, max_lf_l, max_lf_r))
@@ -248,7 +243,7 @@ class NikkyAI(object):
                     out, add_response=add_response)
             except Bad_response_error:
                 continue
-            if markov.conv_key(out) == markov.conv_key(msg):
+            if self.markov.conv_key(out) == self.markov.conv_key(msg):
                 continue
             return out
         if failmsg is None:
@@ -256,14 +251,14 @@ class NikkyAI(object):
         else:
             return failmsg
 
-    def _markov_reply(self, nick, msg, max_lf_l=MAX_LF_L, max_lf_r=MAX_LF_R):
+    def _markov_reply(self, nick, msg, max_lf_l, max_lf_r):
         """Generate a Markov-chained reply for msg"""
 
         # Search for a sequence of input words to Markov chain from: use the
         # longest possible chain matching any regexp from preferred_patterns;
         # failing that, use the longest possible chain of any words found in
         # the Markov database.
-        words = markov.str_to_chain(msg)
+        words = self.markov.str_to_chain(msg)
         high_priority_replies = {1:[]}
         low_priority_replies = {1:[]}
         for order in (5, 4, 3, 2):
@@ -272,12 +267,12 @@ class NikkyAI(object):
             for i in xrange(len(words) - (order-1)):
                 chain = tuple(words[i:i+order])
                 try:
-                    response = markov.adjust_line_breaks(
-                        markov.sentence(chain), max_lf_l, max_lf_r)
+                    response = self.markov.adjust_line_breaks(
+                        self.markov.sentence(chain), max_lf_l, max_lf_r)
                 except KeyError:
                     continue
                 else:
-                    for p in preferred_keywords:
+                    for p in self.preferred_keywords:
                         if re.search(p, response, re.I):
                             high_priority_replies[order].append(response)
                     else:
@@ -288,12 +283,12 @@ class NikkyAI(object):
         words.sort(key=len, reverse=True)
         for word in words:
             try:
-                response = markov.adjust_line_breaks(
-                    markov.sentence((word,)), max_lf_l, max_lf_r)
+                response = self.markov.adjust_line_breaks(
+                    self.markov.sentence((word,)), max_lf_l, max_lf_r)
             except KeyError:
                 continue
             else:
-                for p in preferred_keywords:
+                for p in self.preferred_keywords:
                     if re.search(p, word, re.I):
                         high_priority_replies[1].append(response)
                 else:
@@ -308,10 +303,11 @@ class NikkyAI(object):
         # Failing *that*, return null and let caller deal with it
         return ''
 
-    def random_markov(self, add_response=True, max_lf_l=MAX_LF_L,
-                      max_lf_r=MAX_LF_R):
+    def random_markov(self, add_response=True, max_lf_l=None,
+                      max_lf_r=None):
         """Pick any random Markov-chained sentence and output it.  Do
         check_output_response()."""
+        max_lf_l, max_lf_r = self.get_max_lf(max_lf_l, max_lf_r)
         generic_words = (
             'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have',
             'I', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you',
@@ -326,14 +322,14 @@ class NikkyAI(object):
             'also', 'back', 'after', 'use', 'two', 'how', 'our',
             'work', 'first', 'well', 'way', 'even', 'new', 'want',
             'because', 'any', 'these', 'give', 'day', 'most', 'us')
-        for i in xrange(RECURSE_LIMIT):
-            chain = markov.str_to_chain(choice(generic_words))
+        for i in xrange(self.recurse_limit):
+            chain = self.markov.str_to_chain(choice(generic_words))
             try:
-                msg = markov.sentence(chain)
+                msg = self.markov.sentence(chain)
             except KeyError:
                 continue
             else:
-                out = markov.adjust_line_breaks(
+                out = self.markov.adjust_line_breaks(
                     self.filter_markov_output('', msg), max_lf_l, max_lf_r)
                 try:
                     return self.check_output_response(
@@ -342,15 +338,17 @@ class NikkyAI(object):
                     continue
         return "I don't know what to say!"
 
-    def markov_forward(self, chain, failmsg='', max_lf=MAX_LF_R):
+    def markov_forward(self, chain, failmsg='', max_lf=None):
         """Generate sentence from the current chain forward only and not
         backward.  Do NOT do check_output_response()."""
+        if max_lf is None:
+            max_lf = self.max_lf_r
         try:
-            out = markov.sentence_forward(chain)
+            out = self.markov.sentence_forward(chain)
         except KeyError:
             return failmsg
         else:
-            out = markov.adjust_right_line_breaks(out, max_lf).strip()
+            out = self.markov.adjust_right_line_breaks(out, max_lf).strip()
             return self.filter_markov_output('', out)
 
     def manual_markov(self, order, msg):
@@ -358,9 +356,9 @@ class NikkyAI(object):
         string if chain not found).  Does NOT do check_output_response()."""
         nick, msg = self.filter_input(msg)
         msg = self.filter_markov_input(nick, msg)
-        chain = markov.str_to_chain(msg)
+        chain = self.markov.str_to_chain(msg)
         try:
-            out = markov.sentence(
+            out = self.markov.sentence(
                 chain, forward_length=order-1, backward_length=order-1)
         except KeyError:
             return '{}: Markov chain not found'.format(repr(' '.join(chain)))
@@ -373,9 +371,9 @@ class NikkyAI(object):
         check_output_response()."""
         nick, msg = self.filter_input(msg)
         msg = self.filter_markov_input(nick, msg)
-        chain = markov.str_to_chain(msg)
+        chain = self.markov.str_to_chain(msg)
         try:
-            response = markov.sentence_forward(chain, length=order-1)
+            response = self.markov.sentence_forward(chain, length=order-1)
         except KeyError:
             return '{}: Markov chain not found'.format(repr(' '.join(chain)))
         else:
@@ -396,33 +394,34 @@ class NikkyAI(object):
         else:
             return (out.rstrip(), (x, y))
 
-    def load_preferred_keywords(self, filename=None):
+    def load_preferred_keywords(self):
         """Load a list of preferred keyword patterns for markov_reply"""
-        global preferred_keywords
-        if filename is None:
-            filename = PREFERRED_KEYWORDS_FILE
-        with open(filename, 'r') as f:
+        if self.preferred_keywords_file is None:
+            return
+        fn = self.preferred_keywords_file
+        with open(fn, 'r') as f:
             pk = [L.strip('\n') for L in f.readlines()]
-        preferred_keywords = pk
-        if DEBUG:
-            print("load_preferred_keywords: {} patterns loaded from {}".format(len(pk), repr(filename)))
+        self.preferred_keywords = pk
+        if self.debug:
+            print("load_preferred_keywords: {} patterns loaded from {}".format(len(pk), repr(fn)))
 
-    def save_preferred_keywords(self, filename=None):
+    def save_preferred_keywords(self):
         """Save a list of preferred keyword patterns for markov_reply"""
-        if filename is None:
-            filename = PREFERRED_KEYWORDS_FILE
-        with open(filename, 'w') as f:
-            f.writelines([s+'\n' for s in sorted(preferred_keywords)])
-        if DEBUG:
-            print("save_preferred_keywords: {} patterns saved to {}".format(len(preferred_keywords), repr(filename)))
+        if self.preferred_keywords_file is None:
+            return
+        fn = self.preferred_keywords_file
+        with open(fn, 'w') as f:
+            f.writelines([s+'\n' for s in sorted(self.preferred_keywords)])
+        if self.debug:
+            print("save_preferred_keywords: {} patterns saved to {}".format(len(self.preferred_keywords), repr(fn)))
 
-    def add_preferred_keyword(self, keyword, filename=None):
+    def add_preferred_keyword(self, keyword):
         """Convenience function for adding a single keyword pattern to the
         preferred keywords pattern list"""
-        if keyword not in preferred_keywords:
-            preferred_keywords.append(keyword)
+        if keyword not in self.preferred_keywords:
+            self.preferred_keywords.append(keyword)
             print("add_preferred_keyword: Added keyword {}".format(repr(keyword)))
-            self.save_preferred_keywords(filename)
+            self.save_preferred_keywords()
 
     def add_last_reply(self, reply, datetime_=None):
         """Convenience function to add a reply string to the last replies
@@ -430,7 +429,7 @@ class NikkyAI(object):
         datetime.now()."""
         if datetime_ is None:
             datetime_ = datetime.now()
-        self.last_replies[markov.conv_key(reply)] = datetime.now()
+        self.last_replies[self.markov.conv_key(reply)] = datetime.now()
 
     def check_output_response(self, response, allow_repeat=False,
                               add_response=True):
@@ -440,11 +439,11 @@ class NikkyAI(object):
         and return response list, split by newlines."""
         if not [line for line in response.split('\n') if line.strip()]:
             raise Bad_response_error
-        response_key = markov.conv_key(response)
+        response_key = self.markov.conv_key(response)
         if not allow_repeat:
             try:
                 if (datetime.now() - self.last_replies[response_key]
-                        < PATTERN_RESPONSE_RECYCLE_TIME):
+                        < self.pattern_response_expiry):
                     raise Bad_response_error
                 elif add_response:
                     self.add_last_reply(response_key)
@@ -461,7 +460,7 @@ class NikkyAI(object):
         num_removed = 0
         orig_size = len(self.last_replies)
         for k, d in self.last_replies.items():
-            if (datetime.now() - d > PATTERN_RESPONSE_RECYCLE_TIME):
+            if (datetime.now() - d > self.pattern_response_expiry):
                 print(
                     "clean_up_last_replies: "
                     "Removed stale last_replies entry {} ({})".format(
@@ -529,3 +528,13 @@ class NikkyAI(object):
             for cn in xrange(0, 32):
                 s = s.replace(chr(cn), '')
         return s
+
+    def get_max_lf(self, max_lf_l=None, max_lf_r=None):
+        """Convenience function to obtain maximum number of output lines
+        settings.  Return max_lf_l/max_lf_r parameter unless None, in which
+        case return default setting."""
+        if max_lf_l is None:
+            max_lf_l = self.max_lf_l
+        if max_lf_r is None:
+            max_lf_r = self.max_lf_r
+        return max_lf_l, max_lf_r

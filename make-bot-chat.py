@@ -35,10 +35,6 @@ def just_PRINT_DAMNIT(s):
     print(s.decode(errors='replace'))
 
 NUMBER_OF_ROUNDS = 50
-nikkyai.DEBUG = False
-nikkyai.RECURSE_LIMIT = 10
-nikkyai.MAX_LF_L = 10
-nikkyai.MAX_LF_R = 10
 markovmixai.DEBUG = False
 markovmixai.RECURSE_LIMIT = 10
 markovmixai.MAX_LF_L = 10
@@ -65,7 +61,8 @@ if nick1 == nick2:
 else:
     tag1 = tag2 = None
 
-nikkybot = nikkyai.NikkyAI()
+nikkybot = nikkyai.NikkyAI(recurse_limit=10, debug=False,
+                           max_lf_l=10, max_lf_r=10)
 nikkybot.load_preferred_keywords()
 markovmix = markovmixai.NikkyAI()
 markovmix.load_preferred_keywords()

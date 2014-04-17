@@ -37,6 +37,7 @@ from nikkyai import NikkyAI
 
 OPTS = argparse.Namespace()
 
+
 class NikkyBotFactory(protocol.ReconnectingClientFactory):
 
     protocol = NikkyBot
@@ -48,8 +49,12 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
         self.servers = [(s.split(':')[0], int(s.split(':')[1])) for s in
                         opts.servers]
         self.shut_down = False
-        self.nikkies = defaultdict(NikkyAI)
+        self.nikkies = defaultdict(self.NikkyAIFactory)
         self.load_state()
+
+    def NikkyAIFactory(self):
+        return NikkyAI(
+            preferred_keywords_file=self.opts.keywords_file)
 
     def load_state(self):
         """Attempt to load persistent state data; else start with new
@@ -171,6 +176,9 @@ if __name__ == '__main__':
     ap.add_argument('-t', '--state-file', default=None,
                     help='Path for AI save-state file (no permanent state '
                          'data saved if not given)')
+    ap.add_argument('-k', '--keywords-file', default=None,
+                    help='Path for AI preferred-keywords file (no file if not '
+                        'given')
     ap.add_argument('--state-save-interval', default=900, type=float,
                     help='Seconds to save AI state')
     ap.add_argument('--state-cleanup-interval', default=60*60*24, type=float,
