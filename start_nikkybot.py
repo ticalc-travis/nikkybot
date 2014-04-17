@@ -148,7 +148,8 @@ if __name__ == '__main__':
     ap.add_argument('--admin-hostmasks', nargs='*', metavar='ADMIN_HOSTMASK',
                     default=['*!ijel@ip68-102-86-156.ks.ok.cox.net',
                              '*!travise@nvm2u.com', '*!travise@64.13.172.47',
-                             '*!ijel@68.102.86.156'],
+                             '*!ijel@68.102.86.156', '*!ijel@68.102.29.131',
+                             '*!ijel@ip68-102-29-131.ks.ok.cox.net'],
                     help='Trusted hostmasks to accept special admin commands '
                          'from')
     ap.add_argument('--reconnect-wait', default=30, type=float,
