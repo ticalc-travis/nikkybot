@@ -50,11 +50,11 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
                         opts.servers]
         self.shut_down = False
         self.nikkies = defaultdict(self.NikkyAIFactory)
+        self.load_state_complete = False
         self.load_state()
 
     def NikkyAIFactory(self):
-        return NikkyAI(
-            preferred_keywords_file=self.opts.keywords_file)
+        return NikkyAI(preferred_keywords_file=self.opts.keywords_file)
 
     def load_state(self):
         """Attempt to load persistent state data; else start with new
@@ -83,10 +83,12 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
                         except Exception as e:
                             print("Couldn't load preferred keyword patterns: {}".format(e))
                 print("Loaded state data")
+        self.load_state_complete = True
 
     def save_state(self):
         """Save persistent state data"""
-        if not self.opts.state_file or not self.nikkies:
+        if (not self.load_state_complete or not self.opts.state_file
+                or not self.nikkies):
             return
         try:
             f = open(self.opts.state_file, 'wb')
