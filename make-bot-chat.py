@@ -21,11 +21,15 @@
 
 from __future__ import print_function
 
-import nikkyai
-import markovmixai
+KEYWORDS_FILE = '/home/nikkybot/nikkybot/state/preferred_keywords.txt'
+NUMBER_OF_ROUNDS = 50
+
 import textwrap
 from sys import argv, exit
 from time import sleep
+
+import nikkyai
+import personalitiesrc
 
 # Work around Python2's stupid encoding nonsense
 import sys
@@ -34,57 +38,45 @@ sys.stdout = codecs.getwriter('utf-8')(sys.stdout, 'replace')
 def just_PRINT_DAMNIT(s):
     print(s.decode(errors='replace'))
 
-NUMBER_OF_ROUNDS = 50
-markovmixai.DEBUG = False
-markovmixai.RECURSE_LIMIT = 10
-markovmixai.MAX_LF_L = 10
-markovmixai.MAX_LF_R = 10
-
 def usage_exit():
     print('Usage: {} personality1 personality2'.format(argv[0]))
     print('\n\nPersonalities:\n')
-    print(', '.join(['nikkybot'] + sorted(personalities)))
-    exit(1)
+    print(', '.join(sorted(personalities)))
+    exit(2)
 
-personalities = markovmixai.PERSONALITIES
+personalities = personalitiesrc.personality_regexes
 
 if len(argv) != 3:
     usage_exit()
 nick1, nick2 = argv[1], argv[2]
-if nick1 not in ('nikkybot', 'nikky') and nick1 not in personalities:
+if nick1 != 'nikky' and nick1 not in personalities:
     usage_exit()
-elif nick2 not in ('nikkybot', 'nikky') and nick2 not in personalities:
+elif nick2 != 'nikky' and nick2 not in personalities:
     usage_exit()
-    
+
 if nick1 == nick2:
     tag1, tag2 = '1', '2'
 else:
     tag1 = tag2 = None
 
-nikkybot = nikkyai.NikkyAI(recurse_limit=10, debug=False,
-                           max_lf_l=10, max_lf_r=10)
-nikkybot.load_preferred_keywords()
-markovmix = markovmixai.NikkyAI()
-markovmix.load_preferred_keywords()
+bot1 = nikkyai.NikkyAI(recurse_limit=10, debug=False, max_lf_l=10, max_lf_r=10,
+                       personality=nick1,
+                       preferred_keywords_file=KEYWORDS_FILE)
+bot2 = nikkyai.NikkyAI(recurse_limit=10, debug=False, max_lf_l=10, max_lf_r=10,
+                       personality=nick2,
+                       preferred_keywords_file=KEYWORDS_FILE)
 
 tw = textwrap.TextWrapper(subsequent_indent=' '*20, expand_tabs=True, width=80)
 
-def get_response(nick, target_nick, msg):
-    if isinstance(msg, list):
-        msg = '\n'.join(msg)
-    if nick in ('nikky', 'nikkybot'):
-        msg = '<' + target_nick + '> ' + msg
-        reply = nikkybot.reply(msg)
-    else:
-        reply = markovmix.reply('<' + target_nick + '> ?' + nick + ' ' + msg)
-        reply = [line.replace('<' + nick + '> ', '', 1) for line in reply]
-    if not isinstance(reply, list):
-        reply = [reply]
+def get_response(bot, nick, target_nick, msg):
+    msg = '<{}> {}'.format(target_nick, msg)
+    reply = bot.reply(msg)
     return reply
 
 def format_response(nick, msg, tag=None):
-    if nick == 'nikkybot':
-        display_nick = nick
+    msg = msg.split('\n')
+    if nick == 'nikky':
+        display_nick = nick + 'bot'
     else:
         display_nick = nick + '-bot'
     if tag is not None:
@@ -96,7 +88,7 @@ def format_response(nick, msg, tag=None):
 
 response = 'Hi'
 for i in xrange(NUMBER_OF_ROUNDS):
-    response = get_response(nick1, nick2, response)
+    response = get_response(bot1, nick1, nick2, response)
     just_PRINT_DAMNIT(format_response(nick1, response, tag1) + '\n')
-    response = get_response(nick2, nick1, response)
+    response = get_response(bot2, nick2, nick1, response)
     just_PRINT_DAMNIT(format_response(nick2, response, tag2) + '\n')

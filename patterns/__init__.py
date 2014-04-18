@@ -21,20 +21,35 @@ import importlib
 import _table
 reload(_table)
 
-_PATTERN_FILES = ('general', 'remarks',
-                  'commands', 'community', 'computers', 'meta', 'synonyms')
+_GLOBAL_PATTERN_FILES = ('global', 'synonyms')
+_NIKKY_PATTERN_FILES = ('general', 'remarks',
+                        'commands', 'community', 'computers', 'meta')
 
-# Load all patterns
-generic_remarks = []
-patterns = []
-for module_name in _PATTERN_FILES:
+global_patterns = []
+nikky_generic_remarks = []
+nikky_patterns = []
+
+# Load global patterns (nikky and all other personalities)
+
+for module_name in _GLOBAL_PATTERN_FILES:
     m = importlib.import_module(__name__ + '.' + module_name)
     reload(m)       # Update in case of dynamic reload
     try:
-        generic_remarks += list(m.generic_remarks)
+        global_patterns += m.patterns
+        nikky_patterns += m.patterns
+    except AttributeError:
+        pass
+
+# Load nikky-only patterns and remarks
+
+for module_name in _NIKKY_PATTERN_FILES:
+    m = importlib.import_module(__name__ + '.' + module_name)
+    reload(m)       # Update in case of dynamic reload
+    try:
+        nikky_generic_remarks += list(m.generic_remarks)
     except AttributeError:
         pass
     try:
-        patterns += m.patterns
+        nikky_patterns += m.patterns
     except AttributeError:
         pass

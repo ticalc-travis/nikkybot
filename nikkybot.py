@@ -32,7 +32,7 @@ from twisted.words.protocols import irc
 from twisted.internet import reactor, threads
 
 from nikkyai import NikkyAI
-import markovmixai
+import personalitiesrc
 
 class BotError(Exception):
     pass
@@ -351,16 +351,14 @@ class NikkyBot(irc.IRCClient, Sensitive):
         ## Public commands ##
 
         elif cmd in ('botchat', '?botchat'):
-            reload(sys.modules['markovmixai'])
-            personalities = markovmixai.get_personalities()
-            usage_msg1 = 'Usage: ?botchat personality1 personality2'
-            usage_msg2 = 'Personalities: {}'.format(
-                            ', '.join(sorted(personalities)))
+            reload(personalitiesrc)
+            personalities = personalitiesrc.personality_regexes
+            usage_msg = 'Usage: ?botchat personality1 personality2'
             parms = args.split(' ')
             if (len(parms) != 2 or parms[0] not in personalities or
                     parms[1] not in personalities):
-                reactor.callLater(2, self.notice, src_nick, usage_msg1)
-                reactor.callLater(4, self.notice, src_nick, usage_msg2)
+                reactor.callLater(2, self.notice, src_nick, usage_msg)
+                reactor.callLater(4, self.give_personalities_list, src_nick)
             else:
                 if self.user_threads >= self.opts.max_user_threads:
                     reactor.callLater(
@@ -376,9 +374,18 @@ class NikkyBot(irc.IRCClient, Sensitive):
                                               sender, parms[0], parms[1])
                     d.addErrback(self.bot_chat_error, src_nick)
                     d.addCallback(self.return_bot_chat)
-
+        elif cmd in ('?personas', '?personalities'):
+            reload(personalitiesrc)
+            reactor.callLater(2, self.give_personalities_list, src_nick)
         else:
             raise UnrecognizedCommandError
+
+    def give_personalities_list(self, src_nick):
+        """Notice a list of available Markov personalities to src_nick"""
+        reload(personalitiesrc)
+        personalities = personalitiesrc.personality_regexes
+        msg = 'Personalities: {}'.format(', '.join(sorted(personalities)))
+        self.notice(src_nick, msg)
 
     def return_bot_chat(self, t):
         nick, channel, output = t

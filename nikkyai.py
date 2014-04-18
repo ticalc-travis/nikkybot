@@ -32,8 +32,6 @@
 #
 # When chopping line breaks, avoid cutting off actual keyword seed
 #
-# Merge nikkybot/markovmix
-#
 # More general synonym filtering/transforming (don't replace the entire input
 # pattern)
 
@@ -54,6 +52,8 @@ import markov
 # Set up reply pattern table
 import patterns
 reload(patterns)        # Update in case of dynamic reload
+import personalitiesrc
+reload(personalitiesrc)        # Update in case of dynamic reload
 
 
 class Nikky_error(Exception):
@@ -68,17 +68,22 @@ class Bad_response_error(Nikky_error):
     pass
 
 
+class Bad_personality_error(Nikky_error):
+    pass
+
+
 class NikkyAI(object):
     def __init__(self, db_connect='dbname=markovmix user=markovmix',
                  preferred_keywords_file=None, recurse_limit=100,
                  debug=True, max_lf_l=1, max_lf_r=2,
                  remark_chance_no_keywords = 700, remark_chance_keywords=100,
-                 pattern_response_expiry=timedelta(30)):
+                 pattern_response_expiry=timedelta(30),
+                 personality='nikky'):
 
         # Markov chain initialization
-        dbconn = psycopg2.connect(db_connect)
-        self.markov = markov.PostgresMarkov(dbconn, 'nikky',
-                                            case_sensitive=False)
+        self.personalities = personalitiesrc.personality_regexes
+        self.dbconn = psycopg2.connect(db_connect)
+        self.set_personality(personality)
         self.preferred_keywords = []
         self.preferred_keywords_file = preferred_keywords_file
 
@@ -144,7 +149,11 @@ class NikkyAI(object):
         """Select a random remark from the predefined random remark list.
         check_output_response() NOT called."""
         nick, msg = self.filter_input(msg)
-        return choice(patterns.generic_remarks).format(nick)
+        if self.get_personality() == 'nikky':
+            return choice(patterns.nikky_generic_remarks).format(nick)
+        else:
+            # Not supported for non-nikky personas
+            return ''
 
     def nikkysim_remark(self, msg='', strip_number=True):
         """Generate a NikkySim remark.  If not strip_number, include the
@@ -172,7 +181,11 @@ class NikkyAI(object):
         # Find matching responses for msg, honoring priorities
         cur_priority = None
         matches = []
-        for p in patterns.patterns:
+        if self.get_personality() == 'nikky':
+            pats = patterns.nikky_patterns
+        else:
+            pats = patterns.global_patterns
+        for p in pats:
             if len(p) == 3:
                 pattern, priority, action = p
                 allow_repeat = False
@@ -186,7 +199,7 @@ class NikkyAI(object):
                 raise IndexError('Pattern reply tuple must be length 3, 4, or 5, not {} (pattern: {})'.format(len(p), p))
             # Does input msg match?
             try:
-                m = re.search(pattern, msg, flags=re.I)
+                m = re.search(pattern.format(self.nick), msg, flags=re.I)
             except Exception as e:
                 print('Regex: {}, {}'.format(pattern, e))
                 raise e
@@ -247,7 +260,7 @@ class NikkyAI(object):
                 continue
             return out
         if failmsg is None:
-            return self.random_markov()
+            return self.random_markov(add_response=add_response)
         else:
             return failmsg
 
@@ -501,17 +514,20 @@ class NikkyAI(object):
         """Perform transformations on output for Markov functions."""
 
         # Transform phrases at beginning of reply
+        # !FIXME! Use self.nick, not hardcoded crap.  And maybe re.sub, too
         for transform in (
-                # Avoid self-references in third person
-                (self.nick + ' has ', 'I have '),
-                (self.nick + ' is', 'I am'),
-                (self.nick + ':', sourcenick + ': '),
-                ('nikkybot', 'nikky'),
-                ('nikkybot:', sourcenick + ':'),
-            ):
+                    # Avoid self-references in third person
+                    (self.nick + ' has ', 'I have '),
+                    (self.nick + ' is', 'I am'),
+                    (self.nick + ':',
+                        sourcenick + ':' if sourcenick else ''),
+                    ('nikkybot:',
+                        sourcenick + ':' if sourcenick else ''),
+                    ('nikkybot', 'nikky'),
+                ):
             old, new = transform
             if msg.lower().startswith(old):
-                msg = new + out[len(old):]
+                msg = new + msg[len(old):]
                 break
         msg = msg.replace(self.nick, sourcenick)
 
@@ -538,3 +554,17 @@ class NikkyAI(object):
         if max_lf_r is None:
             max_lf_r = self.max_lf_r
         return max_lf_l, max_lf_r
+
+    def set_personality(self, personality):
+        """Change Markov personality to given table name in Markov database"""
+        personality = personality.lower().strip()
+        if personality in self.personalities:
+            self.markov = markov.PostgresMarkov(self.dbconn, personality,
+                                                case_sensitive=False)
+            self.personality = personality
+        else:
+            raise Bad_personality_error
+
+    def get_personality(self):
+        """Return current Markov personality"""
+        return self.personality

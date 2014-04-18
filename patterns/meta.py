@@ -41,16 +41,8 @@ patterns = (
 ),
 (r'(Do )?you (like|liek) (.*)(.*?)\W?$', -1,
     R(
-        Recurse('what do you think about {3}'),
-        Recurse('yes'),
-        S(
-            R('', 'No, but ', 'Yes, and '),
-            Markov_forward('I like'),
-        ),
-        Markov_forward("I'd rather"),
         "no\nworst thing in the world",
         'no\nit sucks',
-        'of course'
     )
 ),
 (r"\b(who (made|wrote|programmed) you|(who\'s|whose) are you|who (runs|operates) you|(who is|who's) your (creator|programmer|maker|admin|administrator))\b", -2,
@@ -79,7 +71,7 @@ patterns = (
         'I wish I could do better\n*sob*'
     ), True
 ),
-(r"\b(we have|there is|there's|it's|a) ?(\ba\b )?nikkybot\b", 1,
+(r"\b(we have|there is|there's|it's|a) ?(\ba\b )?{0}\b", 1,
     R(
         "I'm filling in for the real nikky",
         'Yes',
@@ -88,7 +80,7 @@ patterns = (
         'hi'
     ), True
 ),
-(r"\bcue (nikky's |nikkybot's |nikky |nikkybot )?[\"']?([^\"']*)[\"']?", -1,
+(r"\bcue ({0}'s |nikky's |nikkybot's |nikky |nikkybot )?[\"']?([^\"']*)[\"']?", -1,
     R('{2}')
 ),
 (r'\b((nicky|niccy|nicci|nikki|nikk|nik|niky)(boy|bot|bott)?)\b', 0,
@@ -97,41 +89,21 @@ patterns = (
         Markov('{1}'),
     )
 ),
-(r'\b(you|nikkybot) (did|does|do)\b', 1,
+(r'\b(you|{0}) (did|does|do)\b', 1,
     R('I did?', 'I what?', 'Someone talking about me?')
 ),
-(r'^(\S+ (u|you|nikkybot)$|(\bWe |\bI )\S+ (u|you|nikkybot))', 5,
-    S(
-        R('Great\n', 'gee\n', 'thanks\n', 'Awesome\n'),
-        R(
-            Markov_forward('I wish you'),
-            Markov_forward('I hope you'),
-            Markov_forward('I hope your'),
-            Markov_forward('You deserve'),
-            Markov_forward("You don't deserve"),
-        ),
-    ),
-),
-(r'\b(nikkybot is|you are|nikkybot must|you must) (a |an |)(.*)', 1,
+(r'\b({0} is|you are|{0} must|you must) (a |an |)(.*)', 1,
     R(
-        R(
-            "That's what you think",
-            "Yes, I'm totally {1}{2}",
-            'Am not',
-            'Why thank you pumpkin',
-            'Thanks',
-            'Damn straight',
-            'Where did you hear that?'
-        ),
-        Markov_forward('I am'),
-        Markov_forward("I'm"),
-        Markov_forward('I am really'),
-        Markov_forward("I'm really"),
-        Markov_forward('I am actually'),
-        Markov_forward("I'm actually"),
+        "That's what you think",
+        "Yes, I'm totally {1}{2}",
+        'Am not',
+        'Why thank you pumpkin',
+        'Thanks',
+        'Damn straight',
+        'Where did you hear that?'
     )
 ),
-(r'\b(are you|is nikkybot) (a |an |)\b(.*)\b', 1,
+(r'\b(are you|is {0}) (a |an |)\b(.*)\b', 1,
     R(
         'yes',
         'no',
@@ -143,7 +115,7 @@ patterns = (
         Recurse('***yes/no***')
     )
 ),
-(r'\b(are you|is nikkybot) a troll\b', 1,
+(r'\b(are you|is {0}) a troll\b', 1,
     R(
         'depends on the weather',
         'No, I care about everyone',
@@ -152,7 +124,7 @@ patterns = (
         Recurse('you are a troll')
     )
 ),
-(r'\b(are you|is nikkybot) (borked|b0rked|broken|screwed|messed|fucked)\b', 1,
+(r'\b(are you|is {0}) (borked|b0rked|broken|screwed|messed|fucked)\b', 1,
     R(
         "yes\nWell, no\nbut tev's code is",
         'about as much as my program code',
@@ -164,25 +136,6 @@ patterns = (
     R('"Your" retarded', "*You're")
 ),
 (r'\bsorry\b', 1, R('you should be')),
-(r"\b(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -3,
-    R(
-        Markov_forward('{6} is'),
-        Markov_forward('{6}'),
-        Markov_forward('better than'),
-        Markov_forward('worse than'),
-    ),
-),
-(r"\bis (.*) (any good|good)", -3, Recurse('what do you think of {1}')),
-(r"^(what do you think|what do you know|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )me\W?$", -3,
-    R(
-        Markov_forward('you'),
-        Recurse('what do you think of {0}')
-    )
-),
-(r"^(how is|how's|do you like|you like|you liek) (.*?)\W?$", -3,
-    Recurse('what do you think of {2}')
-),
-(r"\btell (me|us) about (.*)", -2, Recurse('{2}')),
 (r'(.*)\bnikkybutt\b(.*)', -2,
     R(
         '{0}butt',
