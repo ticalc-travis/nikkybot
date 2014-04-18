@@ -118,16 +118,17 @@ class NikkyAI(object):
         """Determine whether a random response to a line not directed to
         nikkybot should be made.  Do check_output_response()."""
         c = self.remark_chance_no_keywords
-        nick, rest_msg = self.filter_input(msg)
+        nick, msg = self.filter_input(msg)
         for p in self.preferred_keywords:
-            if re.search(p, rest_msg, re.I):
+            if re.search(p, msg, re.I):
                 c = self.remark_chance_keywords
         if not randint(0, c):
+            print(msg)
             # Output random message
             if not randint(0, 1):
-                self.reply(msg)
+                return self.reply(msg)
             else:
-                self.remark(msg)
+                return self.remark(msg)
         return ''
 
     def remark(self, msg='', add_response=True):
