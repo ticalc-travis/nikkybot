@@ -377,6 +377,13 @@ class NikkyBot(irc.IRCClient, Sensitive):
         elif cmd in ('?personas', '?personalities'):
             reload(personalitiesrc)
             reactor.callLater(2, self.give_personalities_list, src_nick)
+            reactor.callLater(4, self.notice, src_nick,
+                              'Say "{}: mimic <personality> <message>" to '
+                              '"talk" to that personality.'.format(
+                                     self.nickname))
+            reactor.callLater(6, self.notice, src_nick,
+                              'Talk to tev to request a new personality based '
+                              'on someone.')
         else:
             raise UnrecognizedCommandError
 
