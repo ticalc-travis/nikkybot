@@ -36,7 +36,7 @@ import sys
 import codecs
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout, 'replace')
 def just_PRINT_DAMNIT(s):
-    print(s.decode(errors='replace'))
+    print(s.decode(encoding='utf-8', errors='replace'))
 
 def usage_exit():
     print('Usage: {} personality1 personality2'.format(argv[0]))

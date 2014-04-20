@@ -245,7 +245,7 @@ def update(pname, reset):
     for i, l in enumerate(training_glob):
         stdout.write('Training {}/{}...\r'.format(i+1, items))
         stdout.flush()
-        mk.add(unicode(l, errors='replace'))
+        mk.add(unicode(l, encoding='utf8', errors='replace'))
 
     stdout.write('\nClosing...\n')
     mk.commit()
