@@ -315,8 +315,22 @@ class NikkyBot(irc.IRCClient, Sensitive):
         elif cmd == '?addword':
             if not is_admin:
                 raise UnauthorizedCommandError
-            n = self.factory.nikkies[self.factory.nikkies.values()[0]]
+            n = self.nikkies[self.nikkies[None]]
             n.add_preferred_keyword(args)
+            self.notice(sender, 'Keyword added; {} total'.format(
+                len(n.preferred_keywords)))
+
+        elif cmd in ('?delword', '?remword', '?deleteword', '?removeword'):
+            if not is_admin:
+                raise UnauthorizedCommandError
+            n = self.nikkies[self.nikkies[None]]
+            try:
+                n.delete_preferred_keyword(args)
+            except KeyError:
+                self.notice(sender, 'Keyword not found')
+            else:
+                self.notice(sender, 'Keyword removed; {} total'.format(
+                    len(n.preferred_keywords)))
 
         elif cmd == '?say':
             if not is_admin:

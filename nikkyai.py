@@ -433,8 +433,20 @@ class NikkyAI(object):
         preferred keywords pattern list"""
         if keyword not in self.preferred_keywords:
             self.preferred_keywords.append(keyword)
-            print("add_preferred_keyword: Added keyword {}".format(repr(keyword)))
+            print("add_preferred_keyword: Added keyword {}".format(
+                repr(keyword)))
             self.save_preferred_keywords()
+
+    def delete_preferred_keyword(self, keyword):
+        """Convenience function for deleting a single keyword pattern from the
+        preferred keywords pattern list.  Raise KeyError if word does not
+        exist in the list."""
+        if keyword not in self.preferred_keywords:
+            raise KeyError(keyword)
+        self.preferred_keywords.remove(keyword)
+        print("delete_preferred_keyword: Removed keyword {}".format(
+            repr(keyword)))
+        self.save_preferred_keywords()
 
     def add_last_reply(self, reply, datetime_=None):
         """Convenience function to add a reply string to the last replies
