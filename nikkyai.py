@@ -43,17 +43,18 @@ from os import fstat, stat, getpid
 import re
 import subprocess
 import psycopg2
+from twisted.python.rebuild import rebuild
 
 import markov
+rebuild(markov)        # Update in case of dynamic reload
 
 #------------------------------------------------------------------------------
 
 
 # Set up reply pattern table
 import patterns
-reload(patterns)        # Update in case of dynamic reload
+rebuild(patterns)        # Update in case of dynamic reload
 import personalitiesrc
-reload(personalitiesrc)        # Update in case of dynamic reload
 
 
 class Nikky_error(Exception):
@@ -81,7 +82,6 @@ class NikkyAI(object):
                  personality='nikky'):
 
         # Markov chain initialization
-        self.personalities = personalitiesrc.personality_regexes
         self.dbconn = psycopg2.connect(db_connect)
         self.set_personality(personality)
         self.preferred_keywords = []
@@ -557,8 +557,10 @@ class NikkyAI(object):
 
     def set_personality(self, personality):
         """Change Markov personality to given table name in Markov database"""
+        rebuild(personalitiesrc)
+        personalities = personalitiesrc.personality_regexes
         personality = personality.lower().strip()
-        if personality in self.personalities:
+        if personality in personalities:
             self.markov = markov.PostgresMarkov(self.dbconn, personality,
                                                 case_sensitive=False)
             self.personality = personality

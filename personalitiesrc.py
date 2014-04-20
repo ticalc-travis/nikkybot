@@ -38,7 +38,7 @@ personality_regexes = {
         (r'(bb010g).*',
          None,
          None),
-    'cvsoft-d':
+    'cvsoftd':
         (r'(CV|notipa).*',
          r'(CVSoft)',
          None),
@@ -50,7 +50,7 @@ personality_regexes = {
         (r'(netham45|netbot45).*',
          r'(netham45)',
          r'(netham45)'),
-    'kevin_o':
+    'kevino':
         (r'(.*?kevin_o.*?|dj_omni.*?|dj_o.*?|`-`|celtic3.*?|celticiii.*?|xlibman.*?|omnom|nom|ragol666.*?)',
          r'(dj.omnimaga|dj.o)',
          r'(dj.omnimaga|dj.o)'),
@@ -70,7 +70,7 @@ personality_regexes = {
         (r'(randomist|korinidos|.*arch|metalrand|randeimos|damakaru).*?',
          None,
          None),
-    'sir_lewk':
+    'sirlewk':
         (r'(sir_lewk|sirlewk).*?',
          None,
          None),
@@ -78,15 +78,15 @@ personality_regexes = {
         (r'(chronomex|chronome1|.*?slythe|xmc|cmx|exmic).*?',
          r'(chronomex)',
          r'(chronomex)'),
-    'michael_v':
+    'michaelv':
         (r'(michael_v|michaelv).*?',
          None,
          None),
-    'e-j':
+    'ej':
         (r'(e-j|e-jl|el-j).*?',
         None,
         None),
-    'cricket_b':
+    'cricketb':
         (r'(cricket_b|cricketb|chirp_b|truepika).*?',
          None,
          None),

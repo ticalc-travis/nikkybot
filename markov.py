@@ -23,7 +23,7 @@ import shelve
 import cPickle
 import psycopg2
 
-DEFAULT_IGNORE_CHARS = '\\]\\-!"&`()*,./:;<=>?[\\^=\'{|}~'
+DEFAULT_IGNORE_CHARS = '\\]\\-!"&`()*,./:;<=>?[\\^=\'{|}~_'
 
 class Markov(object):
     """tev's Markov chain implementation"""
