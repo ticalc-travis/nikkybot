@@ -190,7 +190,7 @@ patterns = (
         Markov_forward('whenever'),
     )
 ),
-(r'^how\b', -1,
+(r'^how\b', 1,
     R(
         Markov_forward('by'),
         Markov_forward('via'),
