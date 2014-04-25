@@ -16,6 +16,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#!FIXME!
+#
+# "mimic x nikky" does not produce responses containing "nikky"
 
 #!TODO!
 #
@@ -75,17 +78,15 @@ class Bad_personality_error(Nikky_error):
 
 class NikkyAI(object):
     def __init__(self, db_connect='dbname=markovmix user=markovmix',
-                 preferred_keywords_file=None, recurse_limit=100,
-                 debug=True, max_lf_l=1, max_lf_r=2,
+                 recurse_limit=100, debug=True, max_lf_l=1, max_lf_r=2,
                  remark_chance_no_keywords = 700, remark_chance_keywords=100,
                  pattern_response_expiry=timedelta(30),
-                 personality='nikky'):
+                 personality='nikky', id=None):
 
         # Markov chain initialization
         self.dbconn = psycopg2.connect(db_connect)
         self.set_personality(personality)
-        self.preferred_keywords = []
-        self.preferred_keywords_file = preferred_keywords_file
+        self.preferred_keywords = set()
 
         # Remember other options
         self.recurse_limit = recurse_limit
@@ -100,7 +101,10 @@ class NikkyAI(object):
         self.last_reply = ''
         self.last_replies = {}
         self.nick = 'nikkybot'
-        self.load_preferred_keywords()
+
+        # Set up state save if ID given
+        self.id = id
+        self.load_state()
 
     def reply(self, msg, add_response=True):
         """Generic reply method.  Try to use pattern_reply; if no response
@@ -407,35 +411,14 @@ class NikkyAI(object):
         else:
             return (out.rstrip(), (x, y))
 
-    def load_preferred_keywords(self):
-        """Load a list of preferred keyword patterns for markov_reply"""
-        if self.preferred_keywords_file is None:
-            return
-        fn = self.preferred_keywords_file
-        with open(fn, 'r') as f:
-            pk = [L.strip('\n') for L in f.readlines()]
-        self.preferred_keywords = pk
-        if self.debug:
-            print("load_preferred_keywords: {} patterns loaded from {}".format(len(pk), repr(fn)))
-
-    def save_preferred_keywords(self):
-        """Save a list of preferred keyword patterns for markov_reply"""
-        if self.preferred_keywords_file is None:
-            return
-        fn = self.preferred_keywords_file
-        with open(fn, 'w') as f:
-            f.writelines([s+'\n' for s in sorted(self.preferred_keywords)])
-        if self.debug:
-            print("save_preferred_keywords: {} patterns saved to {}".format(len(self.preferred_keywords), repr(fn)))
-
     def add_preferred_keyword(self, keyword):
         """Convenience function for adding a single keyword pattern to the
         preferred keywords pattern list"""
         if keyword not in self.preferred_keywords:
-            self.preferred_keywords.append(keyword)
+            self.preferred_keywords.add(keyword)
             print("add_preferred_keyword: Added keyword {}".format(
                 repr(keyword)))
-            self.save_preferred_keywords()
+            self.save_state()
 
     def delete_preferred_keyword(self, keyword):
         """Convenience function for deleting a single keyword pattern from the
@@ -446,7 +429,7 @@ class NikkyAI(object):
         self.preferred_keywords.remove(keyword)
         print("delete_preferred_keyword: Removed keyword {}".format(
             repr(keyword)))
-        self.save_preferred_keywords()
+        self.save_state()
 
     def add_last_reply(self, reply, datetime_=None):
         """Convenience function to add a reply string to the last replies
@@ -455,6 +438,7 @@ class NikkyAI(object):
         if datetime_ is None:
             datetime_ = datetime.now()
         self.last_replies[self.markov.conv_key(reply)] = datetime.now()
+        self.save_state()
 
     def check_output_response(self, response, allow_repeat=False,
                               add_response=True):
@@ -498,6 +482,7 @@ class NikkyAI(object):
             "Removed {} items (len {} -> {})".format(
                 num_removed, orig_size, len(self.last_replies))
         )
+        self.save_state()
 
     def filter_input(self, msg):
         """Preprocess input msg in form "<speaking nick> msg".
@@ -582,3 +567,63 @@ class NikkyAI(object):
     def get_personality(self):
         """Return current Markov personality"""
         return self.personality
+
+    def get_state(self):
+        """Return an object representing current persistent state data for the
+        class (for storage/later restoring)"""
+        return {'last_replies': self.last_replies,
+                'preferred_keywords': self.preferred_keywords}
+
+    def set_state(self, state):
+        """Reset current internal state to that captured by state (returned by
+        get_state)"""
+        self.last_replies = state['last_replies']
+        self.preferred_keywords = state['preferred_keywords']
+
+    def load_state(self):
+        """Load current internal state from DB entry"""
+        if id is None:
+            return
+        cur = self.dbconn.cursor()
+        self._check_state_table()
+        cur.execute('SELECT state FROM ".nikkyai-state" WHERE id=%s',
+                    (self.id,))
+        t = cur.fetchone()
+        if t is None:
+            print('NikkyAI: No state found for id "{}"'.format(self.id))
+        else:
+            self.set_state(cPickle.loads(str(t[0])))
+            print('NikkyAI: Loaded state for id "{}"'.format(self.id))
+        self.dbconn.rollback()
+
+    def save_state(self):
+        """Save current internal state to DB"""
+        if id is None:
+            return
+        cur = self.dbconn.cursor()
+        self._check_state_table()
+        state = cPickle.dumps(self.get_state())
+        try:
+            cur.execute(
+                'INSERT INTO ".nikkyai-state" (id, state) VALUES (%s, %s)',
+                (self.id, psycopg2.Binary(state)))
+        except psycopg2.IntegrityError:
+            self.dbconn.rollback()
+            cur.execute(
+                'UPDATE ".nikkyai-state" SET state=%s WHERE id=%s',
+                (psycopg2.Binary(state), self.id))
+        else:
+            print('NikkyAI: Saved new state for id "{}"'.format(self.id))
+        self.dbconn.commit()
+
+    def _check_state_table(self):
+        """Check existence of state-save table in DB; create if necessary"""
+        cur = self.dbconn.cursor()
+        try:
+            cur.execute('CREATE TABLE ".nikkyai-state" '
+                     '(id VARCHAR PRIMARY KEY, state BYTEA NOT NULL)')
+        except psycopg2.ProgrammingError:
+            self.dbconn.rollback()
+        else:
+            print('NikkyAI: State save table does not exist; creating it')
+            self.dbconn.commit()

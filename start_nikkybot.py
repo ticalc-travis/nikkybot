@@ -38,6 +38,13 @@ from nikkyai import NikkyAI
 OPTS = argparse.Namespace()
 
 
+class DefaultNikkyAIDict(dict):
+    def __getitem__(self, k):
+        if k not in self:
+            self[k] = NikkyAI(id=k)
+        return dict.__getitem__(self, k)
+
+
 class NikkyBotFactory(protocol.ReconnectingClientFactory):
 
     protocol = NikkyBot
@@ -49,62 +56,10 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
         self.servers = [(s.split(':')[0], int(s.split(':')[1])) for s in
                         opts.servers]
         self.shut_down = False
-        self.nikkies = defaultdict(self.NikkyAIFactory)
-        self.load_state_complete = False
-        self.load_state()
+        self.nikkies = DefaultNikkyAIDict()
 
     def NikkyAIFactory(self):
         return NikkyAI(preferred_keywords_file=self.opts.keywords_file)
-
-    def load_state(self):
-        """Attempt to load persistent state data; else start with new
-        defaults"""
-        if not self.opts.state_file:
-            return
-        try:
-            f = open(self.opts.state_file, 'rb')
-        except IOError as e:
-            print("Couldn't open state data file for reading: {}".format(e))
-        else:
-            try:
-                state = cPickle.load(f)
-            except Exception as e:
-                print("Couldn't load state data: {}".format(e))
-            else:
-                for k in state:
-                    try:
-                        nikky = self.nikkies[k]
-                    except KeyError:
-                        pass
-                    else:
-                        nikky.last_replies = state[k]['last_replies']
-                        try:
-                            nikky.load_preferred_keywords()
-                        except Exception as e:
-                            print("Couldn't load preferred keyword patterns: {}".format(e))
-                print("Loaded state data")
-        self.load_state_complete = True
-
-    def save_state(self):
-        """Save persistent state data"""
-        if (not self.load_state_complete or not self.opts.state_file
-                or not self.nikkies):
-            return
-        try:
-            f = open(self.opts.state_file, 'wb')
-        except IOError as e:
-            print(
-                "Couldn't open state data file for writing: {}".format(e))
-        else:
-            state = {}
-            for k in self.nikkies:
-                state[k] = {'last_replies': self.nikkies[k].last_replies}
-            try:
-                cPickle.dump(state, f)
-            except Exception as e:
-                print("Couldn't save state data: {}".format(e))
-            else:
-                print("Saved state data")
 
     def cleanup_state(self):
         """Clean up any stale state data to reduce memory and disk usage"""
@@ -125,7 +80,6 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
         reactor.connectTCP(url, port, NikkyBotFactory(self.opts))
 
     def clientConnectionLost(self, connector, reason):
-        self.save_state()
         if self.shut_down:
             reactor.stop()
         else:
@@ -175,14 +129,6 @@ if __name__ == '__main__':
     ap.add_argument('--simulated-typing-speed', default=.1, type=float,
                     help='Seconds per character to delay message (simulated '
                          'typing delay)')
-    ap.add_argument('-t', '--state-file', default=None,
-                    help='Path for AI save-state file (no permanent state '
-                         'data saved if not given)')
-    ap.add_argument('-k', '--keywords-file', default=None,
-                    help='Path for AI preferred-keywords file (no file if not '
-                        'given')
-    ap.add_argument('--state-save-interval', default=900, type=float,
-                    help='Seconds to save AI state')
     ap.add_argument('--state-cleanup-interval', default=60*60*24, type=float,
                     help='Seconds to do AI state housekeeping/cleanup')
     ap.add_argument('--channel-check-interval', default=300, type=float,

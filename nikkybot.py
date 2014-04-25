@@ -34,6 +34,7 @@ from twisted.internet import reactor, threads
 from nikkyai import NikkyAI
 import personalitiesrc
 
+
 class BotError(Exception):
     pass
 
@@ -97,8 +98,6 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
         if self.opts.channel_check_interval:
             reactor.callLater(self.opts.channel_check_interval, self.channel_check)
-        if self.opts.state_save_interval and self.opts.state_file:
-            reactor.callLater(self.opts.state_save_interval, self.save_state)
         if self.opts.state_cleanup_interval:
             reactor.callLater(self.opts.state_cleanup_interval, self.cleanup_state)
 
@@ -302,6 +301,12 @@ class NikkyBot(irc.IRCClient, Sensitive):
             if not args in self.opts.channels:
                 self.opts.channels.append(args)
             self.join(args)
+            # Update preferred keywords for new channel
+            pk = set()
+            self.nikkies[args]      # Summon new channel NikkyAI into existence
+            for nikky in self.nikkies.values():
+                pk = pk.union(nikky.preferred_keywords)
+            self.nikkies[args].preferred_keywords = pk
 
         elif cmd == '?part':
             if not is_admin:
@@ -315,22 +320,24 @@ class NikkyBot(irc.IRCClient, Sensitive):
         elif cmd == '?addword':
             if not is_admin:
                 raise UnauthorizedCommandError
-            n = self.nikkies[self.nikkies[None]]
-            n.add_preferred_keyword(args)
-            self.notice(sender, 'Keyword added; {} total'.format(
-                len(n.preferred_keywords)))
+            for nikky in self.nikkies.values():
+                nikky.add_preferred_keyword(args)
+                self.notice(sender, '{}: Keyword added; {} total'.format(
+                    nikky.id, len(nikky.preferred_keywords)))
 
         elif cmd in ('?delword', '?remword', '?deleteword', '?removeword'):
             if not is_admin:
                 raise UnauthorizedCommandError
-            n = self.nikkies[self.nikkies[None]]
-            try:
-                n.delete_preferred_keyword(args)
-            except KeyError:
-                self.notice(sender, 'Keyword not found')
-            else:
-                self.notice(sender, 'Keyword removed; {} total'.format(
-                    len(n.preferred_keywords)))
+            for nikky in self.nikkies.values():
+                try:
+                    nikky.delete_preferred_keyword(args)
+                except KeyError:
+                    self.notice(sender, '{}: Keyword not found'.format(
+                        nikky.id))
+                else:
+                    self.notice(sender,
+                                '{}: Keyword removed; {} total'.format(
+                                    nikky.id, len(nikky.preferred_keywords)))
 
         elif cmd == '?say':
             if not is_admin:
@@ -531,11 +538,6 @@ class NikkyBot(irc.IRCClient, Sensitive):
         for c in self.opts.channels:
             if c not in self.joined_channels:
                 self.join(c)
-
-    def save_state(self):
-        """Save nikkyAI state to disk file"""
-        self.factory.save_state()
-        reactor.callLater(self.opts.state_save_interval, self.save_state)
 
     def cleanup_state(self):
         """Clean up any stale state data to reduce memory and disk usage"""
