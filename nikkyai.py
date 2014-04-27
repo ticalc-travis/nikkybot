@@ -16,10 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#!FIXME!
-#
-# "mimic x nikky" does not produce responses containing "nikky"
-
 #!TODO!
 #
 # Add mimic/impersonation feature to "what do you think of" and random remarks
@@ -511,16 +507,12 @@ class NikkyAI(object):
         """Perform transformations on output for Markov functions."""
 
         # Transform phrases at beginning of reply
-        # !FIXME! Use self.nick, not hardcoded crap.  And maybe re.sub, too
         for transform in (
                     # Avoid self-references in third person
                     (self.nick + ' has ', 'I have '),
                     (self.nick + ' is', 'I am'),
                     (self.nick + ':',
                         sourcenick + ':' if sourcenick else ''),
-                    ('nikkybot:',
-                        sourcenick + ':' if sourcenick else ''),
-                    ('nikkybot', 'nikky'),
                 ):
             old, new = transform
             if msg.lower().startswith(old):
