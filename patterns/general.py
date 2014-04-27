@@ -206,7 +206,7 @@ patterns = (
         'nikkybot\nmore like\nawesome',
     ), True
 ),
-(r'(.*?)\W*more like\W*$', -10, E(more_like)),
+(r'(.*?)\S*more like\S*$', -10, E(more_like)),
 (r"^(is|are|am|should|can|do|does|which|what|what's|who|who's)(?: \S+)+[ -](.*?)\W+or (.*)\b", -1,
     S(
         R(
