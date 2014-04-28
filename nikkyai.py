@@ -246,9 +246,10 @@ class NikkyAI(object):
         response to self.last_replies if add_response.  Do
         check_output_response()."""
         max_lf_l, max_lf_r = self.get_max_lf(max_lf_l, max_lf_r)
+        nick, msg = self.filter_input(msg)
+        msg = self.filter_markov_input(nick, msg)
 
         for i in xrange(self.recurse_limit):
-            nick, msg = self.filter_input(msg)
             out = self.filter_markov_output(
                 nick, self._markov_reply(nick, msg, max_lf_l, max_lf_r))
             try:
@@ -499,9 +500,12 @@ class NikkyAI(object):
     def filter_markov_input(self, sourcenick, msg):
         """Perform transformations on input before it goes to Markov
         functions:
+        Replace non-UTF characters.
         Replace occurences of own nick with that of the speaker."""
-        return re.sub(r'\b' + re.escape(self.nick) + r'\b', sourcenick,
-                      msg)
+        new_msg = msg.decode(encoding='utf8', errors='replace')
+        new_msg = re.sub(r'\b' + re.escape(self.nick) + r'\b', sourcenick,
+                         new_msg)
+        return new_msg
 
     def filter_markov_output(self, sourcenick, msg):
         """Perform transformations on output for Markov functions."""
