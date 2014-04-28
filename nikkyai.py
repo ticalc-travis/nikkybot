@@ -502,7 +502,11 @@ class NikkyAI(object):
         functions:
         Replace non-UTF characters.
         Replace occurences of own nick with that of the speaker."""
-        new_msg = msg.decode(encoding='utf8', errors='replace')
+
+        #!FIXME! Temporary workaround (?) for Twisted's Unicode crap.
+        #  To do:  Something slightly less insane?
+        new_msg = msg.decode(encoding='utf8', errors='replace').encode(
+            encoding='utf8', errors='replace')
         new_msg = re.sub(r'\b' + re.escape(self.nick) + r'\b', sourcenick,
                          new_msg)
         return new_msg
