@@ -21,15 +21,15 @@
 # Add mimic/impersonation feature to "what do you think of" and random remarks
 # when it's ready
 #
-# Fix up mismatching "'()[]{}
+# Add response for nikkybot to tell its age
 #
-# Replace nicks with current ones, and/or avoid highlighting random people
+# Fix up mismatching "'()[]{}
 #
 # Don't output keywords exactly as-is (with regard to punctuation)
 #
-# Add response for nikkybot to tell its age
-#
 # When chopping line breaks, avoid cutting off actual keyword seed
+#
+# Replace nicks with current ones, and/or avoid highlighting random people
 #
 # More general synonym filtering/transforming (don't replace the entire input
 # pattern)
