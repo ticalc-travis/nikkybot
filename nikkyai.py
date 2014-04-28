@@ -578,7 +578,7 @@ class NikkyAI(object):
 
     def load_state(self):
         """Load current internal state from DB entry"""
-        if id is None:
+        if self.id is None:
             return
         cur = self.dbconn.cursor()
         self._check_state_table()
@@ -594,7 +594,7 @@ class NikkyAI(object):
 
     def save_state(self):
         """Save current internal state to DB"""
-        if id is None:
+        if self.id is None:
             return
         cur = self.dbconn.cursor()
         self._check_state_table()
