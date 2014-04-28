@@ -124,7 +124,7 @@ patterns = (
         Recurse('you are a troll')
     )
 ),
-(r'\b(are you|is {0}) (borked|b0rked|broken|screwed|messed|fucked)\b', 1,
+(r'\b(you|{0}).*(bug|issue|problem|borked|b0rked|broken|screwed|messed|fucked)', -1,
     R(
         "yes\nWell, no\nbut tev's code is",
         'about as much as my program code',

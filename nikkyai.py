@@ -516,19 +516,23 @@ class NikkyAI(object):
                     (self.nick + ' has ', 'I have '),
                     (self.nick + ' is', 'I am'),
                     (self.nick + ':',
-                        sourcenick + ':' if sourcenick else ''),
+                        sourcenick + ':' if sourcenick else self.nick + ':'),
+                    ('nikkybot:',
+                        sourcenick + ':' if sourcenick else self.nick + ':'),
+                    ('nikkybot', 'nikky'),
                 ):
             old, new = transform
             if msg.lower().startswith(old):
                 msg = new + msg[len(old):]
                 break
-        msg = msg.replace(self.nick, sourcenick)
+        if sourcenick:
+            msg = msg.replace(self.nick, sourcenick)
 
         # Transform initial highlights to a highlight to the speaker for a
         # sense of realism
         if sourcenick and randint(0, 10):
             msg = re.sub(r'\S+: ', sourcenick + ': ', msg)
-        return msg.strip()
+        return msg
 
     def sanitize(self, s):
         """Remove control characters from 's' if it's a string; return it as is
