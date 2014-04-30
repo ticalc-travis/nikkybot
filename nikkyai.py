@@ -251,7 +251,7 @@ class NikkyAI(object):
         except AttributeError as e:
             if str(e).endswith("'get'"):
                 # In case of a plain string
-                return reply.format(*fmt_list)
+                return (reply.format(*fmt_list), allow_repeat)
             else:
                 raise e
 
