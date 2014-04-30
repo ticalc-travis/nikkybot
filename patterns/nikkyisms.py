@@ -24,7 +24,8 @@ import nikkyai
 def more_like(nikkyai, fmt):
     word = fmt[1].strip()
     if not word:
-        return nikkyai.markov_reply('\n more like \n', add_response=False)
+        return nikkyai.markov_reply('\n more like \n', add_response=False,
+                                    max_lf_l=2, max_lf_r=2)
     out1 = nikkyai.markov_forward((word, '\n', 'more', 'like'),
                                   failmsg='', max_lf=3)
     out2 = nikkyai.markov_forward((word, 'more', 'like'), failmsg='', max_lf=3)
