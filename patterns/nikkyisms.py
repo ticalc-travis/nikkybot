@@ -102,5 +102,7 @@ patterns = (
         '\n3. ', E(rule),
     )
 ),
-
+(r"\bdon't do what\b", 1, Recurse('rule'), True),
+(r"\bdon't (.*) what\b", 1, Markov_forward("Don't {1}")),
+(r"(\S*)\s*(\S*)\s*what\b", 1, Markov_forward('{1} {2}')),
 )
