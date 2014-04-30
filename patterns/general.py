@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from _table import *
+import nikkyai
 
 # General patterns for 'nikky' personality
 
@@ -37,6 +38,29 @@ def more_like(nikkyai, fmt):
                 nikkyai.markov_forward(('more', 'like', '\n'), failmsg='',
                                        max_lf=2))
     return out
+
+
+def rule(nikky, fmt):
+    seed = choice(("Don't be", "Don't use", "Don't talk", "Don't bring",
+                   "Don't mention", "Don't do", "Don't act"))
+    chain = nikky.markov.str_to_chain(seed)
+    # Do our own repeated response checking--this lets us avoid giving the same
+    # “rule” more than once in the same list, even if several are being
+    # combined at once into a single output message
+    #
+    # Caveat:  if this function's output is the only thing output in a table
+    # rule, “allow repeats” flag *must* be True (even though repeats are still
+    # avoided), else it will loop forever and never output anything (it will
+    # check the response here, add it to the list, and then check it again
+    # in nikkyai, which will always reject it as a duplicate before ever being
+    # output).
+    for i in xrange(0, nikky.recurse_limit):
+        out = nikky.markov_forward(chain, max_lf=0)
+        try:
+            return nikky.check_output_response(out, add_response=True)
+        except nikkyai.Bad_response_error:
+            continue
+    return "???"
 
 
 patterns = (
@@ -198,13 +222,18 @@ patterns = (
         'DO IT ANYWAY'
     )
 ),
-(r'\brules\b', 1, R("\001ACTION rules {0}\001")),
-(r'\bnikky.*more like\W*$', -20,
-    R(
-        'nikkybot\nmore like\nchamp',
-        "nikkybot\nmore like\nI'm always the best",
-        'nikkybot\nmore like\nawesome',
-    ), True
+(r'\brule\b', 1, E(rule), True),
+    #                     ^ Not really allowing repeats (already handled by
+    # (rule function; if this is False, it will double-check and fail every
+    # response as a duplicate and never output anything.)
+(r'\brules\b', 1,
+    S(
+        R('Rules:', 'Channel rules:', 'Forum rules:', "Today's rules",
+          "Today's channel rules:", "Today's forum rules:"),
+        '\n1. ', E(rule),
+        '\n2. ', E(rule),
+        '\n3. ', E(rule),
+    )
 ),
 (r'(.*?)\S*more like\S*$', -10, E(more_like)),
 (r"^(is|are|am|should|can|do|does|which|what|what's|who|who's)(?: \S+)+[ -](.*?)\W+or (.*)\b", -1,
