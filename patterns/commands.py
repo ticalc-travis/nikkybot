@@ -18,6 +18,8 @@
 
 from _table import *
 
+# Special commands
+
 
 def random_nikkysim(nikkyai, fmt):
     return nikkyai.nikkysim(strip_number=False)[0]

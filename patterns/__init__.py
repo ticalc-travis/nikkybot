@@ -23,7 +23,8 @@ reload(_table)
 
 _GLOBAL_PATTERN_FILES = ('global', 'synonyms')
 _NIKKY_PATTERN_FILES = ('general', 'remarks',
-                        'commands', 'community', 'computers', 'meta')
+                        'commands', 'community', 'computers', 'meta',
+                        'nikkyisms')
 
 global_patterns = []
 nikky_generic_remarks = []

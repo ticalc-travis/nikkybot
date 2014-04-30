@@ -21,42 +21,6 @@ import nikkyai
 
 # General patterns for 'nikky' personality
 
-def more_like(nikkyai, fmt):
-    word = fmt[1].strip()
-    if not word:
-        return nikkyai.markov_reply('\n more like \n', add_response=False)
-    out1 = nikkyai.markov_forward((word, '\n', 'more', 'like'),
-                                  failmsg='', max_lf=3)
-    out2 = nikkyai.markov_forward((word, 'more', 'like'), failmsg='', max_lf=3)
-    out3 = '{}\n{}'.format(word,
-                           nikkyai.markov_forward(('more', 'like', '\n'),
-                                                  failmsg='', max_lf=2))
-    return choice((out1, out2, out3))
-
-
-def rule(nikky, fmt):
-    seed = choice(("Don't be", "Don't use", "Don't talk", "Don't bring",
-                   "Don't mention", "Don't do", "Don't act"))
-    chain = nikky.markov.str_to_chain(seed)
-    # Do our own repeated response checking--this lets us avoid giving the same
-    # “rule” more than once in the same list, even if several are being
-    # combined at once into a single output message
-    #
-    # Caveat:  if this function's output is the only thing output in a table
-    # rule, “allow repeats” flag *must* be True (even though repeats are still
-    # avoided), else it will loop forever and never output anything (it will
-    # check the response here, add it to the list, and then check it again
-    # in nikkyai, which will always reject it as a duplicate before ever being
-    # output).
-    for i in xrange(0, nikky.recurse_limit):
-        out = nikky.markov_forward(chain, max_lf=0)
-        try:
-            return nikky.check_output_response(out, add_response=True)
-        except nikkyai.Bad_response_error:
-            continue
-    return "???"
-
-
 patterns = (
 # Legal forms:
 # pattern regexp, priority, action
@@ -133,24 +97,8 @@ patterns = (
         Recurse("you're")
     )
 ),
-(r'\bdiaf\b', 1,
-    R(
-        '\001ACTION burns\001',
-        S(
-            '\001ACTION lights himself on fire\001',
-            R('','\n\001ACTION burns\001')
-        ),
-        'kk'
-    )
-),
 (r"\b(would you like|want to|you want to|wanna|you wanna) (see|hear|read)\b", 1,
     R("Yes, please bore us to death.")
-),
-(r'\breboot\b', 1,
-    R(
-        '\001ACTION reboots {0}\001\nlolrotflrebooted',
-        'Or you can start using a halfway decent OS'
-    )
 ),
 (r'\bwhere.*you hear that\b', 1, R('Omnimaga', 'your mom', 'your face')),
 (r'\b(lousy|freaking|stupid|damn|dumb|farking|dammit|damnit|screw)\b', 1,
@@ -216,20 +164,6 @@ patterns = (
         'DO IT ANYWAY'
     )
 ),
-(r'\brule\b', 1, E(rule), True),
-    #                     ^ Not really allowing repeats (already handled by
-    # (rule function; if this is False, it will double-check and fail every
-    # response as a duplicate and never output anything.)
-(r'\brules\b', 1,
-    S(
-        R('Rules:', 'Channel rules:', 'Forum rules:', "Today's rules",
-          "Today's channel rules:", "Today's forum rules:"),
-        '\n1. ', E(rule),
-        '\n2. ', E(rule),
-        '\n3. ', E(rule),
-    )
-),
-(r'(.*?)\S*more like\S*$', -10, E(more_like)),
 (r"^(is|are|am|should|can|do|does|which|what|what's|who|who's)(?: \S+)+[ -](.*?)\W+or (.*)\b", -1,
     S(
         R(
