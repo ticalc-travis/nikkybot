@@ -57,7 +57,7 @@ patterns = (
         'tev told me to\nProbably code change or even reboot\nwho knows'
     ), True
 ),
-(r"\b((nikkybot's|your) source code|the source code (to|of|for) (you|nikkybot))\b", -1,
+(r"\b(({0}'s|your) source code|the source code (to|of|for) (you|{0}))\b", -1,
     R(
         '{0}: https://github.com/ticalc-travis/nikkybot',
     ), True
@@ -79,9 +79,6 @@ patterns = (
         'Yes\nnikky is too busy trolling elsewhere\ner, I mean conducting constructive discussion',
         'hi'
     ), True
-),
-(r"\bcue ({0}'s |nikky's |nikkybot's |nikky |nikkybot )?[\"']?([^\"']*)[\"']?", -1,
-    R('{2}')
 ),
 (r'\b((nicky|niccy|nicci|nikki|nikk|nik|niky)(boy|bot|bott)?)\b', 0,
     R(
@@ -111,7 +108,7 @@ patterns = (
         'dunno',
         'Are *you* {2}{3}?',
         '{0}: Are *you* {2}{3}?',
-        'Describe exactly what you mean by {3}',
+        'What do you mean by {3}?',
         Recurse('***yes/no***')
     )
 ),
@@ -131,7 +128,6 @@ patterns = (
         "No\nyou're just incompatible"
     ), True
 ),
-(r'\b((ask|tell) nikky .*)\b', 0, R('HEY NIKKY NIKKY NIKKY\n{0} says "{1}"')),
 (r"\byour (a|an|my|his|her|its|it's|dumb|stupid)\b", 1,
     R('"Your" retarded', "*You're")
 ),
