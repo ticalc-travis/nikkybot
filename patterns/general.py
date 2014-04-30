@@ -22,22 +22,16 @@ import nikkyai
 # General patterns for 'nikky' personality
 
 def more_like(nikkyai, fmt):
-    # !TODO! Implement our own looping; fail to default 'more like' completion
-    # Need a way to access RECURSE_LIMIT from here first (make it an attribute
-    # of NikkyAI)
-    if not fmt[1]:
+    word = fmt[1].strip()
+    if not word:
         return nikkyai.markov_reply('\n more like \n', add_response=False)
-    out = nikkyai.markov_forward((fmt[1], '\n', 'more', 'like'),
-                                 failmsg='', max_lf=3)
-    if not out:
-        out = nikkyai.markov_forward((fmt[1], 'more', 'like'), failmsg='',
-                                     max_lf=3)
-        if not out:
-            out = '{}\n{}'.format(
-                fmt[1],
-                nikkyai.markov_forward(('more', 'like', '\n'), failmsg='',
-                                       max_lf=2))
-    return out
+    out1 = nikkyai.markov_forward((word, '\n', 'more', 'like'),
+                                  failmsg='', max_lf=3)
+    out2 = nikkyai.markov_forward((word, 'more', 'like'), failmsg='', max_lf=3)
+    out3 = '{}\n{}'.format(word,
+                           nikkyai.markov_forward(('more', 'like', '\n'),
+                                                  failmsg='', max_lf=2))
+    return choice((out1, out2, out3))
 
 
 def rule(nikky, fmt):
