@@ -138,7 +138,9 @@ class NikkyAI(object):
         for i in xrange(self.recurse_limit):
             try:
                 return self.check_output_response(
-                    choice((self.nikkysim_remark(), self.generic_remark(msg))),
+                    choice(
+                        (self.nikkysim_remark(), self.generic_remark(msg),
+                         self.mimic_remark(msg))),
                     add_response=add_response
                 )
             except Bad_response_error:
@@ -160,6 +162,21 @@ class NikkyAI(object):
         saying number before the remark.  check_output_response NOT called."""
         out, self.last_nikkysim_saying = self.nikkysim(strip_number)
         return out
+
+    def mimic_remark(self, msg=''):
+        """Mimic a random person."""
+        reload(personalitiesrc)
+        personalities = personalitiesrc.personality_regexes.keys()
+        temp_personality = choice(personalities)
+        last_personality = self.get_personality()
+        self.set_personality(temp_personality)
+        try:
+            out = self.reply(msg)
+        except Exception:
+            raise
+        finally:
+            self.set_personality(last_personality)
+        return '<{}> {}'.format(temp_personality, out)
 
     def pattern_reply(self, msg, add_response=True):
         """Generate a reply using predefined pattern/response patterns.
@@ -558,7 +575,7 @@ class NikkyAI(object):
 
     def set_personality(self, personality):
         """Change Markov personality to given table name in Markov database"""
-        rebuild(personalitiesrc)
+        reload(personalitiesrc)
         personalities = personalitiesrc.personality_regexes
         personality = personality.lower().strip()
         if personality in personalities:
