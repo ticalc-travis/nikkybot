@@ -34,8 +34,11 @@ class S(list):
         for i in self:
             try:
                 s += i.get(nikkyai, fmt)
-            except AttributeError:
-                s += i.format(*fmt)
+            except AttributeError as e:
+                if str(e).endswith("'get'"):
+                    s += i.format(*fmt)
+                else:
+                    raise e
         return s
 
 
@@ -45,8 +48,11 @@ class R(S):
         i = choice(self)
         try:
             return i.get(nikkyai, fmt)
-        except AttributeError:
-            return i.format(*fmt)
+        except AttributeError as e:
+            if str(e).endswith("'get'"):
+                return i.format(*fmt)
+            else:
+                raise e
 
 
 class E(object):
