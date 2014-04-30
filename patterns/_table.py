@@ -68,11 +68,12 @@ class E(object):
 
 class Markov_forward(object):
     """Return a Markov chain from word or chain forward"""
-    def __init__(self, string, failmsglist=None):
+    def __init__(self, string, failmsglist=None, max_lf=None):
         self.chain = string.split(' ')
         if failmsglist is None:
             failmsglist = ['']
         self.failmsglist = failmsglist
+        self.max_lf=max_lf
 
     def get(self, nikkyai, fmt=None):
         if fmt is None:
@@ -83,7 +84,7 @@ class Markov_forward(object):
         except AttributeError:
             failmsg = failmsg.format(*fmt)
         return nikkyai.markov_forward(
-            [x.format(*fmt) for x in self.chain], failmsg)
+            [x.format(*fmt) for x in self.chain], failmsg, max_lf=self.max_lf)
 
 
 class Manual_markov(object):
