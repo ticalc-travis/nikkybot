@@ -180,5 +180,16 @@ patterns = (
         '!unignoresax {1}',
         S('~botabuse', R('', '\nSTOP ABUSING ME', "\nSTOP ABUSING ME\n:'(")),
     )
-)
+),
+(r'\b(banning|ban someone)', -5,
+    S(
+        'RANDOM MONTHLY BANNINGS\n',
+        R(
+            'elfprince', 'KermM', 'Merth', 'shaun', 'tifreak', 'Jonimus',
+            'Swivel', '{0}'
+        ),
+        ': You lose'
+    )
+),
+
 )
