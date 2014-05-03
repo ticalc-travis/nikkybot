@@ -224,7 +224,7 @@ class NikkyAI(object):
             try:
                 m = re.search(pattern.format(self.nick), msg, flags=re.I)
             except Exception as e:
-                print('Regex: {}, {}'.format(pattern, e))
+                self.printdebug('Regex: {}, {}'.format(pattern, e))
                 raise e
             if m:
                 # Input matches, what about last_reply?
@@ -245,12 +245,10 @@ class NikkyAI(object):
         try:
             match, reply, allow_repeat = choice(matches)
         except IndexError:
-            if self.debug:
-                print("DEBUG: pattern_reply: sourcenick {}, msg {}: No pattern match found".format(repr(sourcenick), repr(msg)))
+            self.printdebug("DEBUG: pattern_reply: sourcenick {}, msg {}: No pattern match found".format(repr(sourcenick), repr(msg)))
             raise Dont_know_how_to_respond_error
         else:
-            if self.debug:
-                print("DEBUG: pattern_reply: sourcenick {}, msg {}: Chose match {}".format(repr(sourcenick), repr(msg), repr(match.re.pattern)))
+            self.printdebug("DEBUG: pattern_reply: sourcenick {}, msg {}: Chose match {}".format(repr(sourcenick), repr(msg), repr(match.re.pattern)))
         fmt_list = [sourcenick,] + [self.sanitize(s) for s in match.groups()]
         try:
             return (reply.get(self, fmt_list), allow_repeat)
@@ -437,7 +435,7 @@ class NikkyAI(object):
         preferred keywords pattern list"""
         if keyword not in self.preferred_keywords:
             self.preferred_keywords.add(keyword)
-            print("add_preferred_keyword: Added keyword {}".format(
+            self.printdebug("add_preferred_keyword: Added keyword {}".format(
                 repr(keyword)))
             self.save_state()
 
@@ -448,7 +446,7 @@ class NikkyAI(object):
         if keyword not in self.preferred_keywords:
             raise KeyError(keyword)
         self.preferred_keywords.remove(keyword)
-        print("delete_preferred_keyword: Removed keyword {}".format(
+        self.printdebug("delete_preferred_keyword: Removed keyword {}".format(
             repr(keyword)))
         self.save_state()
 
@@ -456,7 +454,8 @@ class NikkyAI(object):
         """Convenience function for adding a single munged word to the list"""
         if word not in self.munge_list:
             self.munge_list.add(word)
-            print("add_munged_word: Added word {}".format(repr(word)))
+            self.printdebug(
+                "add_munged_word: Added word {}".format(repr(word)))
             self.save_state()
 
     def delete_munged_word(self, word):
@@ -465,7 +464,7 @@ class NikkyAI(object):
         if word not in self.munge_list:
             raise KeyError(word)
         self.munge_list.remove(word)
-        print("delete_munged_word: Removed word {}".format(repr(word)))
+        self.printdebug("delete_munged_word: Removed word {}".format(repr(word)))
         self.save_state()
 
     def add_last_reply(self, reply, datetime_=None):
@@ -507,14 +506,14 @@ class NikkyAI(object):
         orig_size = len(self.last_replies)
         for k, d in self.last_replies.items():
             if (datetime.now() - d > self.pattern_response_expiry):
-                print(
+                self.printdebug(
                     "clean_up_last_replies: "
                     "Removed stale last_replies entry {} ({})".format(
                         repr(k), d)
                 )
                 del self.last_replies[k]
                 num_removed += 1
-        print(
+        self.printdebug(
             "clean_up_last_replies: "
             "Removed {} items (len {} -> {})".format(
                 num_removed, orig_size, len(self.last_replies))
@@ -640,10 +639,11 @@ class NikkyAI(object):
                     (self.id,))
         t = cur.fetchone()
         if t is None:
-            print('NikkyAI: No state found for id "{}"'.format(self.id))
+            self.printdebug('NikkyAI: No state found for id "{}"'.format(self.id))
         else:
             self.set_state(cPickle.loads(str(t[0])))
-            print('NikkyAI: Loaded state for id "{}"'.format(self.id))
+            self.printdebug(
+                'NikkyAI: Loaded state for id "{}"'.format(self.id))
         self.dbconn.rollback()
 
     def save_state(self):
@@ -663,7 +663,7 @@ class NikkyAI(object):
                 'UPDATE ".nikkyai-state" SET state=%s WHERE id=%s',
                 (psycopg2.Binary(state), self.id))
         else:
-            print('NikkyAI: Saved new state for id "{}"'.format(self.id))
+            self.printdebug('NikkyAI: Saved new state for id "{}"'.format(self.id))
         self.dbconn.commit()
 
     def _check_state_table(self):
@@ -675,7 +675,8 @@ class NikkyAI(object):
         except psycopg2.ProgrammingError:
             self.dbconn.rollback()
         else:
-            print('NikkyAI: State save table does not exist; creating it')
+            self.printdebug(
+                'NikkyAI: State save table does not exist; creating it')
             self.dbconn.commit()
 
     def munge_word(self, word):
@@ -693,3 +694,8 @@ class NikkyAI(object):
             sentence = re.sub(r'\b' + re.escape(word) + r'\b', munged,
                               sentence, flags=re.I)
         return sentence
+
+    def printdebug(self, msg):
+        """Output a debug message to stdout if debug mode is on"""
+        if self.debug:
+            print(msg)
