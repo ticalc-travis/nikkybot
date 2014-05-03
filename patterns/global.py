@@ -345,6 +345,10 @@ patterns = (
     R(
         Markov_forward('{6} is'),
         Markov_forward('{6}'),
+        Markov_forward('{6} is'),
+        Markov_forward('{6}'),
+        Markov_forward('{6} is'),
+        Markov_forward('{6}'),
         Markov_forward('better than'),
         Markov_forward('worse than'),
     ),
