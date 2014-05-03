@@ -213,12 +213,11 @@ def update(pname, reset):
 
                 # Special case to handle our silly nikky/nikkybot nick-swapping
                 #   stunt
-                # !TODO! Add a date cutoff here when this mess is finally over
-                #   with
-                if nick.lower().startswith('nikkybot'):
-                    nick = 'nikky'
-                elif nick.lower().startswith('nikky'):
-                    nick = 'nikkybot'
+                if date < datetime(year=2014, month=5, day=2):
+                    if nick.lower().startswith('nikkybot'):
+                        nick = 'nikky'
+                    elif nick.lower().startswith('nikky'):
+                        nick = 'nikkybot'
 
                 if date < last_updated or date > target_date:
                     continue
