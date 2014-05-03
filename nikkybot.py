@@ -415,7 +415,8 @@ class NikkyBot(irc.IRCClient, Sensitive):
                                               sender, parms[0], parms[1])
                     d.addErrback(self.bot_chat_error, src_nick)
                     d.addCallback(self.return_bot_chat)
-        elif cmd in ('?personas', '?personalities'):
+        elif cmd in ('?personas', '?personalities', 'personas',
+                     'personalities'):
             rebuild(personalitiesrc)
             reactor.callLater(2, self.give_personalities_list, src_nick)
             reactor.callLater(4, self.notice, src_nick,
