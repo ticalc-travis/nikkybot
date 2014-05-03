@@ -301,12 +301,15 @@ class NikkyBot(irc.IRCClient, Sensitive):
             if not args in self.opts.channels:
                 self.opts.channels.append(args)
             self.join(args)
-            # Update preferred keywords for new channel
+            # Update preferred keywords/munges for new channel
             pk = set()
+            ml = set()
             self.nikkies[args]      # Summon new channel NikkyAI into existence
             for nikky in self.nikkies.values():
                 pk = pk.union(nikky.preferred_keywords)
+                ml = ml.union(nikky.munge_list)
             self.nikkies[args].preferred_keywords = pk
+            self.nikkies[args].munge_list = ml
 
         elif cmd == '?part':
             if not is_admin:
@@ -338,6 +341,18 @@ class NikkyBot(irc.IRCClient, Sensitive):
                     self.notice(sender,
                                 '{}: Keyword removed; {} total'.format(
                                     nikky.id, len(nikky.preferred_keywords)))
+
+        elif cmd == '?munge':
+            if not is_admin:
+                raise UnauthorizedCommandError
+            self._cmd_add_munge(args)
+            self.notice(sender, 'Munge added: {}'.format(args))
+
+        elif cmd == '?unmunge':
+            if not is_admin:
+                raise UnauthorizedCommandError
+            self._cmd_delete_munge(args)
+            self.notice(sender, 'Munge deleted: {}'.format(args))
 
         elif cmd == '?say':
             if not is_admin:
@@ -410,7 +425,34 @@ class NikkyBot(irc.IRCClient, Sensitive):
             reactor.callLater(6, self.notice, src_nick,
                               'Talk to tev to request a new personality based '
                               'on someone.')
+        elif re.match((r"\b(quit|stop|don.?t|do not)\b.*\b(hilite|hilight|highlite|highlight).*\bme"), msg, re.I):
+            self._cmd_add_munge(src_nick)
+            msg = "Sorry, {}, I'll stop (tell me 'highlight me' to undo)".format(self.nikkies[None].munge_word(src_nick))
+            reactor.callLater(2, self.msg, sender, msg)
+        elif re.match((r"\b(hilite|hilight|highlite|highlight) me"), msg,
+                      re.I):
+            self._cmd_delete_munge(src_nick)
+            msg = "Okay, {}!".format(src_nick)
+            reactor.callLater(2, self.msg, sender, msg)
         else:
+            raise UnrecognizedCommandError
+
+    def _cmd_add_munge(self, nick):
+        nothing_done = True
+        for n in self.nikkies.values():
+            if not nick in n.munge_list:
+                n.add_munged_word(nick)
+                nothing_done = False
+        if nothing_done:
+            raise UnrecognizedCommandError
+
+    def _cmd_delete_munge(self, nick):
+        nothing_done = True
+        for n in self.nikkies.values():
+            if nick in n.munge_list:
+                n.delete_munged_word(nick)
+                nothing_done = False
+        if nothing_done:
             raise UnrecognizedCommandError
 
     def give_personalities_list(self, src_nick):

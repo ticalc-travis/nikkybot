@@ -99,6 +99,7 @@ class NikkyAI(object):
         self.last_nikkysim_saying = None
         self.last_reply = ''
         self.last_replies = {}
+        self.munge_list = set()
         self.nick = 'nikkybot'
 
         # Set up state save if ID given
@@ -155,7 +156,8 @@ class NikkyAI(object):
         check_output_response() NOT called."""
         nick, msg = self.filter_input(msg)
         if self.get_personality() == 'nikky':
-            return choice(patterns.nikky_generic_remarks).format(nick)
+            out = choice(patterns.nikky_generic_remarks).format(nick)
+            return self.dehighlight_sentence(out)
         else:
             # Not supported for non-nikky personas
             return ''
@@ -188,6 +190,7 @@ class NikkyAI(object):
         Do check_output_response()."""
         for i in xrange(self.recurse_limit):
             response, allow_repeat = self._pattern_reply(msg)
+            response = self.dehighlight_sentence(response)
             try:
                 return self.check_output_response(
                     response, allow_repeat, add_response=add_response)
@@ -423,6 +426,7 @@ class NikkyAI(object):
         else:
             x, y = saying
         out = subprocess.check_output(['nikky', '{}-{}'.format(x, y)])
+        out = self.dehighlight_sentence(out)
         if strip_number:
             return (out.split(': ')[1].rstrip(), (x, y))
         else:
@@ -446,6 +450,22 @@ class NikkyAI(object):
         self.preferred_keywords.remove(keyword)
         print("delete_preferred_keyword: Removed keyword {}".format(
             repr(keyword)))
+        self.save_state()
+
+    def add_munged_word(self, word):
+        """Convenience function for adding a single munged word to the list"""
+        if word not in self.munge_list:
+            self.munge_list.add(word)
+            print("add_munged_word: Added word {}".format(repr(word)))
+            self.save_state()
+
+    def delete_munged_word(self, word):
+        """Convenience function for deleting a single munged word from the
+        list"""
+        if word not in self.munge_list:
+            raise KeyError(word)
+        self.munge_list.remove(word)
+        print("delete_munged_word: Removed word {}".format(repr(word)))
         self.save_state()
 
     def add_last_reply(self, reply, datetime_=None):
@@ -556,7 +576,8 @@ class NikkyAI(object):
         # sense of realism
         if sourcenick and randint(0, 10):
             msg = re.sub(r'\S+: ', sourcenick + ': ', msg)
-        return msg
+
+        return self.dehighlight_sentence(msg)
 
     def sanitize(self, s):
         """Remove control characters from 's' if it's a string; return it as is
@@ -596,13 +617,18 @@ class NikkyAI(object):
         """Return an object representing current persistent state data for the
         class (for storage/later restoring)"""
         return {'last_replies': self.last_replies,
-                'preferred_keywords': self.preferred_keywords}
+                'preferred_keywords': self.preferred_keywords,
+                'munge_list': self.munge_list}
 
     def set_state(self, state):
         """Reset current internal state to that captured by state (returned by
         get_state)"""
         self.last_replies = state['last_replies']
         self.preferred_keywords = state['preferred_keywords']
+        try:
+            self.munge_list = state['munge_list']
+        except KeyError:
+            pass
 
     def load_state(self):
         """Load current internal state from DB entry"""
@@ -651,3 +677,19 @@ class NikkyAI(object):
         else:
             print('NikkyAI: State save table does not exist; creating it')
             self.dbconn.commit()
+
+    def munge_word(self, word):
+        """Insert a symbol character into the given word (e.g., for saying
+        nicks without highlighting people)"""
+        pos = randint(1, len(word)-1)
+        word = word[0:pos] + '·' + word[pos:]
+        return word
+
+    def dehighlight_sentence(self, sentence):
+        """Munge any occurrences of words from munged word list that appear in
+        sentence"""
+        for word in self.munge_list:
+            munged = self.munge_word(word)
+            sentence = re.sub(r'\b' + re.escape(word) + r'\b', munged,
+                              sentence, flags=re.I)
+        return sentence
