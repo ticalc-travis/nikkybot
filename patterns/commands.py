@@ -82,18 +82,27 @@ patterns = (
 # pattern regexp, priority, action, allow repeat?
 # pattern regexp, last reply, priority, action, allow repeat?
 
+# NikkySim
 (r'\b(random (quote|saying)|nikkysim)\b', -2,
     E(random_nikkysim)
 ),
+(r'(?<![0-9])#([A-Za-z]-)?([0-9]+)(-([0-9]+))?', -2, E(nikkysim_no), True),
+
+# Random number
+(r'\brandom number\b', -2, E(random_number)),
+
+# Misc
 (r'\b(tell|tell us|tell me|say) (something|anything) (.*)(smart|intelligent|funny|interesting|cool|awesome|bright|thoughtful|entertaining|amusing|exciting|confusing|sensical|inspiring|inspirational|random|wise)\b', 1,
     E(tell_us_something)
 ),
-(r'(?<![0-9])#([A-Za-z]-)?([0-9]+)(-([0-9]+))?', -2, E(nikkysim_no), True),
-(r'\brandom number\b', -2, E(random_number)),
+
+# Mimic
 (r'^(mimic|impersonate|act like|imitate) (\S+) ?(.*)', -99, E(mimic), True),
 (r'\b(markovmix|markov bot)', -99,
     R('I can impersonate people\nSay "?personalities" to me and I\'ll tell you more'),
 ),
+
+# Markov
 (r'^\??markov5 (.*)', -99, Manual_markov(5, '{1}'), True),
 (r'^\??markov4 (.*)', -99, Manual_markov(4, '{1}'), True),
 (r'^\??markov3 (.*)', -99, Manual_markov(3, '{1}'), True),
