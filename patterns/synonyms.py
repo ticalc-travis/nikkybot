@@ -140,6 +140,11 @@ patterns = (
         Markov('mudkipz'),
     ),
 ),
+(r'\b(ut|ut2004|ututut)', 98,
+    R(
+        Markov('ut'),
+    ),
+),
 
 # Transformations
 (r'(.*)\bI am\b(.*)', 99, Markov('{1} you are {2}')),
