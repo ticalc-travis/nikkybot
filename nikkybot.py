@@ -426,6 +426,8 @@ class NikkyBot(irc.IRCClient, Sensitive):
             reactor.callLater(6, self.notice, src_nick,
                               'Talk to tev to request a new personality based '
                               'on someone.')
+        elif cmd in ('?help', 'help'):
+            reactor.callLater(2, self.msg, sender, 'Basic info about me: https://raw.githubusercontent.com/ticalc-travis/nikkybot/master/README')
         elif re.match((r"\b(quit|stop|don.?t|do not)\b.*\b(hilite|hilight|highlite|highlight).*\bme"), msg, re.I):
             self._cmd_add_munge(src_nick)
             msg = "Sorry, {}, I'll stop (tell me 'highlight me' to undo)".format(self.nikkies[None].munge_word(src_nick))

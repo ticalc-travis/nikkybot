@@ -1,9 +1,76 @@
-This project is an attempt to imitate a particular human on IRC (in this case,
-Nikky Southerland), who specializes in random snarky responses.  It's in a
-very rough and unstable state at the moment, not that well documented and not
-really in good shape for distribution, and not particularly well organized.
-Hopefully this will improve with time.
+NikkyBot is an IRC chatbot that primarily attempts to imitate Nikky Southerland
+on EFNet.  It works via a hybrid of pattern/reply lookup tables with a Python-
+written engine inspired by AIML and Markov chaining, with some occasional
+custom Python code sprinkled around for special cases.
 
 Travis Evans
 travise@ticalc.org
 ‘tev’ on EFNet
+
+
+Usage
+-----
+
+In public channels, speak to the chatbot by including its nickname in your line
+(i.e., highlight it).  It will also respond to private messages/queries; it is
+not necessary to highlight it in this case.
+
+
+Commands/special features
+-------------------------
+
+nikkysim
+random quote
+random saying
+
+One of these lines will make the bot produce a sentence generated from NikkySim
+(http://www.ticalc.org/archives/files/fileinfo/450/45051.html).
+
+
+#xxxxx-yyyy
+
+Produces the given B-type NikkySim quote by its number.
+
+Example:
+#1234-56
+  - Produces “Don't failings curse?”
+
+
+personas
+personalities
+
+Get a list of Markov personalities available, via private notice (used for
+“mimic” and “botchat”, explained below).
+
+
+mimic <personality> [<message>]
+
+Say a line imitating <personality> using the NikkyBot engine, replying to
+optional <message>.
+
+Examples:
+mimic tev
+mimic kerm Hi, KermM!
+
+
+botchat <personality1> <personality2>
+
+Generates a “conversation” between two NikkyBot engines, using the given
+personalities.  This may take a few to several minutes.  NikkyBot will then
+provide a link to the Pastebinned transcript.
+
+Example:
+botchat nikky netham45
+
+
+don't highlight me
+
+Causes NikkyBot to attempt to avoid highlighting your current nick when it
+speaks by inserting a ‘·’ character somewhere in it.  This command will need to
+be repeated if your nick changes.
+
+
+highlight me
+
+Undoes the effect of “don't highlight me”.  NikkyBot will speak your current
+nick normally again.
