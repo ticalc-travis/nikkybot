@@ -33,6 +33,9 @@
 #
 # More general synonym filtering/transforming (don't replace the entire input
 # pattern)
+#
+# Don't return dead-end chains for Markov_forward queries (output matching
+# input chain)
 
 
 from datetime import datetime, timedelta
