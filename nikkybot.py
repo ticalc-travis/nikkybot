@@ -121,14 +121,6 @@ class NikkyBot(irc.IRCClient, Sensitive):
         is_admin = self.any_hostmask_match(self.opts.admin_hostmasks, user)
         is_highlight = self.is_highlight(msg)
 
-        # Strip any nick highlight from beginning of line
-        m = re.match(r'^{}[:,]? (.*)'.format(re.escape(self.nickname)),
-                    msg, flags=re.I)
-        has_leading_highlight = False
-        if m:
-            has_leading_highlight = True
-            msg = m.group(1).strip()
-
         # Log private messages
         if is_private:
             print('privmsg from {} {}: {}'.format(
@@ -140,6 +132,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
             if m:
                 nick = m.group(1)
                 formatted_msg = '<{}> {}'.format(nick, m.group(2))
+                msg = '{}'.format(m.group(2))
             else:
                 m = re.match(r'\(.\) \*(.*?) (.*)', msg)
                 if m:
@@ -148,6 +141,15 @@ class NikkyBot(irc.IRCClient, Sensitive):
                     else:
                         nick = ''
                     formatted_msg = '<> {} {}'.format(m.group(1), m.group(2))
+                    msg = '{}'.format(m.group(2))
+
+        # Strip any nick highlight from beginning of line
+        m = re.match(r'^{}[:,]? (.*)'.format(re.escape(self.nickname)),
+                    msg, flags=re.I)
+        has_leading_highlight = False
+        if m:
+            has_leading_highlight = True
+            msg = m.group(1).strip()
 
         # Determine what to do (reply, maybe reply, run command)
         if is_private or is_highlight:

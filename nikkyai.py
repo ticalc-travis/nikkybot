@@ -682,7 +682,9 @@ class NikkyAI(object):
     def munge_word(self, word):
         """Insert a symbol character into the given word (e.g., for saying
         nicks without highlighting people)"""
-        pos = randint(1, len(word)-1)
+        pos = randint(1, min(3, len(word)-1))
+            # Make sure character is inserted within first 4 chars to properly
+            # support Sax's highlighting, which only matches first 4 chars
         word = word[0:pos] + '·' + word[pos:]
         return word
 
