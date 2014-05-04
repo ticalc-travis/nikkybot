@@ -100,7 +100,7 @@ patterns = (
         'Where did you hear that?'
     )
 ),
-(r'\b(are you|is {0}) (a |an |)\b(.*)\b', 1,
+(r'\b(are you|is {0}) (a |an |) ?([^][.;,!?(){{}}]+)', 1,
     R(
         'yes',
         'no',
