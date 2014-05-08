@@ -111,7 +111,8 @@ class NikkyAI(object):
 
     def reply(self, msg, add_response=True):
         """Generic reply method.  Try to use pattern_reply; if no response
-        found, fall back to markov_reply.  Do check_output_response()."""
+        found, fall back to markov_reply.  Do check_output_response().
+        """
         try:
             out = self.pattern_reply(msg, add_response=add_response)
         except Dont_know_how_to_respond_error:
@@ -123,7 +124,8 @@ class NikkyAI(object):
 
     def decide_remark(self, msg):
         """Determine whether a random response to a line not directed to
-        nikkybot should be made.  Do check_output_response()."""
+        nikkybot should be made.  Do check_output_response().
+        """
         c = self.remark_chance_no_keywords
         nick, msg_only = self.filter_input(msg)
         for p in self.preferred_keywords:
@@ -141,7 +143,8 @@ class NikkyAI(object):
         """Choose between a context-less predefined generic remark or a
         NikkySim remark, avoiding repeats in short succession.  Add new
         response to self.last_replies if add_response.  Do
-        check_output_response()."""
+        check_output_response().
+        """
         for i in xrange(self.recurse_limit):
             try:
                 return self.check_output_response(
@@ -156,7 +159,8 @@ class NikkyAI(object):
 
     def generic_remark(self, msg=''):
         """Select a random remark from the predefined random remark list.
-        check_output_response() NOT called."""
+        check_output_response() NOT called.
+        """
         nick, msg = self.filter_input(msg)
         if self.get_personality() == 'nikky':
             out = choice(patterns.nikky_generic_remarks).format(nick)
@@ -167,7 +171,8 @@ class NikkyAI(object):
 
     def nikkysim_remark(self, msg='', strip_number=True):
         """Generate a NikkySim remark.  If not strip_number, include the
-        saying number before the remark.  check_output_response NOT called."""
+        saying number before the remark.  check_output_response NOT called.
+        """
         out, self.last_nikkysim_saying = self.nikkysim(strip_number)
         return out
 
@@ -190,7 +195,8 @@ class NikkyAI(object):
         """Generate a reply using predefined pattern/response patterns.
         Check for and avoid repeated responses.  Add new response to
         add_response to self.last_replies if add_response.
-        Do check_output_response()."""
+        Do check_output_response().
+        """
         for i in xrange(self.recurse_limit):
             response, allow_repeat = self._pattern_reply(msg)
             response = self.dehighlight_sentence(response)
@@ -268,7 +274,8 @@ class NikkyAI(object):
         responses.  If unable to generate a suitable response, return a random
         Markov sentence if failmsg is None; else return failmsg.  Add new
         response to self.last_replies if add_response.  Do
-        check_output_response()."""
+        check_output_response().
+        """
         max_lf_l, max_lf_r = self.get_max_lf(max_lf_l, max_lf_r)
         nick, msg = self.filter_input(msg)
         msg = self.filter_markov_input(nick, msg)
@@ -344,7 +351,8 @@ class NikkyAI(object):
     def random_markov(self, add_response=True, max_lf_l=None,
                       max_lf_r=None):
         """Pick any random Markov-chained sentence and output it.  Do
-        check_output_response()."""
+        check_output_response().
+        """
         max_lf_l, max_lf_r = self.get_max_lf(max_lf_l, max_lf_r)
         generic_words = (
             'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have',
@@ -378,7 +386,8 @@ class NikkyAI(object):
 
     def markov_forward(self, chain, failmsg='', max_lf=None):
         """Generate sentence from the current chain forward only and not
-        backward.  Do NOT do check_output_response()."""
+        backward.  Do NOT do check_output_response().
+        """
         if max_lf is None:
             max_lf = self.max_lf_r
         try:
@@ -391,7 +400,8 @@ class NikkyAI(object):
 
     def manual_markov(self, order, msg):
         """Return manually-invoked Markov operation (output special error
-        string if chain not found).  Does NOT do check_output_response()."""
+        string if chain not found).  Does NOT do check_output_response().
+        """
         nick, msg = self.filter_input(msg)
         msg = self.filter_markov_input(nick, msg)
         chain = self.markov.str_to_chain(msg)
@@ -405,8 +415,8 @@ class NikkyAI(object):
 
     def manual_markov_forward(self, order, msg):
         """Return manually-invoked Markov forward operation (output special
-        error string if chain not found).  Do NOT do
-        check_output_response()."""
+        error string if chain not found).  Do NOT do check_output_response().
+        """
         nick, msg = self.filter_input(msg)
         msg = self.filter_markov_input(nick, msg)
         chain = self.markov.str_to_chain(msg)
@@ -421,7 +431,8 @@ class NikkyAI(object):
         """Return NikkySim saying.  saying is the saying number as a tuple
         (e.g. (1234,5678)); None selects random saying.  Don't start output
         with saying number if strip_number is True.  Output
-        (msg, saying_tuple).  Do NOT do check_output_response()."""
+        (msg, saying_tuple).  Do NOT do check_output_response().
+        """
         if saying is None:
             x, y = randint(0, 4294967295), randint(0, 9999)
         else:
@@ -458,14 +469,12 @@ class NikkyAI(object):
                              'delete_preferred_keyword: Removed {}')
 
     def add_munged_word(self, word):
-        """Convenience function for adding a single munged word to the list"""
-        if word not in self.munge_list:
+        """Add a munged word regex pattern"""
         self._add_state_list(word, self.munge_list,
                              'add_munged_word: Added {}')
 
     def delete_munged_word(self, word):
-        """Convenience function for deleting a single munged word from the
-        list"""
+        """Remove a munged word regex pattern"""
         self._del_state_list(word, self.munge_list,
                              'delete_munged_word: Removed {}')
 
@@ -480,9 +489,9 @@ class NikkyAI(object):
                              'delete_replace_nick: Removed {}')
 
     def add_last_reply(self, reply, datetime_=None):
-        """Convenience function to add a reply string to the last replies
-        memory (used by check_output_response). datetime_ defaults to
-        datetime.now()."""
+        """Add a reply string to the last replies memory (used by
+        check_output_response). datetime_ defaults to datetime.now().
+        """
         if datetime_ is None:
             datetime_ = datetime.now()
         self.last_replies[self.markov.conv_key(reply)] = datetime.now()
@@ -493,7 +502,8 @@ class NikkyAI(object):
         """Throw Bad_response_error on null responses, and, if not
         allow_repeat, if the response was already output not too long ago.
         Otherwise, set response as last-used response if add_response is True,
-        and return response list, split by newlines."""
+        and return response list, split by newlines.
+        """
         if not [line for line in response.split('\n') if line.strip()]:
             raise Bad_response_error
         response_key = self.markov.conv_key(response)
@@ -513,7 +523,8 @@ class NikkyAI(object):
 
     def clean_up_last_replies(self):
         """Remove stale (no longer applicable) entries from self.last_replies
-        dictionary"""
+        dictionary
+        """
         num_removed = 0
         orig_size = len(self.last_replies)
         for k, d in self.last_replies.items():
@@ -534,8 +545,8 @@ class NikkyAI(object):
 
     def filter_input(self, msg):
         """Preprocess input msg in form "<speaking nick> msg".
-        Return (speaker_nick, msg)."""
-
+        Return (speaker_nick, msg).
+        """
         m = re.match(r'<(.*)> (.*)', msg)
         if m:
             speaker_nick, msg = m.groups()
@@ -552,8 +563,8 @@ class NikkyAI(object):
         """Perform transformations on input before it goes to Markov
         functions:
         Replace non-UTF characters.
-        Replace occurences of own nick with that of the speaker."""
-
+        Replace occurences of own nick with that of the speaker.
+        """
         #!FIXME! Temporary workaround (?) for Twisted's Unicode crap.
         #  To do:  Something slightly less insane?
         new_msg = msg.decode(encoding='utf8', errors='replace').encode(
@@ -594,16 +605,17 @@ class NikkyAI(object):
 
     def sanitize(self, s):
         """Remove control characters from 's' if it's a string; return it as is
-        if it's None"""
+        if it's None
+        """
         if s is not None:
             for cn in xrange(0, 32):
                 s = s.replace(chr(cn), '')
         return s
 
     def get_max_lf(self, max_lf_l=None, max_lf_r=None):
-        """Convenience function to obtain maximum number of output lines
-        settings.  Return max_lf_l/max_lf_r parameter unless None, in which
-        case return default setting."""
+        """Obtain maximum number of output lines settings.  Return
+        max_lf_l/max_lf_r parameter unless None, else return default setting.
+        """
         if max_lf_l is None:
             max_lf_l = self.max_lf_l
         if max_lf_r is None:
@@ -628,7 +640,8 @@ class NikkyAI(object):
 
     def get_state(self):
         """Return an object representing current persistent state data for the
-        class (for storage/later restoring)"""
+        class (for storage/later restoring)
+        """
         return {'last_replies': self.last_replies,
                 'preferred_keywords': self.preferred_keywords,
                 'munge_list': self.munge_list,
@@ -636,7 +649,8 @@ class NikkyAI(object):
 
     def set_state(self, state):
         """Reset current internal state to that captured by state (returned by
-        get_state)"""
+        get_state)
+        """
         self.last_replies = state['last_replies']
         self.preferred_keywords = state['preferred_keywords']
         try:
@@ -700,7 +714,8 @@ class NikkyAI(object):
 
     def munge_word(self, word):
         """Insert a symbol character into the given word (e.g., for saying
-        nicks without highlighting people)"""
+        nicks without highlighting people)
+        """
         pos = randint(1, min(3, len(word)-1))
             # Make sure character is inserted within first 4 chars to properly
             # support Sax's highlighting, which only matches first 4 chars
@@ -709,7 +724,8 @@ class NikkyAI(object):
 
     def dehighlight_sentence(self, sentence):
         """Munge any occurrences of words from munged word list that appear in
-        sentence"""
+        sentence
+        """
         for word in self.munge_list:
             munged = self.munge_word(word)
             sentence = re.sub(r'\b' + word + r'\b', munged,
