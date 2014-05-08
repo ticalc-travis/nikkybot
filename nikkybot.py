@@ -578,6 +578,10 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
     def reload_ai(self):
         rebuild(sys.modules['nikkyai'])
+        for n in self.nikkies:
+            state = self.nikkies[n].get_state()
+            self.nikkies[n] = nikkyai.NikkyAI(id=n)
+            self.nikkies[n].set_state(state)
 
     def channel_check(self):
         """Retry any channels that we apparently didn't successfully join for
