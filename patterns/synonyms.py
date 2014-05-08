@@ -145,6 +145,12 @@ patterns = (
         Markov('ut'),
     ),
 ),
+(r'\b(highlight|hilight)', 98,
+    R(
+        Markov('highlight'),
+        Markov('hilight'),
+    ),
+),
 
 # Transformations
 (r'(.*)\bI am\b(.*)', 99, Markov('{1} you are {2}')),
