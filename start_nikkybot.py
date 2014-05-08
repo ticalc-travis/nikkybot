@@ -58,9 +58,6 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
         self.shut_down = False
         self.nikkies = DefaultNikkyAIDict()
 
-    def NikkyAIFactory(self):
-        return NikkyAI(preferred_keywords_file=self.opts.keywords_file)
-
     def cleanup_state(self):
         """Clean up any stale state data to reduce memory and disk usage"""
         for k in self.nikkies:
