@@ -31,7 +31,7 @@ from twisted.python.rebuild import Sensitive, rebuild
 from twisted.words.protocols import irc
 from twisted.internet import reactor, threads
 
-from nikkyai import NikkyAI
+import nikkyai
 import personalitiesrc
 
 
@@ -306,12 +306,16 @@ class NikkyBot(irc.IRCClient, Sensitive):
             # Update preferred keywords/munges for new channel
             pk = set()
             ml = set()
+            rnl = set()
             self.nikkies[args]      # Summon new channel NikkyAI into existence
             for nikky in self.nikkies.values():
                 pk = pk.union(nikky.preferred_keywords)
                 ml = ml.union(nikky.munge_list)
+                rnl = rnl.union(nikky.replace_nicks_list)
             self.nikkies[args].preferred_keywords = pk
             self.nikkies[args].munge_list = ml
+            self.nikkies[args].replace_nicks_list = rnl
+            self.nikkies[args].save_state()
 
         elif cmd == '?part':
             if not is_admin:
@@ -330,7 +334,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
                 self.notice(sender, '{}: Keyword added; {} total'.format(
                     nikky.id, len(nikky.preferred_keywords)))
 
-        elif cmd in ('?delword', '?remword', '?deleteword', '?removeword'):
+        elif cmd == '?delword':
             if not is_admin:
                 raise UnauthorizedCommandError
             for nikky in self.nikkies.values():
@@ -344,17 +348,39 @@ class NikkyBot(irc.IRCClient, Sensitive):
                                 '{}: Keyword removed; {} total'.format(
                                     nikky.id, len(nikky.preferred_keywords)))
 
-        elif cmd == '?munge':
+        elif cmd == '?addmunge':
             if not is_admin:
                 raise UnauthorizedCommandError
             self._cmd_add_munge(args)
             self.notice(sender, 'Munge added: {}'.format(args))
 
-        elif cmd == '?unmunge':
+        elif cmd == '?delmunge':
             if not is_admin:
                 raise UnauthorizedCommandError
             self._cmd_delete_munge(args)
             self.notice(sender, 'Munge deleted: {}'.format(args))
+
+        elif cmd == '?addreplace':
+            if not is_admin:
+                raise UnauthorizedCommandError
+            for nikky in self.nikkies.values():
+                nikky.add_replace_nick(args)
+                self.notice(sender, '{}: Replace nick added: {} total'.format(
+                    nikky.id, len(nikky.replace_nicks_list)))
+
+        elif cmd == '?delreplace':
+            if not is_admin:
+                raise UnauthorizedCommandError
+            for nikky in self.nikkies.values():
+                try:
+                    nikky.delete_replace_nick(args)
+                except KeyError:
+                    self.notice(sender, '{}: Nick not found'.format(
+                        nikky.id))
+                else:
+                    self.notice(sender,
+                                '{}: Nick removed; {} total'.format(
+                                    nikky.id, len(nikky.replace_nicks_list)))
 
         elif cmd == '?say':
             if not is_admin:

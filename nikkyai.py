@@ -85,7 +85,6 @@ class NikkyAI(object):
         # Markov chain initialization
         self.dbconn = psycopg2.connect(db_connect)
         self.set_personality(personality)
-        self.preferred_keywords = set()
 
         # Remember other options
         self.recurse_limit = recurse_limit
@@ -99,8 +98,12 @@ class NikkyAI(object):
         self.last_nikkysim_saying = None
         self.last_reply = ''
         self.last_replies = {}
-        self.munge_list = set()
         self.nick = 'nikkybot'
+
+        # Init state lists
+        self.preferred_keywords = set()
+        self.munge_list = set()
+        self.replace_nicks_list = set()
 
         # Set up state save if ID given
         self.id = id
@@ -430,42 +433,51 @@ class NikkyAI(object):
         else:
             return (out.rstrip(), (x, y))
 
-    def add_preferred_keyword(self, keyword):
-        """Convenience function for adding a single keyword pattern to the
-        preferred keywords pattern list"""
-        if keyword not in self.preferred_keywords:
-            self.preferred_keywords.add(keyword)
-            self.printdebug("add_preferred_keyword: Added keyword {}".format(
-                repr(keyword)))
+    def _add_state_list(self, item, container, debug_msg):
+        if item not in container:
+            container.add(item)
+            self.printdebug(debug_msg.format(repr(item)))
             self.save_state()
 
+    def _del_state_list(self, item, container, debug_msg):
+        if item in container:
+            container.remove(item)
+            self.printdebug(debug_msg.format(repr(item)))
+            self.save_state()
+        else:
+            raise KeyError(item)
+
+    def add_preferred_keyword(self, keyword):
+        """Add a preferred keyword regex pattern"""
+        self._add_state_list(keyword, self.preferred_keywords,
+                             'add_preferred_keyword: Added {}')
+
     def delete_preferred_keyword(self, keyword):
-        """Convenience function for deleting a single keyword pattern from the
-        preferred keywords pattern list.  Raise KeyError if word does not
-        exist in the list."""
-        if keyword not in self.preferred_keywords:
-            raise KeyError(keyword)
-        self.preferred_keywords.remove(keyword)
-        self.printdebug("delete_preferred_keyword: Removed keyword {}".format(
-            repr(keyword)))
-        self.save_state()
+        """Remove a preferred keyword regex pattern"""
+        self._del_state_list(keyword, self.preferred_keywords,
+                             'delete_preferred_keyword: Removed {}')
 
     def add_munged_word(self, word):
         """Convenience function for adding a single munged word to the list"""
         if word not in self.munge_list:
-            self.munge_list.add(word)
-            self.printdebug(
-                "add_munged_word: Added word {}".format(repr(word)))
-            self.save_state()
+        self._add_state_list(word, self.munge_list,
+                             'add_munged_word: Added {}')
 
     def delete_munged_word(self, word):
         """Convenience function for deleting a single munged word from the
         list"""
-        if word not in self.munge_list:
-            raise KeyError(word)
-        self.munge_list.remove(word)
-        self.printdebug("delete_munged_word: Removed word {}".format(repr(word)))
-        self.save_state()
+        self._del_state_list(word, self.munge_list,
+                             'delete_munged_word: Removed {}')
+
+    def add_replace_nick(self, nick):
+        """Add a replaceable nick regex pattern"""
+        self._add_state_list(nick, self.replace_nicks_list,
+                             'add_replace_nick: Added {}')
+
+    def delete_replace_nick(self, nick):
+        """Remove a replaceable nick regex pattern"""
+        self._del_state_list(nick, self.replace_nicks_list,
+                             'delete_replace_nick: Removed {}')
 
     def add_last_reply(self, reply, datetime_=None):
         """Convenience function to add a reply string to the last replies
@@ -576,7 +588,9 @@ class NikkyAI(object):
         if sourcenick and randint(0, 10):
             msg = re.sub(r'\S+: ', sourcenick + ': ', msg)
 
-        return self.dehighlight_sentence(msg)
+        msg = self.dehighlight_sentence(msg)
+        msg = self.replace_nicks(msg, sourcenick)
+        return msg
 
     def sanitize(self, s):
         """Remove control characters from 's' if it's a string; return it as is
@@ -617,7 +631,8 @@ class NikkyAI(object):
         class (for storage/later restoring)"""
         return {'last_replies': self.last_replies,
                 'preferred_keywords': self.preferred_keywords,
-                'munge_list': self.munge_list}
+                'munge_list': self.munge_list,
+                'replace_nicks_list': self.replace_nicks_list}
 
     def set_state(self, state):
         """Reset current internal state to that captured by state (returned by
@@ -626,6 +641,10 @@ class NikkyAI(object):
         self.preferred_keywords = state['preferred_keywords']
         try:
             self.munge_list = state['munge_list']
+        except KeyError:
+            pass
+        try:
+            self.replace_nicks_list = state['replace_nicks_list']
         except KeyError:
             pass
 
@@ -693,8 +712,18 @@ class NikkyAI(object):
         sentence"""
         for word in self.munge_list:
             munged = self.munge_word(word)
-            sentence = re.sub(r'\b' + re.escape(word) + r'\b', munged,
+            sentence = re.sub(r'\b' + word + r'\b', munged,
                               sentence, flags=re.I)
+        return sentence
+
+    def replace_nicks(self, sentence, src_nick):
+        """If src_nick is not None or '', replace any words/nicks that appear
+        in replaceable nicks list with src_nick
+        """
+        if src_nick:
+            for nick in self.replace_nicks_list:
+                sentence = re.sub(r'\b' + nick + r'\b', src_nick,
+                                sentence, flags=re.I)
         return sentence
 
     def printdebug(self, msg):
