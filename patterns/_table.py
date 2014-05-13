@@ -138,5 +138,6 @@ class Recurse(str):
     """Recursively find a response"""
     def get(self, nikkyai, fmt=None):
         if fmt is None:
-            fmt = []
-        return nikkyai.reply(self.format(*fmt), add_response=False)
+            fmt = ['']
+        return nikkyai.reply('<{}> {}'.format(
+            fmt[0], self.format(*fmt)), add_response=False)
