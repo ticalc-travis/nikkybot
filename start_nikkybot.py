@@ -104,8 +104,8 @@ if __name__ == '__main__':
                     help='Client version response to give to CTCP VERSION '
                          'requests')
     ap.add_argument('--admin-hostmasks', nargs='*', metavar='ADMIN_HOSTMASK',
-                    default=['*!ijel@ip68-102-84-166.ks.ok.cox.net',
-                             '*!travise@nvm2u.com', '*!ijel@68.102.84.166'],
+                    default=['*!ijel@ip68-102-31-111.ks.ok.cox.net',
+                             '*!travise@nvm2u.com', '*!ijel@68.102.31.111'],
                     help='Trusted hostmasks to accept special admin commands '
                          'from')
     ap.add_argument('--reconnect-wait', default=30, type=float,
