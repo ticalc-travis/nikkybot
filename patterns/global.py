@@ -90,7 +90,7 @@ patterns = (
     )
 ),
 
-## General ##
+## Questions ##
 
 (r"which", 1,
     R(
@@ -111,7 +111,7 @@ patterns = (
     ),
 ),
 (r"^(what do you|what is going|what's going)", -2, Recurse('for what')),
-(r"(^(what|what's|whats)|for what|for which)", 1,
+(r"(^(what|what's|whats)|for which)", 1,
     R(
         Markov_forward('a'),
         Markov_forward('an'),
@@ -226,15 +226,9 @@ patterns = (
         Markov_forward('{3} {4}s'),
     ),
 ),
-(r'\bcontest\b', 1,
-    R(
-        Recurse("I'm entering"),
-        Recurse("You'll lose"),
-        Recurse('My entry'),
-        Markov_forward('Contests'),
-        Markov('contest')
-    )
-),
+(r"\bdon't (.*) what\b", 1, Markov_forward("Don't {1}")),
+(r"(\S*)\s*(\S*)\s*what\b", 1, Markov_forward('{1} {2}')),
+
 (r'\b(how much|how many|what amount)\b', -2,
     R(
         Markov_forward('enough'),
@@ -303,6 +297,18 @@ patterns = (
         Recurse('{1}'),
         Recurse('{1}'),
     ),
+),
+
+## Misc ##
+
+(r'\bcontest\b', 1,
+    R(
+        Recurse("I'm entering"),
+        Recurse("You'll lose"),
+        Recurse('My entry'),
+        Markov_forward('Contests'),
+        Markov('contest')
+    )
 ),
 
 ## Meta ##
