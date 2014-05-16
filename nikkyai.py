@@ -646,7 +646,7 @@ class NikkyAI(object):
                         open_count += 1
                     else:
                         close_count += 1
-                elif not left or left[-1] in non_word_chars:
+                elif not left or left[-1] in ' -—':
                     open_count += 1
                     last_seen = 'open'
                 elif not right or right[0] in non_word_chars:
