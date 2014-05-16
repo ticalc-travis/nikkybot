@@ -21,8 +21,6 @@
 # Add mimic/impersonation feature to "what do you think of" and random remarks
 # when it's ready
 #
-# Add response for nikkybot to tell its age
-#
 # Don't output keywords exactly as-is (with regard to punctuation)
 #
 # When chopping line breaks, avoid cutting off actual keyword seed

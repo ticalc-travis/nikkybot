@@ -150,5 +150,8 @@ patterns = (
 (r'\bYou should introduce yourself in this thread\b', 0,
     R("I wasn't programmed to post in forums, silly")
 ),
+(r"\b(birthday|birthdate)", 0,
+    R('My birthday is October 30, 2012'),
+),
 
 )
