@@ -86,7 +86,8 @@ patterns = (
         Markov_forward('only when'),
         Markov_forward('as long as'),
         Markov_forward('whenever'),
-        Markov_forward('of course')
+        Markov_forward('of course'),
+        Markov_forward('depends'),
     )
 ),
 
