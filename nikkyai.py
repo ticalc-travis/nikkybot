@@ -30,6 +30,8 @@
 #
 # Don't return dead-end chains for Markov_forward queries (output matching
 # input chain)
+#
+# NikkyBot:  Fix merging of replace-nicks/etc. in nikkies for queries
 
 
 from datetime import datetime, timedelta
@@ -183,7 +185,8 @@ class NikkyAI(object):
             raise
         finally:
             self.set_personality(last_personality)
-        return '<{}> {}'.format(temp_personality, out)
+        personality_out = self.filter_markov_output('', temp_personality)
+        return '<{}> {}'.format(personality_out, out)
 
     def pattern_reply(self, msg, add_response=True):
         """Generate a reply using predefined pattern/response patterns.
