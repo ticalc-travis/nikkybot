@@ -32,8 +32,7 @@ from twisted.internet import reactor, protocol
 from twisted.python import log
 
 import nikkybot
-from nikkybot import NikkyBot
-from nikkyai import NikkyAI
+import nikkyai
 
 OPTS = argparse.Namespace()
 
@@ -41,13 +40,13 @@ OPTS = argparse.Namespace()
 class DefaultNikkyAIDict(dict):
     def __getitem__(self, k):
         if k not in self:
-            self[k] = NikkyAI(id=k)
+            self[k] = nikkyai.NikkyAI(id=k)
         return dict.__getitem__(self, k)
 
 
 class NikkyBotFactory(protocol.ReconnectingClientFactory):
 
-    protocol = NikkyBot
+    protocol = nikkybot.NikkyBot
 
     def __init__(self, opts):
 
