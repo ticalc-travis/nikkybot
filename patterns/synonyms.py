@@ -140,7 +140,7 @@ patterns = (
         Markov('mudkipz'),
     ),
 ),
-(r'\b(ut|ut2004|ututut)', 98,
+(r'\b(ut|ut2004|ututut)\b', 98,
     R(
         Markov('ut'),
     ),
