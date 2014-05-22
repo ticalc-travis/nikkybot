@@ -89,11 +89,11 @@ patterns = (
     ),
 ),
 (r'(.*?)\S*more like\S*$', -10, E(more_like)),
-(r'\brule\b', 1, E(rule), True),
+(r'\brule\b', -1, E(rule), True),
     #                     ^ Not really allowing repeats (already handled by
     # (rule function; if this is False, it will double-check and fail every
     # response as a duplicate and never output anything.)
-(r'\brules\b', 1,
+(r'\brules\b', -1,
     S(
         R('Rules:', 'Channel rules:', 'Forum rules:', "Today's rules",
           "Today's channel rules:", "Today's forum rules:"),
