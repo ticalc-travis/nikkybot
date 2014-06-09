@@ -294,13 +294,6 @@ patterns = (
         Markov_forward('why'),
     ),
 ),
-(r"(?:is(?: it)?|it's|i'm|i am)\b ([^][.;,!?(){{}}]+)", -5,
-    R(
-        Recurse('{1}'),
-        Recurse('{1}'),
-        Recurse('{1}'),
-    ),
-),
 
 ## Misc ##
 

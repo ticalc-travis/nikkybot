@@ -174,7 +174,7 @@ patterns = (
         R('', Markov_forward('because', [' ']), Markov_forward('since', [' '])),
     ),
 ),
-(r"(?:is(?: it)?|it's|i'm|i am)\b ([^][.;,!?(){{}}]+)", -1,
+(r"(?:is(?: it)?|it's|i'm|i am)\b ([^][.;,!?(){{}}]+)", 1,
     R(
         S(
             R('{0} is', "{0}'s mom is", "{0}'s face is", 'your mom is',
@@ -182,6 +182,9 @@ patterns = (
             R(' ', '\n'),
             '{1}',
         ),
+        Recurse('{1}'),
+        Recurse('{1}'),
+        Recurse('{1}'),
     ),
 ),
 
