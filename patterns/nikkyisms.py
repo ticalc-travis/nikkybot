@@ -80,14 +80,6 @@ patterns = (
         'Or you can start using a halfway decent OS'
     )
 ),
-(r'\b(anders|tiberg|jeremy|lane|approv|accept|reject)', 1,
-    S(
-        'def process_pending_file(file):\n'
-        "    if ('2048' in file.desc or 'omnimaga' in file.desc.lower()\n"
-        "            or 'Kerm Martian' in file.authors):\n"
-        "        file.reject()\n"
-    ),
-),
 (r'(.*?)\S*more like\S*$', -10, E(more_like)),
 (r'\brule\b', -1, E(rule), True),
     #                     ^ Not really allowing repeats (already handled by
