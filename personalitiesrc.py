@@ -10,6 +10,10 @@
 # Regexes must contain at least one parenthesized group!
 
 personality_regexes = {
+    'sircmpwn':
+        (r'(sircmpwn).*',
+         r'(sircmpwn).*',
+         r'(sircmpwn).*',),
     'ashbad':
         (r'(ashbad|obongo|aalewis).*',
          r'(ashbad).*',
