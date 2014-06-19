@@ -17,13 +17,27 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from _table import *
-
+from nikkyai import Bad_personality_error
 
 def age(nikkyai, fmt):
     from datetime import datetime
     return ('About ' +
             str((datetime.now() - datetime(2012, 10, 30)).days) +
             " days' worth ongoing so far, give or take")
+
+def try_mimic(nikkyai, fmt):
+    pers = fmt[6]
+    personalities = nikkyai.get_personalities()
+    try:
+        nikkyai.set_personality(pers)
+    except Bad_personality_error:
+        out = ''
+    else:
+        out = '{}...\n"{}"'.format(pers,
+                                   nikkyai.reply('', add_response=True))
+    finally:
+        nikkyai.set_personality('nikky')
+    return out
 
 
 patterns = (
@@ -153,5 +167,6 @@ patterns = (
 (r"\b(birthday|birthdate)", 0,
     R('My birthday is October 30, 2012'),
 ),
+(r"\b(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -3, E(try_mimic), True),
 
 )

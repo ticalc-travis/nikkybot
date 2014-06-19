@@ -31,10 +31,18 @@
 # Don't return dead-end chains for Markov_forward queries (output matching
 # input chain)
 #
-# NikkyBot:  Fix merging of replace-nicks/etc. in nikkies for queries
+# NikkyBot:  Fix merging of replace-nicks/etc. in nikkies for queries;
+#   maybe allow for them to be defined separately in channels
 #
 # Fix ‘personas’ command for Sax users
-
+#
+# Allow aliases for personalities
+#
+# NikkyBot:  Separate state lists per channel
+#
+# NikkyBot:  Make ?personalities work for sax users
+#
+# Bug:  Replace nicks doesn't seem to work reliably
 
 from datetime import datetime, timedelta
 from random import randint, choice
@@ -51,12 +59,6 @@ rebuild(markov)        # Update in case of dynamic reload
 #------------------------------------------------------------------------------
 
 
-# Set up reply pattern table
-import patterns
-rebuild(patterns)        # Update in case of dynamic reload
-import personalitiesrc
-
-
 class Nikky_error(Exception):
     pass
 
@@ -71,6 +73,12 @@ class Bad_response_error(Nikky_error):
 
 class Bad_personality_error(Nikky_error):
     pass
+
+
+# Set up reply pattern table
+import patterns
+rebuild(patterns)        # Update in case of dynamic reload
+import personalitiesrc
 
 
 class NikkyAI(object):
@@ -176,8 +184,7 @@ class NikkyAI(object):
 
     def mimic_remark(self, msg=''):
         """Mimic a random person."""
-        reload(personalitiesrc)
-        personalities = personalitiesrc.personality_regexes.keys()
+        personalities = self.get_personalities()
         temp_personality = choice(personalities)
         last_personality = self.get_personality()
         self.set_personality(temp_personality)
@@ -686,10 +693,9 @@ class NikkyAI(object):
 
     def set_personality(self, personality):
         """Change Markov personality to given table name in Markov database"""
-        reload(personalitiesrc)
-        personalities = personalitiesrc.personality_regexes
-        personality = personality.lower().strip()
-        if personality in personalities:
+        personalities = self.get_personalities()
+        personality = self.normalize_personality(personality)
+        if self.is_personality_valid(personality):
             self.markov = markov.PostgresMarkov(self.dbconn, personality,
                                                 case_sensitive=False)
             self.personality = personality
@@ -699,6 +705,25 @@ class NikkyAI(object):
     def get_personality(self):
         """Return current Markov personality"""
         return self.personality
+
+    def get_personalities(self):
+        """Return list of available personalities"""
+        reload(personalitiesrc)
+        return personalitiesrc.personality_regexes.keys()
+
+    def normalize_personality(self, personality):
+        """Reduce personality to case/punctuation-insensitive form"""
+        try:
+            return self.markov.conv_key(personality)
+        except AttributeError:
+            # If self.markov hasn't been created yet (e.g., during class init),
+            # fallback to lower()
+            return personality.lower()
+
+    def is_personality_valid(self, personality):
+        """Return whether personality is valid and available"""
+        personalities = self.get_personalities()
+        return self.normalize_personality(personality) in personalities
 
     def get_state(self):
         """Return an object representing current persistent state data for the

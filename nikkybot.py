@@ -32,7 +32,6 @@ from twisted.words.protocols import irc
 from twisted.internet import reactor, threads
 
 import nikkyai
-import personalitiesrc
 
 
 class BotError(Exception):
@@ -415,17 +414,11 @@ class NikkyBot(irc.IRCClient, Sensitive):
         ## Public commands ##
 
         elif cmd in ('botchat', '?botchat'):
-            rebuild(personalitiesrc)
-            personalities = personalitiesrc.personality_regexes
             usage_msg = 'Usage: ?botchat personality1 personality2'
             parms = args.split(' ')
-            try:
-                parms[0] = self.nikkies[None].markov.conv_key(parms[0])
-                parms[1] = self.nikkies[None].markov.conv_key(parms[1])
-            except IndexError:
-                pass
-            if (len(parms) != 2 or parms[0] not in personalities or
-                    parms[1] not in personalities):
+            if (len(parms) != 2 or
+                    not self.nikkies[None].is_personality_valid(parms[0]) or
+                    not self.nikkies[None].is_personality_valid(parms[1])):
                 reactor.callLater(2, self.notice, src_nick, usage_msg)
                 reactor.callLater(4, self.give_personalities_list, src_nick)
             else:
@@ -445,7 +438,6 @@ class NikkyBot(irc.IRCClient, Sensitive):
                     d.addCallback(self.return_bot_chat)
         elif cmd in ('?personas', '?personalities', 'personas',
                      'personalities'):
-            rebuild(personalitiesrc)
             reactor.callLater(2, self.give_personalities_list, src_nick)
             reactor.callLater(4, self.notice, src_nick,
                               'Say "{}: mimic <personality> <message>" to '
@@ -488,8 +480,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
     def give_personalities_list(self, src_nick):
         """Notice a list of available Markov personalities to src_nick"""
-        rebuild(personalitiesrc)
-        personalities = personalitiesrc.personality_regexes
+        personalities = self.nikkies[None].get_personalities()
         msg = 'Personalities: {}'.format(', '.join(sorted(personalities)))
         self.notice(src_nick, msg)
 
