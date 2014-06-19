@@ -32,6 +32,8 @@
 # input chain)
 #
 # NikkyBot:  Fix merging of replace-nicks/etc. in nikkies for queries
+#
+# Fix ‘personas’ command for Sax users
 
 
 from datetime import datetime, timedelta
