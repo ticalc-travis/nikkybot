@@ -62,7 +62,7 @@ patterns = (
         '{0}: https://github.com/ticalc-travis/nikkybot',
     ), True
 ),
-(r"\bthat ((made|makes|is making) (no )?sense|does not .* make (any |no )?sense|doesn't .* make (any |no )?sense|.* sense make)\b", 1,
+(r"\bthat ((made|makes|is making) (no )?sense|does not .* make (any |no )?sense|(doesn't|doesnt|dosen't|dosent) .* ?make (any |no )?sense|.* sense make)\b", 1,
     R(
         'Sorry',
         'sorry\n:(',
