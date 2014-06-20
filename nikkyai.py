@@ -141,7 +141,13 @@ class NikkyAI(object):
         """
         nick, msg = self.filter_input(msg)
         if self.get_personality() == 'nikky':
-            out = choice(patterns.nikky_generic_remarks).format(nick)
+            while True:
+                p = choice(patterns.nikky_generic_remarks)
+                if nick or '{0}' not in p:
+                    # Don't use a pattern requiring a source nick if we don't
+                    # have one
+                    break
+            out = p.format(nick)
             return self.dehighlight_sentence(out)
         else:
             # Not supported for non-nikky personas
