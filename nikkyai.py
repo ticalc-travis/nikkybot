@@ -16,34 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#!TODO!
-#
-# Add mimic/impersonation feature to "what do you think of" and random remarks
-# when it's ready
-#
-# Don't output keywords exactly as-is (with regard to punctuation)
-#
-# When chopping line breaks, avoid cutting off actual keyword seed
-#
-# More general synonym filtering/transforming (don't replace the entire input
-# pattern)
-#
-# Don't return dead-end chains for Markov_forward queries (output matching
-# input chain)
-#
-# NikkyBot:  Fix merging of replace-nicks/etc. in nikkies for queries;
-#   maybe allow for them to be defined separately in channels
-#
-# Fix ‘personas’ command for Sax users
-#
-# Allow aliases for personalities
-#
-# NikkyBot:  Separate state lists per channel
-#
-# NikkyBot:  Make ?personalities work for sax users
-#
-# Bug:  Replace nicks doesn't seem to work reliably
-
 from datetime import datetime, timedelta
 from random import randint, choice
 import cPickle
