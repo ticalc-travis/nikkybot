@@ -798,13 +798,16 @@ class NikkyAI(object):
         return sentence
 
     def replace_nicks(self, sentence, src_nick):
-        """If src_nick is not None or '', replace any words/nicks that appear
-        in replaceable nicks list with src_nick
-        """
-        if src_nick:
-            for nick in self.replace_nicks_list:
+        """Replace words/nicks that appear in replaceable nicks list with
+        src_nick if src_nick is not None or '', or if the words/nicks appear
+        at the beginning of 'sentence' and appear to be a highlight."""
+        for nick in self.replace_nicks_list:
+            if src_nick:
                 sentence = re.sub(r'\b' + nick + r'\b', src_nick,
-                                sentence, flags=re.I)
+                                  sentence, flags=re.I)
+            else:
+                sentence = re.sub(r'^' + nick + r'(:|--|,)\s*', src_nick,
+                                  sentence, flags=re.I)
         return sentence
 
     def printdebug(self, msg):
