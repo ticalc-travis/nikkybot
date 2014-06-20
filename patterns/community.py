@@ -26,7 +26,7 @@ patterns = (
 
 # Memes
 (r'\b(fail|epic fail)\b', 1, R('Yeah, you suck', 'HAW HAW', 'Lame')),
-(r'^\>.*', 1, R('>true dat', '>hi kerm\n>is\n>this\n>annoying?')),
+(r'^\>[a-z]', 1, R('>true dat', '>hi kerm\n>is\n>this\n>annoying?')),
 
 # Cemetech
 (r'\bdisallowed word\b', -3,
