@@ -602,9 +602,9 @@ class NikkyAI(object):
             open_count = sentence.count(opener)
             close_count = sentence.count(closer)
 
-            # Don't count emoticons as unclosed parentheses
+            # Don't count emoticons or digits as unclosed parentheses
             # :) :-) ;) :-( :( ): (: etc. -- just ignore them
-            emot_chars = ':;-8'
+            emot_chars = ':;-0123456789'
             if closer in ')]}':
                 for emot_char in emot_chars:
                     close_count -= sentence.count(emot_char + closer)
