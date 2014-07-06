@@ -436,16 +436,6 @@ class NikkyBot(irc.IRCClient, Sensitive):
                                               sender, parms[0], parms[1])
                     d.addErrback(self.bot_chat_error, src_nick)
                     d.addCallback(self.return_bot_chat)
-        elif cmd in ('?personas', '?personalities', 'personas',
-                     'personalities'):
-            reactor.callLater(2, self.give_personalities_list, src_nick)
-            reactor.callLater(4, self.notice, src_nick,
-                              'Say "{}: mimic <personality> <message>" to '
-                              '"talk" to that personality.'.format(
-                                     self.nickname))
-            reactor.callLater(6, self.notice, src_nick,
-                              'Talk to tev to request a new personality based '
-                              'on someone.')
         elif cmd in ('?help', 'help'):
             reactor.callLater(2, self.msg, sender, 'Basic info about me: https://raw.githubusercontent.com/ticalc-travis/nikkybot/master/README')
         elif re.match((r"\b(quit|stop|don.?t|do not)\b.*\b(hilite|hilight|highlite|highlight).*\bme"), msg, re.I):
@@ -477,12 +467,6 @@ class NikkyBot(irc.IRCClient, Sensitive):
                 nothing_done = False
         if nothing_done:
             raise UnrecognizedCommandError
-
-    def give_personalities_list(self, src_nick):
-        """Notice a list of available Markov personalities to src_nick"""
-        personalities = self.nikkies[None].get_personalities()
-        msg = 'Personalities: {}'.format(', '.join(sorted(personalities)))
-        self.notice(src_nick, msg)
 
     def return_bot_chat(self, t):
         nick, channel, output = t

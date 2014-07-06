@@ -76,6 +76,15 @@ def mimic(nikkyai, fmt):
     return out
 
 
+def list_personas(nikkyai, fmt):
+    personas = [nikkyai.munge_word(p) for p in nikkyai.get_personalities()]
+    return ('List of personalities: \n{}\n'
+            'Say "{}: mimic <personality> <message>" to "talk" to that '
+            'personality.\n'
+            'Talk to tev to request a new personality based on '
+            'someone.\n'.format(', '.join(sorted(personas)), nikkyai.nick))
+
+
 patterns = (
 # Legal forms:
 # pattern regexp, priority, action
@@ -101,6 +110,7 @@ patterns = (
 (r'\b(markovmix|markov bot)', -99,
     R('I can impersonate people\nSay "?personalities" to me and I\'ll tell you more'),
 ),
+(r'^\??(personas|personalities)\b', -99, E(list_personas), True),
 
 # Markov
 (r'^\??markov5 (.*)', -99, Manual_markov(5, '{1}'), True),

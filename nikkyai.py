@@ -691,6 +691,7 @@ class NikkyAI(object):
 
     def normalize_personality(self, personality):
         """Reduce personality to case/punctuation-insensitive form"""
+        personality = personality.replace('·', '')
         try:
             return self.markov.conv_key(personality)
         except AttributeError:
