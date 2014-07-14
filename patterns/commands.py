@@ -76,6 +76,22 @@ def mimic(nikkyai, fmt):
     return out
 
 
+def mimic_random(nikkyai, fmt):
+    from random import choice
+    from nikkyai import Bad_personality_error
+    msg = fmt[3]
+    persona = choice(nikkyai.get_personalities())
+    try:
+        nikkyai.set_personality(persona)
+    except:
+        raise
+    else:
+        out = '<{}> {}'.format(persona, nikkyai.reply(msg, add_response=True))
+    finally:
+        nikkyai.set_personality('nikky')
+    return out
+
+
 def list_personas(nikkyai, fmt):
     personas = [nikkyai.munge_word(p) for p in nikkyai.get_personalities()]
     return ('List of personalities: \n{}\n'
@@ -106,7 +122,8 @@ patterns = (
 ),
 
 # Mimic
-(r'^(mimic|impersonate|act like|imitate) (\S+) ?(.*)', -99, E(mimic), True),
+(r'^(mimic|impersonate|act like|imitate) (\S+) ?(.*)', -98, E(mimic), True),
+(r'^(mimic|impersonate|act like|imitate) (someone|anyone|somebody|anybody|random|rand) (.*)', -99, E(mimic_random), True),
 (r'\b(markovmix|markov bot)', -99,
     R('I can impersonate people\nSay "?personalities" to me and I\'ll tell you more'),
 ),
