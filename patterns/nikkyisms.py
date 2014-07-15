@@ -94,5 +94,5 @@ patterns = (
         '\n3. ', E(rule),
     )
 ),
-(r"\bdon't do what\b", 1, Recurse('rule'), True),
+(r"\bdon't do (what|who|whom|which)\b", 1, Recurse('rule'), True),
 )
