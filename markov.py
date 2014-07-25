@@ -169,8 +169,9 @@ class PostgresMarkov(object):
             self.adjust_right_line_breaks(string, rmax), lmax)
 
     def forward(self, start):
-        """Select and return a chain from the given chain forward in context.
-        Input chain is a list/tuple of words one to five items in length."""
+        """Return a list of available chains from the given chain forward in
+        context.  Input chain is a list/tuple of words one to five items in
+        length."""
         chain = self.conv_key(start)
         chain.reverse()
         q = self.cursor.mogrify(
@@ -192,8 +193,8 @@ class PostgresMarkov(object):
         return self.cursor.fetchall()
 
     def backward(self, start):
-        """Select and return a chain from the given chain backward in context.
-        Input chain is a list/tuple of words one to five items in length."""
+        """Return a list of available chains from the given chain backward in
+        context.  Input chain is a list/tuple of words one to five items in length."""
         chain = self.conv_key(start)
         q = self.cursor.mogrify(
             'SELECT prev4, prev3, prev2, prev1'
