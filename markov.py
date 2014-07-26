@@ -213,13 +213,21 @@ class PostgresMarkov(object):
             raise KeyError("{}: chain not found".format(chain))
         return self.cursor.fetchall()
 
-    def sentence_forward(self, start, length=4):
+    def sentence_forward(self, start, length=4, allow_empty_completion=True):
         """Generate a sentence forward from the start chain.  'length' sets the
-        size of the chain used to extend the sentence in words."""
+        size of the chain used to extend the sentence in words.
+        If 'allow_empty_completion' is False, do not return a chain identical
+        to the start chain, but always a non-empty chain completion (return
+        KeyError if this is not possible)."""
         sentence = tuple(start)
         while True:
             try:
-                sentence = sentence + choice(self.forward(sentence[-length:]))
+                choices = self.forward(sentence[-length:])
+                if not allow_empty_completion:
+                    choices = [c for c in choices if c != ('', '', '', '')]
+                    if not choices:
+                        raise KeyError('No non-empty forward chain completion for: ' + repr(start))
+                sentence = sentence + choice(choices)
             except KeyError:
                 if sentence == tuple(start):
                     raise
@@ -227,12 +235,21 @@ class PostgresMarkov(object):
                     break
         return self.chain_to_str(sentence)
 
-    def sentence_backward(self, start, length=4):
-        """Generate a sentence backward from the start chain"""
+    def sentence_backward(self, start, length=4, allow_empty_completion=True):
+        """Generate a sentence backward from the start chain.  'length' sets
+        the size of the chain used to extend the sentence in words.
+        If 'allow_empty_completion' is False, do not return a chain identical
+        to the start chain, but always a non-empty chain completion (return
+        KeyError if this is not possible)."""
         sentence = tuple(start)
         while True:
             try:
-                sentence = choice(self.backward(sentence[:length])) + sentence
+                choices = self.backward(sentence[:length])
+                if not allow_empty_completion:
+                    choices = [c for c in choices if c != ('', '', '', '')]
+                    if not choices:
+                        raise KeyError('No non-empty backward chain completion for: ' + repr(start))
+                sentence = choice(choices) + sentence
             except KeyError:
                 if sentence == tuple(start):
                     raise

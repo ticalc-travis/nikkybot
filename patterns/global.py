@@ -37,57 +37,56 @@ patterns = (
 ),
 (r"\b(how are you|how are we|how's your|how is your)\b", 0,
     R(
-        Markov_forward('ok'),
-        Markov_forward('okay'),
-        Markov_forward('good'),
-        Markov_forward('bad')
+        Markov_forward('ok', force_completion=False),
+        Markov_forward('okay', force_completion=False),
+        Markov_forward('good', force_completion=False),
+        Markov_forward('bad', force_completion=False)
     ),
 ),
 (r"\b(good night|goodnight|g'?night)\b", 0,
     R(
-        Markov_forward('night'),
-        Markov_forward('night {0}'),
+        Markov_forward('night', force_completion=False),
+        Markov_forward('night {0}', force_completion=False),
     )
 ),
 (r"\b(bye|bye bye|goodbye|good bye|see you later|night|good night|g'night)\b",
 0,
     R(
-        Markov_forward('bye'),
-        Markov_forward('bye {0}')
+        Markov_forward('bye', force_completion=False),
+        Markov_forward('bye {0}', force_completion=False)
     ),
 ),
 (r"\b(congratulations|congrats|congradulations)", 1,
     R(
-        Markov_forward('Thanks'),
-        Markov_forward('thx'),
+        Markov_forward('Thanks', force_completion=False),
+        Markov_forward('thx', force_completion=False),
     )
 ),
 (r'\b(thanks|thank you)\b', 1,
     R(
-        Markov_forward("you're welcome"),
+        Markov_forward("you're welcome", force_completion=False),
         'np'
     )
 ),
 (r'\b(wb|welcome back|welcoem back)\b', 1,
     R(
-        Markov_forward('Thanks'),
-        Markov_forward('thx'),
+        Markov_forward('Thanks', force_completion=False),
+        Markov_forward('thx', force_completion=False),
     )
 ),
 (r"\*\*\*yes/no\*\*\*", -99,
     R(
-        Markov_forward('yes'),
-        Markov_forward('no'),
-        Markov_forward('maybe'),
-        Markov_forward('yeah'),
-        Markov_forward('probably'),
-        Markov_forward('yes'),
+        Markov_forward('yes', force_completion=False),
+        Markov_forward('no', force_completion=False),
+        Markov_forward('maybe', force_completion=False),
+        Markov_forward('yeah', force_completion=False),
+        Markov_forward('probably', force_completion=False),
         Markov_forward('only if'),
         Markov_forward('only when'),
         Markov_forward('as long as'),
-        Markov_forward('whenever'),
-        Markov_forward('of course'),
-        Markov_forward('depends'),
+        Markov_forward('whenever', force_completion=False),
+        Markov_forward('of course', force_completion=False),
+        Markov_forward('depends', force_completion=False),
     )
 ),
 
@@ -98,8 +97,8 @@ patterns = (
         Markov_forward('this'),
         Markov_forward('that'),
         Markov_forward('the'),
-        Markov_forward('those'),
-        Markov_forward('these'),
+        Markov_forward('those', force_completion=False),
+        Markov_forward('these', force_completion=False),
         Markov_forward('all of'),
         Markov_forward('all the'),
     ),
@@ -155,13 +154,13 @@ patterns = (
         Markov_forward('on'),
         Markov_forward('on top of'),
         Markov_forward('inside of'),
-        Markov_forward('inside'),
+        Markov_forward('inside', force_completion=False),
         Markov_forward('under'),
         Markov_forward('behind'),
-        Markov_forward('outside'),
-        Markov_forward('over'),
-        Markov_forward('up'),
-        Markov_forward('beyond'),
+        Markov_forward('outside', force_completion=False),
+        Markov_forward('over', force_completion=False),
+        Markov_forward('up', force_completion=False),
+        Markov_forward('beyond', force_completion=False),
     )
 ),
 (r'^when\b', 1,
@@ -171,13 +170,13 @@ patterns = (
         'right now',
         'tomorrow',
         'now',
-        Markov_forward('never'),
-        Markov_forward('tomorrow'),
+        Markov_forward('never', force_completion=False),
+        Markov_forward('tomorrow', force_completion=False),
         Markov_forward('as soon as'),
-        Markov_forward('whenever'),
+        Markov_forward('whenever', force_completion=False),
         Markov_forward('after'),
         Markov_forward('before'),
-        Markov_forward('yesterday'),
+        Markov_forward('yesterday', force_completion=False),
         Markov_forward('last'),
         Markov_forward('next'),
     )
@@ -210,7 +209,7 @@ patterns = (
 ),
 (r'\b(why|how come)\b', 0,
     R(
-        Markov_forward('because'),
+        Markov_forward('because', force_completion=False),
         Markov_forward('because your'),
         Markov_forward('because you'),
         Markov_forward('because of'),
@@ -232,10 +231,10 @@ patterns = (
 
 (r'\b(how much|how many|what amount)\b', -2,
     R(
-        Markov_forward('enough'),
-        Markov_forward('too many'),
-        Markov_forward('more than you'),
-        Markov_forward('not enough'),
+        Markov_forward('enough', force_completion=False),
+        Markov_forward('too many', force_completion=False),
+        Markov_forward('more than you', force_completion=False),
+        Markov_forward('not enough', force_completion=False),
     )
 ),
 (r"^(is|isn't|are|am|does|should|would|can|do|did)\b", 2,
@@ -291,7 +290,7 @@ patterns = (
         Markov_forward('yes or just {2}'),
         Markov_forward('yeah and just {2}'),
         Markov_forward('yes and just {2}'),
-        Markov_forward('why'),
+        Markov_forward('why', force_completion=False),
     ),
 ),
 

@@ -368,14 +368,16 @@ class NikkyAI(object):
                     continue
         return "I don't know what to say!"
 
-    def markov_forward(self, chain, failmsg='', max_lf=None):
+    def markov_forward(self, chain, failmsg='', max_lf=None,
+                       force_completion=True):
         """Generate sentence from the current chain forward only and not
         backward.  Do NOT do check_output_response().
         """
         if max_lf is None:
             max_lf = self.max_lf_r
         try:
-            out = self.markov.sentence_forward(chain)
+            out = self.markov.sentence_forward(
+                chain, allow_empty_completion=not force_completion)
         except KeyError:
             return failmsg
         else:
