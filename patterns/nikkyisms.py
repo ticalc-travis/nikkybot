@@ -36,9 +36,6 @@ def more_like(nikkyai, fmt):
 
 
 def rule(nikky, fmt):
-    seed = choice(("Don't be", "Don't use", "Don't talk", "Don't bring",
-                   "Don't mention", "Don't do", "Don't act"))
-    chain = nikky.markov.str_to_chain(seed)
     # Do our own repeated response checking--this lets us avoid giving the same
     # “rule” more than once in the same list, even if several are being
     # combined at once into a single output message
@@ -50,6 +47,9 @@ def rule(nikky, fmt):
     # in nikkyai, which will always reject it as a duplicate before ever being
     # output).
     for i in xrange(0, nikky.recurse_limit):
+        seed = choice(("Don't be", "Don't use", "Don't talk", "Don't bring",
+                       "Don't mention", "Don't do", "Don't act"))
+        chain = nikky.markov.str_to_chain(seed)
         out = nikky.markov_forward(chain, max_lf=0)
         try:
             return nikky.check_output_response(out, add_response=True)
