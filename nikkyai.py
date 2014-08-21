@@ -390,12 +390,12 @@ class NikkyAI(object):
         """
         nick, msg = self.filter_input(msg)
         msg = self.filter_markov_input(nick, msg)
-        chain = self.markov.str_to_chain(msg)
+        chain = self.markov.str_to_chain(msg, wildcard='*')
         try:
             out = self.markov.sentence(
                 chain, forward_length=order-1, backward_length=order-1)
         except KeyError:
-            return '{}: Markov chain not found'.format(repr(' '.join(chain)))
+            return '{}: Markov chain not found'.format(repr(chain))
         else:
             return self.filter_markov_output(nick, out)
 
@@ -405,11 +405,11 @@ class NikkyAI(object):
         """
         nick, msg = self.filter_input(msg)
         msg = self.filter_markov_input(nick, msg)
-        chain = self.markov.str_to_chain(msg)
+        chain = self.markov.str_to_chain(msg, wildcard='*')
         try:
             response = self.markov.sentence_forward(chain, length=order-1)
         except KeyError:
-            return '{}: Markov chain not found'.format(repr(' '.join(chain)))
+            return '{}: Markov chain not found'.format(repr(chain))
         else:
             return self.filter_markov_output(nick, response)
 

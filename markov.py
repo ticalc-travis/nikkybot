@@ -102,9 +102,17 @@ class PostgresMarkov(object):
             else:
                 return '_'
 
-    def str_to_chain(self, string):
-        """Convert a normal sentence in a string to a list of words"""
-        return [s for s in string.replace('\n', ' \n ').split(' ') if s]
+    def str_to_chain(self, string, wildcard=None):
+        """Convert a normal sentence in a string to a list of words.
+        If 'wildcard' is a string, replace words matching that string with the
+        object None."""
+        chain = []
+        for s in string.replace('\n', ' \n ').split(' '):
+            if s == wildcard:
+                chain.append(None)
+            elif s:
+                chain.append(s)
+        return chain
 
     def chain_to_str(self, chain):
         """Unsplit a tuple of words back into a string"""
@@ -171,47 +179,89 @@ class PostgresMarkov(object):
     def forward(self, start):
         """Return a list of available chains from the given chain forward in
         context.  Input chain is a list/tuple of words one to five items in
-        length."""
+        length.  None objects may be given to serve as "wildcards" for
+        particular word positions.  Output is a list of pairs of chains, the
+        first in the pair covering the given context from 'start' (with
+        wildcards filled in), the second covering the next words in context
+        after 'start'.
+        """
+        chain = tuple(start)
         chain = self.conv_key(start)
         chain.reverse()
-        q = self.cursor.mogrify(
-            'SELECT next1, next2, next3, next4'
-            ' FROM "{}" WHERE word=%s'.format(
-                self.table_name), (chain[0],))
-        if len(chain) >= 2:
-            q += self.cursor.mogrify(' AND prev1key=%s', (chain[1],))
-        if len(chain) >= 3:
-            q += self.cursor.mogrify(' AND prev2key=%s', (chain[2],))
-        if len(chain) >= 4:
-            q += self.cursor.mogrify(' AND prev3key=%s', (chain[3],))
-        if len(chain) >= 5:
-            q += self.cursor.mogrify(' AND prev4key=%s', (chain[4],))
+        if len(chain) < 1 or len(chain) > 5:
+            raise IndexError("'start' must contain 1 to 5 items")
+        if not [x for x in chain if x is not None]:
+            raise ValueError("'start' must contain at least one non-None item")
+
+        # Gather a list of columns backward in context to cover length of
+        # given chain
+        context_cols = ['word','prev1','prev2','prev3','prev4'][:len(chain)]
+        context_cols.reverse()
+        context_cols = ', '.join(context_cols)
+
+        q1 = 'SELECT {}, next1, next2, next3, next4 FROM "{}" WHERE '.format(
+            context_cols, self.table_name)
+        q2 = []
+        if chain[0] is not None:
+            q2.append(self.cursor.mogrify('word=%s', (chain[0],)))
+        if len(chain) >= 2 and chain[1] is not None:
+            q2.append(self.cursor.mogrify('prev1key=%s', (chain[1],)))
+        if len(chain) >= 3 and chain[2] is not None:
+            q2.append(self.cursor.mogrify('prev2key=%s', (chain[2],)))
+        if len(chain) >= 4 and chain[3] is not None:
+            q2.append(self.cursor.mogrify('prev3key=%s', (chain[3],)))
+        if len(chain) >= 5 and chain[4] is not None:
+            q2.append(self.cursor.mogrify('prev4key=%s', (chain[4],)))
+        q = q1 + ' AND '.join(q2)
         self.doquery(q)
         if not self.cursor.rowcount:
             chain.reverse()     # Back to original order for error message
             raise KeyError("{}: chain not found".format(chain))
-        return self.cursor.fetchall()
+        return [(t[:len(chain)], t[len(chain):]) for t in
+                self.cursor.fetchall()]
 
     def backward(self, start):
         """Return a list of available chains from the given chain backward in
-        context.  Input chain is a list/tuple of words one to five items in length."""
+        context.  Input chain is a list/tuple of words one to five items in
+        length.  None objects may be given to serve as "wildcards" for
+        particular word positions.  Output is a list of pairs of chains, the
+        first in the pair covering the given context from 'start' (with
+        wildcards filled in), the second covering the previous words in context
+        before 'start'.
+        """
+        chain = tuple(start)
         chain = self.conv_key(start)
-        q = self.cursor.mogrify(
-            'SELECT prev4, prev3, prev2, prev1'
-            ' FROM "{}" WHERE word=%s'.format(
-                self.table_name), (chain[0],))
-        if len(chain) >= 2:
-            q += self.cursor.mogrify(' AND next1key=%s', (chain[1],))
-        if len(chain) >= 3:
-            q += self.cursor.mogrify(' AND next2key=%s', (chain[2],))
-        if len(chain) >= 4:
-            q += self.cursor.mogrify(' AND next3key=%s', (chain[3],))
-        if len(chain) >= 5:
-            q += self.cursor.mogrify(' AND next4key=%s', (chain[4],))
+        if len(chain) < 1 or len(chain) > 5:
+            raise IndexError("'start' must contain 1 to 5 items")
+        if not [x for x in chain if x is not None]:
+            raise ValueError("'start' must contain at least one non-None item")
+
+        # Gather a list of columns forward in context to cover length of
+        # given chain
+        context_cols = ['word', 'next1','next2','next3','next4'][:len(chain)]
+        #context_cols.reverse()
+        context_cols = ', '.join(context_cols)
+
+        q1 = 'SELECT {}, prev4, prev3, prev2, prev1 FROM "{}" WHERE '.format(
+            context_cols, self.table_name)
+        q2 = []
+        if chain[0] is not None:
+            q2.append(self.cursor.mogrify('word=%s', (chain[0],)))
+        if len(chain) >= 2 and chain[1] is not None:
+            q2.append(self.cursor.mogrify('next1key=%s', (chain[1],)))
+        if len(chain) >= 3 and chain[2] is not None:
+            q2.append(self.cursor.mogrify('next2key=%s', (chain[2],)))
+        if len(chain) >= 4 and chain[3] is not None:
+            q2.append(self.cursor.mogrify('next3key=%s', (chain[3],)))
+        if len(chain) >= 5 and chain[4] is not None:
+            q2.append(self.cursor.mogrify('next4key=%s', (chain[4],)))
+        q = q1 + ' AND '.join(q2)
         self.doquery(q)
         if not self.cursor.rowcount:
+            #chain.reverse()     # Back to original order for error message
             raise KeyError("{}: chain not found".format(chain))
-        return self.cursor.fetchall()
+        return [(t[:len(chain)], t[len(chain):]) for t in
+                self.cursor.fetchall()]
 
     def sentence_forward(self, start, length=4, allow_empty_completion=True):
         """Generate a sentence forward from the start chain.  'length' sets the
@@ -219,17 +269,17 @@ class PostgresMarkov(object):
         If 'allow_empty_completion' is False, do not return a chain identical
         to the start chain, but always a non-empty chain completion (return
         KeyError if this is not possible)."""
-        sentence = tuple(start)
+        sentence = start = choice(self.forward(start))[0]
         while True:
             try:
-                choices = self.forward(sentence[-length:])
+                choices = [t[1] for t in self.forward(sentence[-length:])]
                 if not allow_empty_completion:
                     choices = [c for c in choices if c != ('', '', '', '')]
                     if not choices:
                         raise KeyError('No non-empty forward chain completion for: ' + repr(start))
-                sentence = sentence + choice(choices)
+                sentence = sentence + choice(choices)[:length]
             except KeyError:
-                if sentence == tuple(start):
+                if sentence == start:
                     raise
                 else:
                     break
@@ -241,17 +291,17 @@ class PostgresMarkov(object):
         If 'allow_empty_completion' is False, do not return a chain identical
         to the start chain, but always a non-empty chain completion (return
         KeyError if this is not possible)."""
-        sentence = tuple(start)
+        sentence = start = choice(self.backward(start))[0]
         while True:
             try:
-                choices = self.backward(sentence[:length])
+                choices = [t[1] for t in self.backward(sentence[:length])]
                 if not allow_empty_completion:
                     choices = [c for c in choices if c != ('', '', '', '')]
                     if not choices:
                         raise KeyError('No non-empty backward chain completion for: ' + repr(start))
-                sentence = choice(choices) + sentence
+                sentence = choice(choices)[-length:] + sentence
             except KeyError:
-                if sentence == tuple(start):
+                if sentence == start:
                     raise
                 else:
                     break
@@ -263,8 +313,7 @@ class PostgresMarkov(object):
         backward_order (for backward direction)."""
         right = self.str_to_chain(self.sentence_forward(start, forward_length))
         back_chain = right[:backward_length]
-        left = self.str_to_chain(self.sentence_backward(back_chain,
-                                                        backward_length))
-        return self.chain_to_str(left[:-len(back_chain)] + \
-            list(start) + right[len(start):])
+        left = self.str_to_chain(
+            self.sentence_backward(back_chain, backward_length))
+        return self.chain_to_str(left[:-len(back_chain)] + right)
 
