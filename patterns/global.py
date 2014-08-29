@@ -118,6 +118,20 @@ patterns = (
         Markov_forward('* you then', force_completion=False),
     ),
 ),
+(r'^(but)\b', 0,
+    R(
+        Markov_forward('well'),
+        Markov_forward('okay, well'),
+        Markov_forward('then'),
+        Markov_forward('whatever', force_completion=False),
+        Markov_forward('good idea', force_completion=False),
+        Markov_forward('okay', force_completion=False),
+        Markov_forward('right', force_completion=False),
+        Markov_forward('nope', force_completion=False),
+        Markov_forward('no', force_completion=False),
+        Markov_forward('so', force_completion=False),
+    ),
+),
 
 ## Questions ##
 
