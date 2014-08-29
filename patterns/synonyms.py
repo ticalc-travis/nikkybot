@@ -155,6 +155,6 @@ patterns = (
 # Transformations
 (r'(.*)\bI am\b(.*)', 99, Markov('{1} you are {2}')),
 (r'(.*)\byou are\b(.*)', 99, Markov('{1} I am {2}')),
-(r'(.*)\bme\b(.*)', 99, Markov('{1} you {2}')),
+(r'(.*)\bme\b(.*)', 0, Markov('{1} you {2}')),
 
 )
