@@ -75,9 +75,12 @@ class NikkyBot(irc.IRCClient, Sensitive):
         reclaim task"""
         reactor.callLater(self.opts.nick_retry_wait, self.reclaim_nick)
         try:
-            return self.opts.nicks[self.opts.nicks.index(nickname) + 1]
+            newnick = self.opts.nicks[self.opts.nicks.index(nickname) + 1]
         except IndexError:
-            return self.opts.nicks[0] + '_'
+            newnick = self.opts.nicks[0] + '_'
+        print("Nick collision for {}; using {}".format(
+            repr(nickname), repr(newnick)))
+        return newnick
 
     ## Callbacks ##
 
@@ -205,7 +208,10 @@ class NikkyBot(irc.IRCClient, Sensitive):
         """Attempt to reclaim preferred nick (self.alterCollidedNick will
         set up this function to be called again later on failure)"""
         if self.nickname != self.opts.nicks[0]:
+            print('Attempting to change nick from {} to {}'.format(
+                repr(self.nickname), repr(self.opts.nicks[0])))
             self.setNick(self.opts.nicks[0])
+            reactor.callLater(self.opts.nick_retry_wait, self.reclaim_nick)
 
     def hostmask_match(self, testmask, knownmask):
         """Check if knownmask matches against testmask, resolving wildcards
