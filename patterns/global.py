@@ -89,6 +89,35 @@ patterns = (
         Markov_forward('depends', force_completion=False),
     )
 ),
+(r"^(yes|yah|yeah)\b", 0,
+    R(
+        Markov_forward('well'),
+        Markov_forward('okay, well'),
+        Markov_forward('thanks', force_completion=False),
+        Markov_forward('good idea', force_completion=False),
+        Markov_forward('see, I told you', force_completion=False),
+        Markov_forward('okay', force_completion=False),
+        Markov_forward('right', force_completion=False),
+        Markov_forward('nope', force_completion=False),
+        Markov_forward('no', force_completion=False),
+        Markov_forward('wrong', force_completion=False),
+        "I'm glad we agree."
+    ),
+),
+(r"^(no|nope|nuh-uh)\b", 0,
+    R(
+        Markov_forward('well'),
+        Markov_forward('okay, well'),
+        Markov_forward('then'),
+        Markov_forward('whatever', force_completion=False),
+        Markov_forward('yes', force_completion=False),
+        Markov_forward('then * you', force_completion=False),
+        Markov_forward('well * you', force_completion=False),
+        Markov_forward('well * you then', force_completion=False),
+        Markov_forward('* you', force_completion=False),
+        Markov_forward('* you then', force_completion=False),
+    ),
+),
 
 ## Questions ##
 
