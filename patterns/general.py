@@ -94,6 +94,7 @@ patterns = (
         'k',
         'nice',
         "I'm sorry",
+        'Me too',
         Recurse("you're")
     )
 ),
