@@ -323,6 +323,7 @@ patterns = (
         Markov_forward('why', force_completion=False),
     ),
 ),
+(r"\b(really|orly|rly)\b", 0, Recurse('***yes/no***')),
 
 ## Misc ##
 
