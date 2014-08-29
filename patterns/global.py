@@ -89,7 +89,7 @@ patterns = (
         Markov_forward('depends', force_completion=False),
     )
 ),
-(r"^(yes|yah|yeah)\b", 0,
+(r"^(yes|yah|yeah|right|naturally|of course)\b", 0,
     R(
         Markov_forward('well'),
         Markov_forward('okay, well'),
