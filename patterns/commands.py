@@ -130,21 +130,4 @@ patterns = (
 (r'^\??(personas|personalities)\b', -99, E(list_personas), True),
 
 # Markov
-(r'^\??markov5 (.*)', -99, Manual_markov(5, '{1}'), True),
-(r'^\??markov4 (.*)', -99, Manual_markov(4, '{1}'), True),
-(r'^\??markov3 (.*)', -99, Manual_markov(3, '{1}'), True),
-(r'^\??markov2 (.*)', -99, Manual_markov(2, '{1}'), True),
-(r'^\??markov5nr (.*)', -99, Manual_markov(5, '{1}'), False),
-(r'^\??markov4nr (.*)', -99, Manual_markov(4, '{1}'), False),
-(r'^\??markov3nr (.*)', -99, Manual_markov(3, '{1}'), False),
-(r'^\??markov2nr (.*)', -99, Manual_markov(2, '{1}'), False),
-(r'^\??markov5f (.*)', -99, Manual_markov_forward(5, '{1}'), True),
-(r'^\??markov4f (.*)', -99, Manual_markov_forward(4, '{1}'), True),
-(r'^\??markov3f (.*)', -99, Manual_markov_forward(3, '{1}'), True),
-(r'^\??markov2f (.*)', -99, Manual_markov_forward(2, '{1}'), True),
-(r'^\??markov5fnr (.*)', -99, Manual_markov_forward(5, '{1}'), False),
-(r'^\??markov4fnr (.*)', -99, Manual_markov_forward(4, '{1}'), False),
-(r'^\??markov3fnr (.*)', -99, Manual_markov_forward(3, '{1}'), False),
-(r'^\??markov2fnr (.*)', -99, Manual_markov_forward(2, '{1}'), False),
-
 )
