@@ -408,7 +408,7 @@ class NikkyAI(object):
         except KeyError:
             return '{}: Markov chain not found'.format(repr(chain))
         else:
-            return self.filter_markov_output(nick, out)
+            return out
 
     def manual_markov_forward(self, order, msg):
         """Return manually-invoked Markov forward operation (output special
@@ -422,7 +422,7 @@ class NikkyAI(object):
         except KeyError:
             return '{}: Markov chain not found'.format(repr(chain))
         else:
-            return self.filter_markov_output(nick, response)
+            return response
 
     def nikkysim(self, strip_number=True, saying=None):
         """Return NikkySim saying.  saying is the saying number as a tuple
