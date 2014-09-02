@@ -577,7 +577,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         """'Escape' a message by inserting an invisible control character
         at the beginning in some cases, to avoid triggering public bot
         commands."""
-        if (msg[0] in '~!?@#$%^&*-.,;:' and
+        if (msg[0] in '!?@#$%^&*-.,;:' and
                 not msg.startswith('!qfind') and
                 not msg.startswith('!qadd')):
             return '\x0F' + msg
