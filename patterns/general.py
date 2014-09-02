@@ -69,6 +69,13 @@ patterns = (
 (r'\b(brb|be right back)\b', 1, R('k', 'kk')),
 (r'\bno\W*thanks\b', 1, R('DIAF then')),
 (r'\b(wb|welcome back|welcoem back)\b', 1, R('No\nGo away')),
+(r"^(no|nope|nuh-uh)\b", 0,
+    R(
+        Markov_forward('well suck'),
+        Markov_forward('then suck'),
+        Markov_forward('suck'),
+    ),
+),
 
 # General
 (r'\b(you suck|your .* sucks)\b', 1,
