@@ -28,6 +28,8 @@ from twisted.python.rebuild import rebuild
 import markov
 rebuild(markov)        # Update in case of dynamic reload
 
+DEFAULT_MARKOV_LENGTH=3         # Valid values:  1-4
+
 #------------------------------------------------------------------------------
 
 
@@ -297,7 +299,10 @@ class NikkyAI(object):
                 chain = tuple(words[i:i+order])
                 try:
                     response = self.markov.adjust_line_breaks(
-                        self.markov.sentence(chain), max_lf_l, max_lf_r)
+                        self.markov.sentence(
+                            chain, forward_length=DEFAULT_MARKOV_LENGTH,
+                            backward_length=DEFAULT_MARKOV_LENGTH),
+                        max_lf_l, max_lf_r)
                 except KeyError:
                     continue
                 else:
@@ -313,7 +318,10 @@ class NikkyAI(object):
         for word in words:
             try:
                 response = self.markov.adjust_line_breaks(
-                    self.markov.sentence((word,)), max_lf_l, max_lf_r)
+                    self.markov.sentence(
+                        (word,), forward_length=DEFAULT_MARKOV_LENGTH,
+                        backward_length=DEFAULT_MARKOV_LENGTH),
+                    max_lf_l, max_lf_r)
             except KeyError:
                 continue
             else:
@@ -355,7 +363,9 @@ class NikkyAI(object):
         for i in xrange(self.recurse_limit):
             chain = self.markov.str_to_chain(choice(generic_words))
             try:
-                msg = self.markov.sentence(chain)
+                msg = self.markov.sentence(
+                    chain, forward_length=DEFAULT_MARKOV_LENGTH,
+                    backward_length=DEFAULT_MARKOV_LENGTH)
             except KeyError:
                 continue
             else:
@@ -377,7 +387,8 @@ class NikkyAI(object):
             max_lf = self.max_lf_r
         try:
             out = self.markov.sentence_forward(
-                chain, allow_empty_completion=not force_completion)
+                chain, length=DEFAULT_MARKOV_LENGTH,
+                allow_empty_completion=not force_completion)
         except KeyError:
             return failmsg
         else:
