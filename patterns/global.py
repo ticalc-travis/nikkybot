@@ -270,8 +270,8 @@ patterns = (
     ),
 ),
 (r"\bdon't (.*) what\b", 1, Markov_forward("Don't {1}")),
-(r"(\S*)\s*(\S*)\s*(what|who|whom|which)\b", 1, Markov_forward('{1} {2}')),
-(r"(\S*)\s*(what|who|whom|which)\b", 1, Markov_forward('{1}')),
+(r"(\S+)\s+(\S+)\s+(what|who|whom|which)\b", 1, Markov_forward('{1} {2}')),
+(r"(\S+)\s+(what|who|whom|which)\b", 1, Markov_forward('{1}')),
 
 (r'\b(how much|how many|what amount)\b', -2,
     R(
