@@ -385,6 +385,9 @@ class NikkyAI(object):
         """
         if max_lf is None:
             max_lf = self.max_lf_r
+        if len(chain) > 5:
+            chain = chain[:5]
+            self.printdebug('NikkyAI.markov_forward:  Warning:  chain length too long; truncating')
         try:
             out = self.markov.sentence_forward(
                 chain, length=DEFAULT_MARKOV_LENGTH,
