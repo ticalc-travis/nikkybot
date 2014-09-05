@@ -168,7 +168,7 @@ patterns = (
         Recurse('how many'),
     ),
 ),
-(r"^(who is|who's|what is|what's|how's|how is) (the |a |an |your |my )?(.*?)\?*$", 0,
+(r"^(who is|who's|what is|what's|how's|how is) (the |a |an |your |my )?(\w+)", 0,
     R(
         Markov_forward('{3} is'),
         Markov_forward('{3}'),
@@ -181,7 +181,7 @@ patterns = (
         Recurse("what's"),
     ),
 ),
-(r"^(who are|who're|what are|what're|how're|how are) (.*?)\?*$", 0,
+(r"^(who are|who're|what are|what're|how're|how are) (\w+)", 0,
     R(
         Markov_forward('{2} are'),
         Markov_forward("They're"),
@@ -262,7 +262,7 @@ patterns = (
 (r'\bwhat does it mean\b', 1,
     Markov_forward('it means')
 ),
-(r'\b(who|what) (does|do|did|should|will|is) (\S+) (.*?)\?*$', -1,
+(r'\b(who|what) (does|do|did|should|will|is) (\w+) (\w+)', 0,
     R(
         Recurse('which'),
         Markov_forward('{3} {4}'),
