@@ -577,7 +577,6 @@ class NikkyAI(object):
 
     def filter_markov_output(self, sourcenick, msg):
         """Perform transformations on output for Markov functions."""
-        self.printdebug('DEBUG: filter_markov_output: original:      '+msg)
 
         # Transform phrases at beginning of reply
         for transform in (
@@ -602,13 +601,9 @@ class NikkyAI(object):
         if sourcenick and randint(0, 10):
             msg = re.sub(r'\S+: ', sourcenick + ': ', msg)
 
-        self.printdebug('DEBUG: filter_markov_output: transform:     '+msg)
         msg = self.dehighlight_sentence(msg)
-        self.printdebug('DEBUG: filter_markov_output: dehighlight:   '+msg)
         msg = self.replace_nicks(msg, sourcenick)
-        self.printdebug('DEBUG: filter_markov_output: replace nicks: '+msg)
         msg = self.fix_nonmatching_punctuation(msg)
-        self.printdebug('DEBUG: filter_markov_output: fix punct:     '+msg)
         return msg
 
     def fix_nonmatching_punctuation(self, sentence):
