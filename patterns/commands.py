@@ -68,7 +68,7 @@ def mimic(nikkyai, fmt):
     try:
         nikkyai.set_personality(persona)
     except Bad_personality_error:
-        out = "No such personality '{}'; say \"{}: ?personalities\" to get the list".format(persona, nikkyai.nick)
+        out = "No such personality '{}'; say \"{}: personalities\" to get the list".format(persona, nikkyai.nick)
     else:
         out = '"' + nikkyai.reply(msg, add_response=True) + '"'
     finally:
