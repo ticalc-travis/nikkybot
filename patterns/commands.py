@@ -107,6 +107,11 @@ patterns = (
 # pattern regexp, priority, action, allow repeat?
 # pattern regexp, last reply, priority, action, allow repeat?
 
+# Help
+(r'^\W*help', -99,
+    S('Basic info about me: https://raw.githubusercontent.com/ticalc-travis/nikkybot/master/README'),
+True),
+
 # NikkySim
 (r'\b(random (quote|saying)|nikkysim)\b', -2,
     E(random_nikkysim)
