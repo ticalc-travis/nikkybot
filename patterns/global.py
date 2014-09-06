@@ -251,6 +251,14 @@ patterns = (
         Markov_forward("I am"),
     ),
 ),
+(r'\bwho', 0,
+    R(
+        Markov_forward('nobody', force_completion=False),
+        Markov_forward('somebody', force_completion=False),
+        Markov_forward('everybody', force_completion=False),
+        Markov_forward('anybody', force_completion=False),
+    )
+),
 (r'\b(why|how come)\b', 0,
     R(
         Markov_forward('because', force_completion=False),
