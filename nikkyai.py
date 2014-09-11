@@ -75,7 +75,6 @@ class NikkyAI(object):
         self.pattern_response_expiry = pattern_response_expiry
 
         # Init AI
-        self.last_nikkysim_saying = None
         self.last_reply = ''
         self.last_replies = {}
         self.nick = 'nikkybot'
@@ -155,12 +154,12 @@ class NikkyAI(object):
             # Not supported for non-nikky personas
             return ''
 
-    def nikkysim_remark(self, msg='', strip_number=True):
+    def nikkysim_remark(self, msg='', strip_number=False):
         """Generate a NikkySim remark.  If not strip_number, include the
         saying number before the remark.  check_output_response NOT called.
         """
-        out, self.last_nikkysim_saying = self.nikkysim(strip_number)
-        return out
+        out, saying_no = self.nikkysim(strip_number)
+        return out + ' --NikkySim'
 
     def mimic_remark(self, msg=''):
         """Mimic a random person."""
@@ -427,7 +426,7 @@ class NikkyAI(object):
         else:
             return response
 
-    def nikkysim(self, strip_number=True, saying=None):
+    def nikkysim(self, strip_number=False, saying=None):
         """Return NikkySim saying.  saying is the saying number as a tuple
         (e.g. (1234,5678)); None selects random saying.  Don't start output
         with saying number if strip_number is True.  Output
