@@ -127,12 +127,12 @@ True),
 ),
 
 # Mimic
-(r'^(mimic|impersonate|act like|imitate) (\S+) ?(.*)', -98, E(mimic), True),
-(r'^(mimic|impersonate|act like|imitate) (someone|anyone|somebody|anybody|random|rand) ?(.*)', -99, E(mimic_random), True),
+(r'^\W*(mimic|impersonate|act like|imitate) (\S+) ?(.*)', -98, E(mimic), True),
+(r'^\W*(mimic|impersonate|act like|imitate) (someone|anyone|somebody|anybody|random|rand) (.*)', -99, E(mimic_random), True),
 (r'\b(markovmix|markov bot)', -99,
     R('I can impersonate people\nSay "?personalities" to me and I\'ll tell you more'),
 ),
-(r'^\??(personas|personalities)\b', -99, E(list_personas), True),
+(r'^\W*(personas|personalities)\b', -99, E(list_personas), True),
 
 # Markov
 )
