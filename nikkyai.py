@@ -397,7 +397,7 @@ class NikkyAI(object):
             out = self.markov.adjust_right_line_breaks(out, max_lf).strip()
             return self.filter_markov_output('', out)
 
-    def manual_markov(self, order, msg):
+    def manual_markov(self, order, msg, max_lf=None):
         """Return manually-invoked Markov operation (output special error
         string if chain not found).  Does NOT do check_output_response().
         """
@@ -410,9 +410,10 @@ class NikkyAI(object):
         except KeyError:
             return '{}: Markov chain not found'.format(repr(chain))
         else:
+            out = self.markov.adjust_right_line_breaks(out, max_lf).strip()
             return out
 
-    def manual_markov_forward(self, order, msg):
+    def manual_markov_forward(self, order, msg, max_lf=None):
         """Return manually-invoked Markov forward operation (output special
         error string if chain not found).  Do NOT do check_output_response().
         """
@@ -424,6 +425,7 @@ class NikkyAI(object):
         except KeyError:
             return '{}: Markov chain not found'.format(repr(chain))
         else:
+            out = self.markov.adjust_right_line_breaks(out, max_lf).strip()
             return response
 
     def nikkysim(self, strip_number=False, saying=None):

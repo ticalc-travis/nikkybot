@@ -22,6 +22,9 @@
 from random import choice
 
 
+MANUAL_MAX_LF = 5       # Maximum line breaks allowed in “markov” commands
+
+
 class S(list):
     """Sequence table"""
     def __init__(self, *args):
@@ -100,7 +103,8 @@ class Manual_markov(object):
     def get(self, nikkyai, fmt=None):
         if fmt is None:
             fmt = []
-        return nikkyai.manual_markov(self.order, self.text.format(*fmt))
+        return nikkyai.manual_markov(
+            self.order, self.text.format(*fmt), max_lf=MANUAL_MAX_LF)
 
 
 class Manual_markov_forward(object):
@@ -113,8 +117,8 @@ class Manual_markov_forward(object):
     def get(self, nikkyai, fmt=None):
         if fmt is None:
             fmt = []
-        return nikkyai.manual_markov_forward(self.order,
-                                             self.text.format(*fmt))
+        return nikkyai.manual_markov_forward(
+            self.order, self.text.format(*fmt), max_lf=MANUAL_MAX_LF)
 
 
 class Markov(object):
