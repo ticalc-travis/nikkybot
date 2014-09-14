@@ -426,12 +426,15 @@ class NikkyBot(irc.IRCClient, Sensitive):
         elif cmd in ('botchat', '?botchat'):
             usage_msg = 'Usage: ?botchat personality1 personality2'
             parms = args.split(' ')
+            nikky = self.nikkies[None]
             if (len(parms) != 2 or
-                    not self.nikkies[None].is_personality_valid(parms[0]) or
-                    not self.nikkies[None].is_personality_valid(parms[1])):
+                    not nikky.is_personality_valid(parms[0]) or
+                    not nikky.is_personality_valid(parms[1])):
                 reactor.callLater(2, self.notice, src_nick, usage_msg)
                 reactor.callLater(4, self.give_personalities_list, src_nick)
             else:
+                nick1 = nikky.normalize_personality(parms[0])
+                nick2 = nikky.normalize_personality(parms[1])
                 if self.user_threads >= self.opts.max_user_threads:
                     reactor.callLater(
                         2, self.notice, src_nick,
@@ -443,18 +446,21 @@ class NikkyBot(irc.IRCClient, Sensitive):
                         "Generating the bot chat may take a while... I'll let "
                         "you know when it's done!")
                     d = threads.deferToThread(self.exec_bot_chat, src_nick,
-                                              sender, parms[0], parms[1])
+                                              sender, nick1, nick2)
                     d.addErrback(self.bot_chat_error, src_nick)
                     d.addCallback(self.return_bot_chat)
+
         elif re.match((r"\b(quit|stop|don.?t|do not)\b.*\b(hilite|hilight|highlite|highlight).*\bme"), msg, re.I):
             self._cmd_add_munge(src_nick)
             msg = "Sorry, {}, I'll stop (tell me 'highlight me' to undo)".format(self.nikkies[None].munge_word(src_nick))
             reactor.callLater(2, self.msg, sender, msg)
+
         elif re.match((r"\b(hilite|hilight|highlite|highlight) me"), msg,
                       re.I):
             self._cmd_delete_munge(src_nick)
             msg = "Okay, {}!".format(src_nick)
             reactor.callLater(2, self.msg, sender, msg)
+
         else:
             raise UnrecognizedCommandError
 
