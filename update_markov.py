@@ -194,8 +194,8 @@ def update(pname, reset):
     for fn in [os.path.join('log_irc_weechat', 'irc.efnet.#'+x+'.weechatlog')
                for x in
             ('calcgames', 'cemetech', 'tcpa', 'ti', 'omnimaga', 'flood',
-             'caleb', 'hp48', 'markov', 'nspired', 'nspire-lua', 'prizm',
-             'wikiti')]:
+             'caleb', 'caleb-spam', 'hp48', 'markov', 'nspired', 'nspire-lua',
+             'prizm', 'wikiti')]:
         with open(os.path.join(home, fn), 'r') as f:
             line_group = []
             for line in f:
