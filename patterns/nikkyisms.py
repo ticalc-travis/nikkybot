@@ -64,7 +64,7 @@ patterns = (
 # pattern regexp, priority, action, allow repeat?
 # pattern regexp, last reply, priority, action, allow repeat?
 
-(r'\bdiaf\b', 1,
+(r'\b(diaf|fire)\b', 1,
     R(
         '\001ACTION burns\001',
         S(
