@@ -64,7 +64,7 @@ def random_number(nikkyai, fmt):
 def mimic(nikkyai, fmt):
     from nikkyai import Bad_personality_error
     persona, msg = fmt[2], fmt[3]
-    persona = nikkyai.markov.conv_key(persona)
+    persona = nikkyai.normalize_personality(persona)
     try:
         nikkyai.set_personality(persona)
     except Bad_personality_error:
