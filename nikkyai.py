@@ -58,7 +58,7 @@ import personalitiesrc
 class NikkyAI(object):
     def __init__(self, db_connect='dbname=markovmix user=markovmix',
                  recurse_limit=100, debug=True, max_lf_l=1, max_lf_r=2,
-                 remark_chance_no_keywords = 700, remark_chance_keywords=100,
+                 remark_chance_no_keywords=1000, remark_chance_keywords=200,
                  pattern_response_expiry=timedelta(30),
                  personality='nikky', id=None):
 
