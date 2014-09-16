@@ -549,7 +549,7 @@ class NikkyAI(object):
         """Preprocess input msg in form "<speaking nick> msg".
         Return (speaker_nick, msg).
         """
-        m = re.match(r'<(.*)> (.*)', msg)
+        m = re.match(r'<(.*)> (.*)', msg, re.DOTALL)
         if m:
             speaker_nick, msg = m.groups()
         else:
