@@ -61,9 +61,9 @@ personality_regexes = {
     'kevino':
         (r'(.*?kevin_o.*?|dj_omni.*?|dj_o.*?|`-`|celtic3.*?|celticiii.*?|xlibman.*?|omnom|nom|ragol666.*?)',
          r'(dj.omnimaga|dj.o)',
-         r'(dj.omnimaga|dj.o)'),
+         r'(dj.omnimaga|dj.o).*?'),
     'brandonw':
-        (r'(brandonw)',
+        (r'(brandonw).*?',
          r'(brandonw)',
          r'(brandonw)'),
     'tev':
@@ -75,7 +75,7 @@ personality_regexes = {
          r'(merth|merthsoft|shaun).*?',
          r'(merth|merthsoft|shaun).*?'),
     'randomist':
-        (r'(randomist|korinidos|.*arch|metalrand|randeimos|damakaru).*?',
+        (r'(randomist|korinidos|.*arch|metalrand|randeimos|dama).*?',
          None,
          None),
     'sirlewk':
