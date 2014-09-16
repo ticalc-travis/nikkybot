@@ -195,7 +195,7 @@ def update(pname, reset):
                for x in
             ('calcgames', 'cemetech', 'tcpa', 'ti', 'omnimaga', 'flood',
              'caleb', 'caleb-spam', 'hp48', 'markov', 'nspired', 'nspire-lua',
-             'prizm', 'wikiti')]:
+             'prizm', 'wikiti', 'cemetech-mc')]:
         with open(os.path.join(home, fn), 'r') as f:
             line_group = []
             for line in f:
@@ -223,7 +223,8 @@ def update(pname, reset):
                     continue
                 if re.match('^'+pregex[0]+'$', nick, re.I):
                     line_group.append(msg)
-                elif pregex[1] and nick.lower().startswith('saxjax'):
+                elif pregex[1] and (nick.lower().startswith('saxjax') or
+                                    nick.lower().startswith('cemetecmc')):
                     m = re.match(r'^\(.\) \[?'+pregex[1]+r'[:\]] (.*)',
                                  msg, re.I)
                     if m:

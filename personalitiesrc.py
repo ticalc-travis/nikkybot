@@ -12,7 +12,7 @@
 personality_regexes = {
     'redstone':
         (r'(redstone|asian).*',
-         None,
+         r'(redstonepizza).*',
          None),
     'sircmpwn':
         (r'(sircmpwn).*',
