@@ -277,7 +277,7 @@ class NikkyAI(object):
                 continue
             return out
         if failmsg is None:
-            return self.random_markov(add_response=add_response)
+            return self.random_markov(src_nick=nick, add_response=add_response)
         else:
             return failmsg
 
@@ -339,8 +339,8 @@ class NikkyAI(object):
         # Failing *that*, return null and let caller deal with it
         return ''
 
-    def random_markov(self, add_response=True, max_lf_l=None,
-                      max_lf_r=None):
+    def random_markov(self, src_nick='', add_response=True,
+                      max_lf_l=None, max_lf_r=None):
         """Pick any random Markov-chained sentence and output it.  Do
         check_output_response().
         """
@@ -369,7 +369,8 @@ class NikkyAI(object):
                 continue
             else:
                 out = self.markov.adjust_line_breaks(
-                    self.filter_markov_output('', msg), max_lf_l, max_lf_r)
+                    self.filter_markov_output(src_nick, msg),
+                    max_lf_l, max_lf_r)
                 try:
                     return self.check_output_response(
                         out, add_response=add_response)
@@ -377,8 +378,8 @@ class NikkyAI(object):
                     continue
         return "I don't know what to say!"
 
-    def markov_forward(self, chain, failmsg='', max_lf=None,
-                       force_completion=True):
+    def markov_forward(self, chain, failmsg='', src_nick='',
+                       max_lf=None, force_completion=True):
         """Generate sentence from the current chain forward only and not
         backward.  Do NOT do check_output_response().
         """
@@ -395,7 +396,7 @@ class NikkyAI(object):
             return failmsg
         else:
             out = self.markov.adjust_right_line_breaks(out, max_lf).strip()
-            return self.filter_markov_output('', out)
+            return self.filter_markov_output(src_nick, out)
 
     def manual_markov(self, order, msg, max_lf=None):
         """Return manually-invoked Markov operation (output special error

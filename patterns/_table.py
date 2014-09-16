@@ -90,7 +90,8 @@ class Markov_forward(object):
             failmsg = failmsg.format(*fmt)
         chain = nikkyai.markov.str_to_chain(
             self.string.format(*fmt), wildcard='*')
-        return nikkyai.markov_forward(chain, failmsg, max_lf=self.max_lf,
+        return nikkyai.markov_forward(chain, failmsg, src_nick=fmt[0],
+                                      max_lf=self.max_lf,
                                       force_completion=self.force_completion)
 
 

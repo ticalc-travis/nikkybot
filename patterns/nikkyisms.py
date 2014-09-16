@@ -22,17 +22,24 @@ import nikkyai
 # Distinctive “Nikky-like” phrases
 
 def more_like(nikkyai, fmt):
+    src_nick = fmt[0]
     word = fmt[1].strip()
     if not word:
-        return nikkyai.markov_reply('\n more like \n', add_response=False,
-                                    max_lf_l=2, max_lf_r=2)
-    out1 = nikkyai.markov_forward((word, '\n', 'more', 'like'),
-                                  failmsg='', max_lf=3)
-    out2 = nikkyai.markov_forward((word, 'more', 'like'), failmsg='', max_lf=3)
-    out3 = '{}\n{}'.format(word,
-                           nikkyai.markov_forward(('more', 'like', '\n'),
-                                                  failmsg='', max_lf=2))
-    return choice((out1, out2, out3))
+        return nikkyai.markov_reply(
+            '<{}> \n more like \n'.format(src_nick), failmsg='',
+            add_response=False, max_lf_l=2, max_lf_r=2)
+    else:
+        out1 = nikkyai.markov_forward(
+            (word, '\n', 'more', 'like'), failmsg='', src_nick=src_nick,
+            max_lf=3)
+        out2 = nikkyai.markov_forward(
+            (word, 'more', 'like'), failmsg='', src_nick=src_nick,
+            max_lf=3)
+        out3 = '{}\n{}'.format(word,
+                               nikkyai.markov_forward(
+                                   ('more', 'like', '\n'), failmsg='',
+                                   src_nick=src_nick, max_lf=2))
+        return choice((out1, out2, out3))
 
 
 def rule(nikky, fmt):
@@ -50,7 +57,7 @@ def rule(nikky, fmt):
         seed = choice(("Don't be", "Don't use", "Don't talk", "Don't bring",
                        "Don't mention", "Don't do", "Don't act"))
         chain = nikky.markov.str_to_chain(seed)
-        out = nikky.markov_forward(chain, max_lf=0)
+        out = nikky.markov_forward(chain, src_nick=fmt[0], max_lf=0)
         try:
             return nikky.check_output_response(out, add_response=True)
         except nikkyai.Bad_response_error:
