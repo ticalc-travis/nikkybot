@@ -105,17 +105,22 @@ class NikkyAI(object):
         """Determine whether a random response to a line not directed to
         nikkybot should be made.  Do check_output_response().
         """
-        c = self.remark_chance_no_keywords
         nick, msg_only = self.filter_input(msg)
+        has_keywords = False
         for p in self.preferred_keywords:
             if re.search(p, msg_only, re.I):
-                c = self.remark_chance_keywords
+                has_keywords = True
+        c = (self.remark_chance_keywords if has_keywords
+             else self.remark_chance_no_keywords)
         if not randint(0, c):
             # Output random message
-            if not randint(0, 1):
+            if has_keywords:
                 return self.reply(msg)
             else:
-                return self.remark(msg)
+                if randint(0, 1):
+                    return self.remark(msg)
+                else:
+                    return self.reply(msg)
         return ''
 
     def remark(self, msg='', add_response=True):
@@ -127,11 +132,7 @@ class NikkyAI(object):
         for i in xrange(self.recurse_limit):
             try:
                 return self.check_output_response(
-                    choice(
-                        (self.nikkysim_remark(), self.generic_remark(msg),
-                         self.mimic_remark(msg))),
-                    add_response=add_response
-                )
+                    self.generic_remark(msg), add_response=add_response)
             except Bad_response_error:
                 pass
         return ''
@@ -153,28 +154,6 @@ class NikkyAI(object):
         else:
             # Not supported for non-nikky personas
             return ''
-
-    def nikkysim_remark(self, msg='', strip_number=False):
-        """Generate a NikkySim remark.  If not strip_number, include the
-        saying number before the remark.  check_output_response NOT called.
-        """
-        out, saying_no = self.nikkysim(strip_number)
-        return out + ' --NikkySim'
-
-    def mimic_remark(self, msg=''):
-        """Mimic a random person."""
-        personalities = self.get_personalities()
-        temp_personality = choice(personalities)
-        last_personality = self.get_personality()
-        self.set_personality(temp_personality)
-        try:
-            out = self.reply(msg)
-        except Exception:
-            raise
-        finally:
-            self.set_personality(last_personality)
-        personality_out = self.filter_markov_output('', temp_personality)
-        return '<{}> {}'.format(personality_out, out)
 
     def pattern_reply(self, msg, add_response=True):
         """Generate a reply using predefined pattern/response patterns.
