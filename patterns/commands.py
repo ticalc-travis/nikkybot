@@ -63,14 +63,15 @@ def random_number(nikkyai, fmt):
 
 def mimic(nikkyai, fmt):
     from nikkyai import Bad_personality_error
-    persona, msg = fmt[2], fmt[3]
+    src_nick, persona, msg = fmt[0], fmt[2], fmt[3]
     persona = nikkyai.normalize_personality(persona)
     try:
         nikkyai.set_personality(persona)
     except Bad_personality_error:
         out = "No such personality '{}'; say \"{}: personalities\" to get the list".format(persona, nikkyai.nick)
     else:
-        out = '"' + nikkyai.reply(msg, add_response=True) + '"'
+        in_msg = '<{}> {}'.format(src_nick, msg)
+        out = '"' + nikkyai.reply(in_msg, add_response=True) + '"'
     finally:
         nikkyai.set_personality('nikky')
     return out
@@ -79,14 +80,16 @@ def mimic(nikkyai, fmt):
 def mimic_random(nikkyai, fmt):
     from random import choice
     from nikkyai import Bad_personality_error
-    msg = fmt[3]
+    src_nick, msg = fmt[0], fmt[3]
     persona = choice(nikkyai.get_personalities())
     try:
         nikkyai.set_personality(persona)
     except:
         raise
     else:
-        out = '<{}> {}'.format(persona, nikkyai.reply(msg, add_response=True))
+        in_msg = '<{}> {}'.format(src_nick, msg)
+        out = '<{}> {}'.format(
+            persona, nikkyai.reply(in_msg, add_response=True))
     finally:
         nikkyai.set_personality('nikky')
     return out
