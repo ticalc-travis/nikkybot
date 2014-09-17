@@ -80,7 +80,11 @@ def mimic(nikkyai, fmt):
 def mimic_random(nikkyai, fmt):
     from random import choice
     from nikkyai import Bad_personality_error
-    src_nick, msg = fmt[0], fmt[3]
+    src_nick = fmt[0]
+    try:
+        msg = fmt[3]
+    except IndexError:
+        msg = ''
     persona = choice(nikkyai.get_personalities())
     try:
         nikkyai.set_personality(persona)
@@ -130,12 +134,14 @@ True),
 ),
 
 # Mimic
-(r'^\W*(mimic|impersonate|act like|imitate) (\S+) ?(.*)', -98, E(mimic), True),
-(r'^\W*(mimic|impersonate|act like|imitate) (someone|anyone|somebody|anybody|random|rand) (.*)', -99, E(mimic_random), True),
+(r'^\W*(mimic|impersonate|act like|imitate)\W*$', -98, E(mimic_random), True),
+(r'^\W*(mimic|impersonate|act like|imitate)\W+(\S+)(?: |$)(.*)', -98, E(mimic), True),
+(r'^\W*(mimic|impersonate|act like|imitate)\W+(someone|anyone|somebody|anybody|random|rand)(?: |$)(.*)', -99, E(mimic_random), True),
 (r'\b(markovmix|markov bot)', -99,
     R('I can impersonate people\nSay "?personalities" to me and I\'ll tell you more'),
 ),
 (r'^\W*(personas|personalities)\b', -99, E(list_personas), True),
 
 # Markov
+(r'^!say', -99, '%echo !say HAW HAW INFINITE LOOP', True),
 )

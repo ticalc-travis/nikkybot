@@ -43,16 +43,19 @@ Get a list of Markov personalities available, via private notice (used for
 “mimic” and “botchat”, explained below).
 
 
-mimic <personality>|someone [<message>]
+mimic [<personality>|someone [<message>]]
 
 Say a line imitating <personality> using the NikkyBot engine, replying to
 optional <message>.  “someone” can be used to select a random personality.
+If no arguments are given, a random personality will be mimicked with a random
+message.
 
 Examples:
 mimic tev
 mimic kerm Hi, KermM!
 mimic someone
 mimic someone TI-89
+mimic
 
 
 botchat <personality1> <personality2>
