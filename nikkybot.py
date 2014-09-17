@@ -73,7 +73,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
     def alterCollidedNick(self, nickname):
         """Resolve nick conflicts and set up automatic preferred nick
         reclaim task"""
-        reactor.callLater(self.opts.nick_retry_wait, self.reclaim_nick)
+        self.set_nick_reclaim_timer()
         try:
             newnick = self.opts.nicks[self.opts.nicks.index(nickname) + 1]
         except IndexError:
@@ -96,6 +96,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         self.user_threads = 0
         self.pending_msg_time = now()
         self.versionName = self.opts.client_version
+        self.pending_nick_reclaim_timer = False
 
         irc.IRCClient.connectionMade(self)
 
@@ -207,10 +208,18 @@ class NikkyBot(irc.IRCClient, Sensitive):
     def reclaim_nick(self):
         """Attempt to reclaim preferred nick (self.alterCollidedNick will
         set up this function to be called again later on failure)"""
+        self.pending_nick_reclaim_timer = False
         if self.nickname != self.opts.nicks[0]:
             print('Attempting to change nick from {} to {}'.format(
                 repr(self.nickname), repr(self.opts.nicks[0])))
             self.setNick(self.opts.nicks[0])
+            self.set_nick_reclaim_timer()
+
+    def set_nick_reclaim_timer(self):
+        """Set up a timer to try to reclaim preferred nick, if one is not
+        already set"""
+        if not self.pending_nick_reclaim_timer:
+            self.pending_nick_reclaim_timer = True
             reactor.callLater(self.opts.nick_retry_wait, self.reclaim_nick)
 
     def hostmask_match(self, testmask, knownmask):
