@@ -134,7 +134,7 @@ True),
 ),
 
 # Mimic
-(r'^\W*(mimic|impersonate|act like|imitate)\W*$', -98, E(mimic_random), True),
+(r'^\W*(mimic|impersonate|act like|imitate)\s*$', -98, E(mimic_random), True),
 (r'^\W*(mimic|impersonate|act like|imitate)\W+(\S+)(?: |$)(.*)', -98, E(mimic), True),
 (r'^\W*(mimic|impersonate|act like|imitate)\W+(someone|anyone|somebody|anybody|random|rand)(?: |$)(.*)', -99, E(mimic_random), True),
 (r'\b(markovmix|markov bot)', -99,

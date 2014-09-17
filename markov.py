@@ -47,11 +47,15 @@ class PostgresMarkov(object):
         try:
             self.doquery(
                 'CREATE TABLE "{}"'
-                '(word VARCHAR,'
-                ' next1key VARCHAR DEFAULT NULL, next2key VARCHAR DEFAULT NULL,'
-                ' next3key VARCHAR DEFAULT NULL, next4key VARCHAR DEFAULT NULL,'
-                ' prev1key VARCHAR DEFAULT NULL, prev2key VARCHAR DEFAULT NULL,'
-                ' prev3key VARCHAR DEFAULT NULL, prev4key VARCHAR DEFAULT NULL,'
+                '(word VARCHAR, rawword VARCHAR,'
+                ' next1key VARCHAR DEFAULT NULL,'
+                ' next2key VARCHAR DEFAULT NULL,'
+                ' next3key VARCHAR DEFAULT NULL,'
+                ' next4key VARCHAR DEFAULT NULL,'
+                ' prev1key VARCHAR DEFAULT NULL,'
+                ' prev2key VARCHAR DEFAULT NULL,'
+                ' prev3key VARCHAR DEFAULT NULL,'
+                ' prev4key VARCHAR DEFAULT NULL,'
                 ' next1 VARCHAR DEFAULT NULL, next2 VARCHAR DEFAULT NULL,'
                 ' next3 VARCHAR DEFAULT NULL, next4 VARCHAR DEFAULT NULL,'
                 ' prev1 VARCHAR DEFAULT NULL, prev2 VARCHAR DEFAULT NULL,'
@@ -133,12 +137,12 @@ class PostgresMarkov(object):
             backward_key = self.conv_key(backward_chain)
             self.doquery(
                 'INSERT INTO "{}" '
-                '(word, next1key, next2key, next3key, next4key,'
+                '(word, rawword, next1key, next2key, next3key, next4key,'
                 ' prev1key, prev2key, prev3key, prev4key,'
                 ' next1, next2, next3, next4, prev1, prev2, prev3, prev4) '
-                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s,'
+                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,'
                 '%s, %s, %s, %s, %s, %s, %s, %s, %s)'.format(self.table_name),
-                [self.conv_key(word)] + forward_key + backward_key +
+                [self.conv_key(word), word] + forward_key + backward_key +
                 forward_chain + backward_chain
             )
 
@@ -195,7 +199,7 @@ class PostgresMarkov(object):
 
         # Gather a list of columns backward in context to cover length of
         # given chain
-        context_cols = ['word','prev1','prev2','prev3','prev4'][:len(chain)]
+        context_cols = ['rawword','prev1','prev2','prev3','prev4'][:len(chain)]
         context_cols.reverse()
         context_cols = ', '.join(context_cols)
 
@@ -238,7 +242,7 @@ class PostgresMarkov(object):
 
         # Gather a list of columns forward in context to cover length of
         # given chain
-        context_cols = ['word', 'next1','next2','next3','next4'][:len(chain)]
+        context_cols = ['rawword','next1','next2','next3','next4'][:len(chain)]
         #context_cols.reverse()
         context_cols = ', '.join(context_cols)
 
