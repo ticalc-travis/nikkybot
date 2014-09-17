@@ -129,6 +129,8 @@ class Markov(object):
         if failmsglist is None:
             failmsglist = ['']
         self.failmsglist = failmsglist
+        if not text.startswith('<{0}>'):
+            text = '<{0}> ' + text
         self.text = text
 
     def get(self, nikkyai, fmt=None):
