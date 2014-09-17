@@ -46,7 +46,7 @@ personality_regexes = {
         (r'(bb010g).*',
          None,
          None),
-    'cvsoftd':
+    'cvsoft':
         (r'(CV|notipa).*',
          r'(CVSoft)',
          None),
