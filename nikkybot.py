@@ -117,9 +117,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         self.joined_channels.add(channel)
 
     def privmsg(self, user, target, msg):
-        nick, host = user.split('!', 1)
-        formatted_msg = '<{}> {}'.format(nick, msg)
-        msg = msg.strip()
+        nick, msg = self.preparse_msg(user, msg)
         is_private = target == self.nickname
         sender = nick if is_private else target
         is_admin = self.any_hostmask_match(self.opts.admin_hostmasks, user)
@@ -130,45 +128,32 @@ class NikkyBot(irc.IRCClient, Sensitive):
             print('privmsg from {} {}: {}'.format(
                 user, '[ADMIN]' if is_admin else '', msg))
 
-        # Parse/convert saxjax's messages
-        if self.hostmask_match('*!~saxjax@*', user):
-            m = re.match(r'\(.\) \[(.*)\] (.*)', msg)
-            if m:
-                nick = m.group(1)
-                formatted_msg = '<{}> {}'.format(nick, m.group(2))
-                msg = '{}'.format(m.group(2))
-            else:
-                m = re.match(r'\(.\) \*(.*?) (.*)', msg)
-                if m:
-                    if m.group(1) != 'File':
-                        nick = m.group(1)
-                    else:
-                        nick = ''
-                    formatted_msg = '<> {} {}'.format(m.group(1), m.group(2))
-                    msg = '{}'.format(m.group(2))
-
         # Strip any nick highlight from beginning of line
         m = re.match(r'^{}[:,]? (.*)'.format(re.escape(self.nickname)),
-                    msg, flags=re.I)
+                     msg, flags=re.I)
         has_leading_highlight = False
         if m:
             has_leading_highlight = True
             msg = m.group(1).strip()
 
         # Determine what to do (reply, maybe reply, run command)
+        if nick:
+            msg_with_nick = '<{}> {}'.format(nick, msg)
+        else:
+            msg_with_nick = msg
         if is_private or is_highlight:
             if is_private or has_leading_highlight:
                 try:
                     self.do_command(msg, nick, target, is_admin)
                     print('Executed: {}'.format(msg))
                 except (UnrecognizedCommandError, UnauthorizedCommandError):
-                    self.do_AI_reply(formatted_msg, sender,
+                    self.do_AI_reply(msg_with_nick, sender,
                                      no_delay=is_private, log_response=is_private)
             else:
-                self.do_AI_reply(formatted_msg, sender, no_delay=is_private,
+                self.do_AI_reply(msg_with_nick, sender, no_delay=is_private,
                                  log_response=is_private)
         else:
-            self.do_AI_maybe_reply(formatted_msg, sender, log_response=False)
+            self.do_AI_maybe_reply(msg_with_nick, sender, log_response=False)
 
     def action(self, user, channel, msg):
         """Pass actions to AI like normal lines"""
@@ -243,6 +228,32 @@ class NikkyBot(irc.IRCClient, Sensitive):
                      msg, flags=re.I):
             return True
         return False
+
+    def preparse_msg(self, user, raw_msg):
+        """Check message for certain IRC bridge bots; separate out correct
+        nickname and return it along with the message."""
+        nick, host = user.split('!', 1)
+        msg = raw_msg.strip()
+
+        # Parse/convert saxjax's messages
+        if self.hostmask_match('*!~saxjax@*', user):
+            m = re.match(r'\(.\) \[(.*)\] (.*)', msg)
+            if m:
+                # Normal chat speaking
+                nick = m.group(1)
+                msg = '{}'.format(m.group(2))
+            else:
+                m = re.match(r'\(.\) \*(.*?) (.*)', msg)
+                if m:
+                    if m.group(1) == 'File':
+                        # Approving/rejecting files
+                        nick = ''
+                        msg = '{} {}'.format(m.group(1), m.group(2))
+                    else:
+                        # Other stuff (log ins, log outs)
+                        nick = m.group(1)
+                        msg = m.group(2)
+        return nick, msg
 
     def report_error(self, source, silent=False):
         """Log a traceback if NikkyAI fails due to an unhandled exception
