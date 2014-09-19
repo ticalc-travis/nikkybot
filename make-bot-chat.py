@@ -81,7 +81,7 @@ def format_response(nick, msg, tag=None):
     msg = '\n'.join(msg)
     return msg
 
-response = 'Hi'
+response = ''
 for i in xrange(NUMBER_OF_ROUNDS):
     response = get_response(bot1, nick1, nick2, response)
     just_PRINT_DAMNIT(format_response(nick1, response, tag1) + '\n')
