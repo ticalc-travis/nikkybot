@@ -444,7 +444,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         ## Public commands ##
 
         elif cmd in ('botchat', '?botchat'):
-            usage_msg = 'Usage: ?botchat personality1 personality2'
+            usage_msg = 'Usage: botchat personality1 personality2'
             parms = args.split(' ')
             nikky = self.nikkies[None]
             if (len(parms) != 2 or
