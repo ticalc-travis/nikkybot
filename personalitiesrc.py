@@ -1,11 +1,20 @@
 #!/usr/bin/env python2
 
 # Markov chain nick configuration
+#
+# personalities = {
+#       'alias': 'primary_persona_name',
+#       ...
+#       'alias': None,   # 'alias' is the primary persona name
+# }
+#
+# personality_regexes = {
 # 'Personality name':
-#   ('IRC nick regex',
-#    'Cemetech forum username regex' or None,
-#    'Omnimaga forum username regex' or None),
+#       ('IRC nick regex',
+#        'Cemetech forum username regex' or None,
+#        'Omnimaga forum username regex' or None),
 # ...etc....
+# }
 #
 # Regexes must contain at least one parenthesized group!
 
@@ -111,3 +120,28 @@ personality_regexes = {
          r'(allynfolksjr)',
          None),
 }
+
+personalities = {
+    # Aliases...:
+    'exmic': 'chronomex',
+    'cmx': 'chronomex',
+    'xmc': 'chronomex',
+    'duncans': 'chronomex',
+    'comicidiot': 'comic',
+    'comicsans': 'comic',
+    'jonimusp': 'jonimus',
+    'thestorm': 'jonimus',
+    'djo': 'kevino',
+    'djomni': 'kevino',
+    'djomnimaga': 'kevino',
+    'xlibman': 'kevino',
+    'kermm': 'kerm',
+    'kermmartian': 'kerm',
+    'merthsoft': 'merth',
+    'shaun': 'merth',
+}
+
+# Fill in primary personas...
+for p in personality_regexes:
+    personalities[p] = None
+

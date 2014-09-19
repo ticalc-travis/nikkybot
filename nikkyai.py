@@ -665,7 +665,6 @@ class NikkyAI(object):
 
     def set_personality(self, personality):
         """Change Markov personality to given table name in Markov database"""
-        personalities = self.get_personalities()
         personality = self.normalize_personality(personality)
         if self.is_personality_valid(personality):
             self.markov = markov.PostgresMarkov(self.dbconn, personality,
@@ -684,14 +683,21 @@ class NikkyAI(object):
         return personalitiesrc.personality_regexes.keys()
 
     def normalize_personality(self, personality):
-        """Reduce personality to case/punctuation-insensitive form"""
+        """Reduce personality to case/punctuation-insensitive form;
+        resolve aliases to primary personality name"""
         personality = personality.replace('·', '')
         try:
-            return self.markov.conv_key(personality)
+            personality = self.markov.conv_key(personality)
         except AttributeError:
             # If self.markov hasn't been created yet (e.g., during class init),
-            # fallback to lower()
-            return personality.lower()
+            # fall back to lower()
+            personality = personality.lower()
+        # Resolve any aliases
+        try:
+            link = personalitiesrc.personalities[personality]
+        except KeyError:
+            link = None
+        return self.normalize_personality(link) if link else personality
 
     def is_personality_valid(self, personality):
         """Return whether personality is valid and available"""

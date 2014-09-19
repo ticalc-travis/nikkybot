@@ -41,7 +41,7 @@ def usage_exit():
     print(', '.join(sorted(personalities)))
     exit(2)
 
-personalities = personalitiesrc.personality_regexes
+personalities = personalitiesrc.personalities
 
 if len(argv) != 3:
     usage_exit()
