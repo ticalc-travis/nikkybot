@@ -76,10 +76,16 @@ def format_response(nick, msg, tag=None):
         display_nick = nick + '-bot'
     if tag is not None:
         display_nick = display_nick + '-' + tag
-    tw.initial_indent='{:<20}'.format('<' + display_nick + '>')
-    msg = [tw.fill(p) for p in msg]
-    msg = '\n'.join(msg)
-    return msg
+    formatted_msg = []
+    for line in msg:
+        if line.startswith('\x01ACTION ') and line.endswith('\x01'):
+            line = line[8:-1]
+            tw.initial_indent = ' * {} '.format(display_nick)
+        else:
+            tw.initial_indent = '{:<20}'.format('<' + display_nick + '>')
+        formatted_msg.append(tw.fill(line))
+    formatted_msg = '\n'.join(formatted_msg)
+    return formatted_msg
 
 response = ''
 for i in xrange(NUMBER_OF_ROUNDS):
