@@ -123,6 +123,7 @@ personality_regexes = {
 
 personalities = {
     # Aliases...:
+    'nikkybot': 'nikky',
     'exmic': 'chronomex',
     'cmx': 'chronomex',
     'xmc': 'chronomex',
