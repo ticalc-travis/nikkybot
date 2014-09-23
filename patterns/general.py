@@ -91,7 +91,9 @@ patterns = (
     )
 ),
 (r'\bsuck (a |an )\b(.*)\b', 1,
-    R('k', 'kk', 'kk\n\001ACTION sucks {1}{2}\001')
+    R(
+        'k', 'kk', 'kk\n\001ACTION sucks {1}{2}\001', 'nou', 'diaf', ':('
+    ),
 ),
 (r'\bShut up\b', 1, R('I hate you', 'k', 'kk', 'nou', 'NO U', 'NOU')),
 (r"\bI'm\b", 1,
