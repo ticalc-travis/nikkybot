@@ -130,6 +130,8 @@ personalities = {
     'duncans': 'chronomex',
     'comicidiot': 'comic',
     'comicsans': 'comic',
+    'cvsoftd': 'cvsoft',
+    'cvsoftl': 'cvsoft',
     'jonimusp': 'jonimus',
     'thestorm': 'jonimus',
     'djo': 'kevino',
