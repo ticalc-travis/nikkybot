@@ -147,15 +147,15 @@ patterns = (
         Markov_forward('all the'),
     ),
 ),
-(r"^anything else", 1,
+(r"anything else", 1,
     S(
         R('', Recurse('***yes/no***')),
         '\n',
         Recurse("what's"),
     ),
 ),
-(r"^(what do you|what is going|what's going)", -2, Recurse('for what')),
-(r"(^(what|what's|whats)|for which)", 1,
+(r"(what do you|what is going|what's going)", -2, Recurse('for what')),
+(r"(what|what's|whats|for which)", 1,
     R(
         Markov_forward('a'),
         Markov_forward('an'),
@@ -169,7 +169,7 @@ patterns = (
         Recurse('how many'),
     ),
 ),
-(r"^(who is|who's|what is|what's|how's|how is) (the |a |an |your |my )?(\w+)", 0,
+(r"(who is|who's|what is|what's|how's|how is) (the |a |an |your |my )?(\w+)", 0,
     R(
         Markov_forward('{3} is'),
         Markov_forward('{3}'),
@@ -182,17 +182,17 @@ patterns = (
         Recurse("what's"),
     ),
 ),
-(r"^(who are|who're|what are|what're|how're|how are) (\w+)", 0,
+(r"(who are|who're|what are|what're|how're|how are) (\w+)", 0,
     R(
         Markov_forward('{2} are'),
         Markov_forward("They're"),
         Markov_forward('They are'),
     ),
 ),
-(r"^(what are|what're) .*ing\b", -1,
+(r"(what are|what're) .*ing\b", -1,
     Recurse("what's"),
 ),
-(r'^where\b', 0,
+(r'where\b', 0,
     R(
         Markov_forward('in'),
         Markov_forward('on'),
@@ -207,7 +207,7 @@ patterns = (
         Markov_forward('beyond', force_completion=False),
     )
 ),
-(r'^when\b', 1,
+(r'when\b', 1,
     R(
         'never',
         'forever',
@@ -225,16 +225,7 @@ patterns = (
         Markov_forward('next'),
     )
 ),
-(r'^how (long|much longer|much more time)\b', -2,
-    R(
-        'never',
-        'forever',
-        Markov_forward('until'),
-        Markov_forward('as soon as'),
-        Markov_forward('whenever'),
-    )
-),
-(r'^how\b', 1,
+(r'how\b', 1,
     R(
         Markov_forward('by'),
         Markov_forward('via'),
@@ -243,6 +234,23 @@ patterns = (
         Markov_forward('only by'),
         Markov_forward('only by using'),
         Markov_forward('just use'),
+    )
+),
+(r'how (long|much longer|much more time)\b', -2,
+    R(
+        'never',
+        'forever',
+        Markov_forward('until'),
+        Markov_forward('as soon as'),
+        Markov_forward('whenever'),
+    )
+),
+(r'\b(how much|how many|what amount|how .* is)\b', -2,
+    R(
+        Markov_forward('enough', force_completion=False),
+        Markov_forward('too many', force_completion=False),
+        Markov_forward('more than you', force_completion=False),
+        Markov_forward('not enough', force_completion=False),
     )
 ),
 (r'\bwho (are you|is {0})\b', -1,
@@ -306,14 +314,6 @@ patterns = (
 (r"(\S+)\s+(\S+)\s+(what|who|whom|which)\b", 1, Markov_forward('{1} {2}')),
 (r"(\S+)\s+(what|who|whom|which)\b", 1, Markov_forward('{1}')),
 
-(r'\b(how much|how many|what amount)\b', -2,
-    R(
-        Markov_forward('enough', force_completion=False),
-        Markov_forward('too many', force_completion=False),
-        Markov_forward('more than you', force_completion=False),
-        Markov_forward('not enough', force_completion=False),
-    )
-),
 (r"(is|isn't|are|am|does|should|would|can|do|did)\b", 2,
     Recurse('***yes/no***')
 ),
