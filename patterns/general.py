@@ -111,14 +111,17 @@ patterns = (
     R("Yes, please bore us to death.")
 ),
 (r'\bwhere.*you hear that\b', 1, R('Omnimaga', 'your mom', 'your face')),
-(r'\b(lousy|freaking|stupid|damn|dumb|farking|dammit|damnit|screw)\b', 1,
-    S(
-        R(
-            'sorry\n',
-            'sry\n',
-            'sorry\n:(\n',
-        ),
+(r'\b(lousy|freaking|stupid|damn|dumb|farking|dammit|damnit|screw|dangit|dang it)\b', 1,
+    R(
+        'sorry\n',
+        'sry\n',
+        'sorry\n:(\n',
         Recurse('excuse me while I'),
+        Markov_forward('suck'),
+        Markov('diaf'),
+        Markov_forward('shut'),
+        Markov_forward('well suck'),
+        Markov_forward('then suck'),
     )
 ),
 (r'\b((are|is) \S+|you) t?here\b', 0,
