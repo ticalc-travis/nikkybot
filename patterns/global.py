@@ -113,7 +113,7 @@ patterns = (
         Markov_forward('depends', force_completion=False),
     )
 ),
-(r"^(uh |well )?(yes|yah|yeah|right|naturally|of course|good|excellent|sure|exactly|definitely|absolutely)\b", 0,
+(r"(yes|yah|yeah|right|naturally|of course|good|excellent|sure|exactly|definitely|absolutely)\b", 0,
     R(
         Markov_forward('well'),
         Markov_forward('okay, well'),
@@ -128,7 +128,7 @@ patterns = (
         "I'm glad we agree."
     ),
 ),
-(r"^(uh |well )?(no|nope|nuh-uh)\b", 0,
+(r"(no|nope|nuh-uh|you aren't)\b", 0,
     R(
         Markov_forward('well'),
         Markov_forward('okay, well'),
