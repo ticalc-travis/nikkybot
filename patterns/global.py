@@ -444,7 +444,7 @@ patterns = (
         Markov_forward("I'm actually"),
     )
 ),
-(r"\b(what do you think|what do you know|tell us about|tell me about|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -3,
+(r"\b(what do you think|what do you know|tell us about|tell me about|how do you feel|(what is |what's |what are )?your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -3,
     R(
         Markov_forward('{6} is'),
         Markov_forward('{6}'),
