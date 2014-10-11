@@ -59,7 +59,7 @@ patterns = (
         '{1}, {0}',
     ),
 ),
-(r"\b(how are you|how are we|how's your|how is your)\b", 0,
+(r"\b(how are you|how are we|how's your|how is your)\b", -1,
     R(
         Markov_forward('ok', force_completion=False),
         Markov_forward('okay', force_completion=False),
