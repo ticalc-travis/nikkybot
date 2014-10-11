@@ -116,7 +116,7 @@ patterns = (
 
 # Help
 (r'^\W*help', -99,
-    S('Basic info about me: https://raw.githubusercontent.com/ticalc-travis/nikkybot/master/README'),
+    S("I'm a Markov-chain bot representing Nikky. https://raw.githubusercontent.com/ticalc-travis/nikkybot/master/README"),
 True),
 
 # NikkySim

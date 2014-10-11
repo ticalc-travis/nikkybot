@@ -59,6 +59,9 @@ patterns = (
         'no\nit sucks',
     )
 ),
+(r'\b(what|who) (are you|is {0})\b', -1,
+    Recurse('help'),
+),
 (r"\b(who (made|wrote|programmed) you|(who\'s|whose) are you|who (runs|operates) you|(who is|who's) your (creator|programmer|maker|admin|administrator))\b", -2,
     R(
         "It's tev",

@@ -277,7 +277,7 @@ patterns = (
         Markov_forward('not enough', force_completion=False),
     )
 ),
-(r'\bwho (are you|is {0})\b', -1,
+(r'\b(what|who) (are you|is {0})\b', -1,
     R(
         Markov_forward("I'm"),
         Markov_forward("I am"),
