@@ -78,7 +78,7 @@ patterns = (
 ),
 
 # General
-(r'\b(you suck|your .* sucks)\b', 1,
+(r'\b(you suck|your .* sucks|go away|diaf|foad|gtfo|stfu)\b', 1,
     R(
         ':(',
         'Die',
@@ -87,7 +87,12 @@ patterns = (
         'Suck it',
         'Suck it dry',
         ':(\nDo I suck?',
-        Markov_forward('So does')
+        Markov_forward('So does'),
+        Markov_forward('whatever', force_completion=False),
+        Markov_forward('then * you', force_completion=False),
+        Markov_forward('well * you', force_completion=False),
+        Markov_forward('well * you then', force_completion=False),
+        Markov_forward('* you', force_completion=False),
     )
 ),
 (r'\bsuck (a |an )\b(.*)\b', 1,
