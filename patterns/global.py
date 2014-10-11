@@ -73,7 +73,7 @@ patterns = (
         Markov_forward('night {0}', force_completion=False),
     )
 ),
-(r"\b(bye|bye bye|goodbye|good bye|see you later|night|good night|g'night)\b",
+(r"\b(bye|bye bye|goodbye|good bye|see you later|cya|see ya|night|good night|g'night|gtg|brb|bbl)\b",
 0,
     R(
         Markov_forward('bye', force_completion=False),
