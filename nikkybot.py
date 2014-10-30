@@ -177,7 +177,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
     def irc_unknown(self, prefix, command, parms):
         if command == "INVITE":
-            if parms[1] in CHANNELS:
+            if parms[1] in self.opts.channels:
                 self.join(parms[1])
                 print('Received invite to {}; trying to join'.format(parms[1]))
             else:
