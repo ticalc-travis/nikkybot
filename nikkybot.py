@@ -624,6 +624,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         for c in self.opts.channels:
             if c not in self.joined_channels:
                 self.join(c)
+        reactor.callLater(self.opts.channel_check_interval, self.channel_check)
 
     def cleanup_state(self):
         """Clean up any stale state data to reduce memory and disk usage"""
