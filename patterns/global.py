@@ -32,13 +32,18 @@ def rule(nikky, fmt):
     # output).
     for i in xrange(0, nikky.recurse_limit):
         seed = choice(("Don't be", "Don't use", "Don't talk", "Don't bring",
-                       "Don't mention", "Don't do", "Don't act"))
-        chain = nikky.markov.str_to_chain(seed)
-        out = nikky.markov_forward(chain, src_nick=fmt[0], max_lf=0)
+                       "Don't mention", "Don't do", "Don't act", "Just kick",
+                       "Just ban", "Don't forget to", "Just stop", "Stop",
+                       "Go", "No more", "No * allowed", "Kick * in the",
+                       "Use only", "Only use"))
+        chain = nikky.markov.str_to_chain(seed, wildcard="*")
+        out = nikky.markov_forward(chain, src_nick=fmt[0], max_lf=1)
         try:
-            return nikky.check_output_response(out, add_response=True)
+            out = nikky.check_output_response(out, add_response=True)
         except nikkyai.Bad_response_error:
             continue
+        out = out.replace('\n','... ')
+        return out
     return "???"
 
 

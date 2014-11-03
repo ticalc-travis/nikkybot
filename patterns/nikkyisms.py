@@ -65,5 +65,4 @@ patterns = (
     )
 ),
 (r'(.*?)\S*more like\S*$', -10, E(more_like)),
-(r"\bdon't do (what|who|whom|which)\b", 1, Recurse('rule'), True),
 )
