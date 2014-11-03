@@ -46,6 +46,53 @@ def rule(nikky, fmt):
         return out
     return "???"
 
+def war(nikky, fmt):
+    recurse_count = 0
+    subject = ''
+    while not subject.strip():
+        recurse_count += 1
+        if recurse_count > nikky.recurse_limit:
+            return 'Are we arguing about random crap again?!'
+
+        verb = choice(('arguing', 'bitching', 'complaining', 'yelling',
+                       'shouting'))
+        chain = (verb, 'about')
+        subject = nikky.markov_forward(chain, src_nick=fmt[0])
+        if not subject.strip():
+            continue
+        subject = subject.replace('\n', '... ')
+
+        # Cut off starting at first word that ends with punctuation
+        chain = subject.split()
+        for last_word, word in enumerate(chain):
+            if last_word < 2:
+                # Don't consider first two chain words ("… about"); they
+                # don't count
+                continue
+            if not word[-1].isalnum():
+                break
+        last_word += 1
+        chain = chain[0:last_word]
+        subject = ' '.join(chain)
+        # Remove certain punctuation/nonalphanumerics from end of subject
+        while (subject.strip() and not subject[-1].isalnum()
+               and not subject[-1] in '\'"[]{}'):
+            subject = subject[:-1]
+        # Remove first two words (the Markov chain) from subject
+        chain = subject.split()
+        chain = chain[2:]
+        # If chain is now empty, need to start over with a different phrase
+        if not chain:
+            continue
+        # Don't repeat the word "again"
+        if chain[-1].lower() == 'again':
+            chain = chain[:-1]
+        # Reconstruct the subject string, force beginning word to lowercase
+        subject = ' '.join(chain)
+        subject = subject[0].lower() + subject[1:]
+        # Return it
+    return 'Are we arguing about ' + subject + ' again?'
+
 
 # General patterns used for all personalities, including 'nikky'
 
@@ -486,6 +533,7 @@ patterns = (
         '\n3. ', E(rule),
     )
 ),
+(r'\b(war|wars)[0-9]*\b', 0, E(war)),
 
 ## Markov search/debug ##
 
