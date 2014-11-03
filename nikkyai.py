@@ -205,8 +205,8 @@ class NikkyAI(object):
                     # last_reply good, does potential response have priority?
                     # (Lower values = higher precedence)
                     if cur_priority is None or priority < cur_priority:
-                        # Found higher priority, discard everything found and start
-                        # again with this one
+                        # Found higher priority, discard everything found and
+                        # start again with this one
                         matches = [(m, action, allow_repeat)]
                         cur_priority = priority
                     elif priority == cur_priority:
