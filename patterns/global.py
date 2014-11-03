@@ -338,9 +338,8 @@ patterns = (
         Markov_forward('{3} {4}s'),
     ),
 ),
-(r"\bdon't (.*) what\b", 0, Markov_forward("Don't {1}")),
-(r"(\S+)\s+(\S+)\s+(what|who|whom|which)\b", 1, Markov_forward('{1} {2}')),
-(r"(\S+)\s+(what|who|whom|which)\b", 1, Markov_forward('{1}')),
+(r"(\S+)\s+(\S+)\s+(what|who|whom|which)\b", -2, Markov_forward('{1} {2}')),
+(r"(\S+)\s+(what|who|whom|which)\b", -1, Markov_forward('{1}')),
 
 (r"(is|isn't|are|am|does|should|would|can|do|did)\b", 2,
     Recurse('***yes/no***')
