@@ -81,7 +81,8 @@ def war(nikky, fmt):
         # Remove first two words (the Markov chain) from subject
         chain = subject.split()
         chain = chain[2:]
-        # If chain is now empty, need to start over with a different phrase
+        # If chain is now empty, need to start over and try again using a
+        # different phrase
         if not chain:
             continue
         # Don't repeat the word "again"
