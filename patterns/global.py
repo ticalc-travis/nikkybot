@@ -52,14 +52,14 @@ patterns = (
 
 ## Basics ##
 
-(r"\b(hi|hello|hey|sup|what's up|welcome)\b", 0,
+(r"\b(hi|hello|hey|sup|what's up|welcome)\b", 50,
     R(
         Markov_forward('{1}'),
         Markov_forward('{1} {0}'),
         '{1}, {0}',
     ),
 ),
-(r"\b(how are you|how are we|how's your|how is your)\b", -1,
+(r"\b(how are you|how are we|how's your|how is your)\b", 49,
     R(
         Markov_forward('ok', force_completion=False),
         Markov_forward('okay', force_completion=False),
@@ -67,32 +67,31 @@ patterns = (
         Markov_forward('bad', force_completion=False)
     ),
 ),
-(r"\b(good night|goodnight|g'?night)\b", 0,
+(r"\b(good night|goodnight|g'?night)\b", 50,
     R(
         Markov_forward('night', force_completion=False),
         Markov_forward('night {0}', force_completion=False),
     )
 ),
-(r"\b(bye|bye bye|goodbye|good bye|see you later|cya|see ya|night|good night|g'night|gtg|brb|bbl)\b",
-0,
+(r"\b(bye|bye bye|goodbye|good bye|see you later|cya|see ya|night|good night|g'night|gtg|brb|bbl)\b", 50,
     R(
         Markov_forward('bye', force_completion=False),
         Markov_forward('bye {0}', force_completion=False)
     ),
 ),
-(r"\b(congratulations|congrats|congradulations)", 1,
+(r"\b(congratulations|congrats|congradulations)", 51,
     R(
         Markov_forward('Thanks', force_completion=False),
         Markov_forward('thx', force_completion=False),
     )
 ),
-(r'\b(thanks|thank you)\b', 1,
+(r'\b(thanks|thank you)\b', 51,
     R(
         Markov_forward("you're welcome", force_completion=False),
         'np'
     )
 ),
-(r'\b(wb|welcome back|welcoem back)\b', 1,
+(r'\b(wb|welcome back|welcoem back)\b', 51,
     R(
         Markov_forward('Thanks', force_completion=False),
         Markov_forward('thx', force_completion=False),
