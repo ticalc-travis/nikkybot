@@ -35,10 +35,9 @@ def more_like(nikkyai, fmt):
         out2 = nikkyai.markov_forward(
             (word, 'more', 'like'), failmsg='', src_nick=src_nick,
             max_lf=3)
-        out3 = '{}\n{}'.format(word,
-                               nikkyai.markov_forward(
-                                   ('more', 'like', '\n'), failmsg='',
-                                   src_nick=src_nick, max_lf=2))
+        out3 = '{}\n{}'.format(
+            word, nikkyai.markov_forward(
+                ('more', 'like'), failmsg='', src_nick=src_nick, max_lf=1))
         return choice((out1, out2, out3))
 
 
