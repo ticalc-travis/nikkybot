@@ -276,11 +276,10 @@ class NikkyAI(object):
             for i in xrange(len(words) - (order-1)):
                 chain = tuple(words[i:i+order])
                 try:
-                    response = self.markov.adjust_line_breaks(
-                        self.markov.sentence(
-                            chain, forward_length=DEFAULT_MARKOV_LENGTH,
-                            backward_length=DEFAULT_MARKOV_LENGTH),
-                        max_lf_l, max_lf_r)
+                    response = self.markov.sentence(
+                        chain, forward_length=DEFAULT_MARKOV_LENGTH,
+                        backward_length=DEFAULT_MARKOV_LENGTH,
+                        max_lf_forward=max_lf_r, max_lf_backward=max_lf_l)
                 except KeyError:
                     continue
                 else:
@@ -295,11 +294,10 @@ class NikkyAI(object):
         words.sort(key=len, reverse=True)
         for word in words:
             try:
-                response = self.markov.adjust_line_breaks(
-                    self.markov.sentence(
-                        (word,), forward_length=DEFAULT_MARKOV_LENGTH,
-                        backward_length=DEFAULT_MARKOV_LENGTH),
-                    max_lf_l, max_lf_r)
+                response = self.markov.sentence(
+                    (word,), forward_length=DEFAULT_MARKOV_LENGTH,
+                    backward_length=DEFAULT_MARKOV_LENGTH,
+                    max_lf_forward=max_lf_r, max_lf_backward=max_lf_l)
             except KeyError:
                 continue
             else:
@@ -343,13 +341,12 @@ class NikkyAI(object):
             try:
                 msg = self.markov.sentence(
                     chain, forward_length=DEFAULT_MARKOV_LENGTH,
-                    backward_length=DEFAULT_MARKOV_LENGTH)
+                    backward_length=DEFAULT_MARKOV_LENGTH,
+                    max_lf_forward=max_lf_r, max_lf_backward=max_lf_l)
             except KeyError:
                 continue
             else:
-                out = self.markov.adjust_line_breaks(
-                    self.filter_markov_output(src_nick, msg),
-                    max_lf_l, max_lf_r)
+                out = self.filter_markov_output(src_nick, msg)
                 try:
                     return self.check_output_response(
                         out, add_response=add_response)
@@ -370,11 +367,10 @@ class NikkyAI(object):
         try:
             out = self.markov.sentence_forward(
                 chain, length=DEFAULT_MARKOV_LENGTH,
-                allow_empty_completion=not force_completion)
+                allow_empty_completion=not force_completion, max_lf=max_lf)
         except KeyError:
             return failmsg
         else:
-            out = self.markov.adjust_right_line_breaks(out, max_lf).strip()
             return self.filter_markov_output(src_nick, out)
 
     def manual_markov(self, order, msg, max_lf=None):
@@ -386,11 +382,11 @@ class NikkyAI(object):
         chain = self.markov.str_to_chain(msg, wildcard='*')
         try:
             out = self.markov.sentence(
-                chain, forward_length=order-1, backward_length=order-1)
+                chain, forward_length=order-1, backward_length=order-1,
+                max_lf_forward=max_lf, max_lf_backward=max_lf)
         except KeyError:
             return '{}: Markov chain not found'.format(repr(chain))
         else:
-            out = self.markov.adjust_right_line_breaks(out, max_lf).strip()
             return out
 
     def manual_markov_forward(self, order, msg, max_lf=None):
@@ -401,11 +397,11 @@ class NikkyAI(object):
         msg = self.filter_markov_input(nick, msg)
         chain = self.markov.str_to_chain(msg, wildcard='*')
         try:
-            response = self.markov.sentence_forward(chain, length=order-1)
+            response = self.markov.sentence_forward(chain, length=order-1,
+                                                    max_lf=max_lf)
         except KeyError:
             return '{}: Markov chain not found'.format(repr(chain))
         else:
-            out = self.markov.adjust_right_line_breaks(out, max_lf).strip()
             return response
 
     def nikkysim(self, strip_number=False, saying=None):

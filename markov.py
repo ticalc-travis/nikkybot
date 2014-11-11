@@ -156,30 +156,6 @@ class PostgresMarkov(object):
         """Delete all trained data; restart with a completely empty state"""
         self.doquery('DELETE FROM "{}"'.format(self.table_name))
 
-    def adjust_left_line_breaks(self, string, max):
-        """Limit newline characters in string to 'max' total, counting from end
-        of string backward; truncate any additional newlines and everything
-        before them. None for 'max' means unlimited (return string
-        unchanged)."""
-        if max is not None:
-            return '\n'.join(string.split('\n')[-max-1:])
-        return string
-
-    def adjust_right_line_breaks(self, string, max):
-        """Limit newline characters in string to 'max' total, counting from
-        start of string forward; truncate any additional newlines and
-        everything after them. None for 'max' means unlimited (return string
-        unchanged)."""
-        if max is not None:
-            return '\n'.join(string.split('\n')[:max+1])
-        return string
-
-    def adjust_line_breaks(self, string, lmax, rmax):
-        """Limit newline characters in string to 'lmax' total on left side,
-        and 'rmax' total on right end."""
-        return self.adjust_left_line_breaks(
-            self.adjust_right_line_breaks(string, rmax), lmax)
-
     def forward(self, start):
         """Return a list of available chains from the given chain forward in
         context.  Input chain is a list/tuple of words one to five items in
@@ -267,27 +243,54 @@ class PostgresMarkov(object):
         return [(t[:len(chain)], t[len(chain):]) for t in
                 self.cursor.fetchall()]
 
-    def sentence_forward(self, start, length=4, allow_empty_completion=True):
-        """Generate a sentence forward from the start chain.  'length' sets the
-        size of the chain used to extend the sentence in words.
-        If 'allow_empty_completion' is False, do not return a chain identical
-        to the start chain, but always a non-empty chain completion (return
-        KeyError if this is not possible)."""
+    def _filter_completions(self, sentence, completions,
+                            allow_empty_completion, max_lf,
+                            backwards=False):
+        # Truncate each completion starting with a line break that exceeds the
+        # maximum number of allowed line breaks (line breaks already in
+        # 'sentence' chain are counted toward this total).  Then remove each
+        # empty completion if not allow_empty_completion (including those that
+        # end up empty due to line break truncation).
+        choices = []
+        for c in completions:
+            c = list(c)
+            lf_count = sentence.count('\n')
+            if backwards:
+                c.reverse()
+            for i, word in enumerate(c):
+                if word == '\n':
+                    lf_count += 1
+                if max_lf is not None and lf_count > max_lf:
+                    c[i] = ''
+            if backwards:
+                c.reverse()
+            if allow_empty_completion or c != ['', '', '', '']:
+                choices.append(tuple(c))
+        return choices
+
+    def sentence_forward(self, start, length=4, allow_empty_completion=True,
+                         max_lf=None):
+        """Generate a sentence forward from the start chain.
+        length:  Size of the chain used to extend the sentence in words
+        allow_empty_completion:  If False, do not return a chain identical
+          to the start chain, but always a non-empty chain completion (return
+          KeyError if this is not possible).
+        max_lf:  Limit number of line breaks in output sentence to this value
+          (None = unlimited)
+        """
         sentence = start = choice(self.forward(start))[0]
         while True:
             try:
                 choices = [t[1] for t in self.forward(sentence[-length:])]
-                if not allow_empty_completion:
-                    # Remove empty completions from choices list if not
-                    # allowing empty completions
-                    choices = [c for c in choices if c != ('', '', '', '')]
-                    if not choices:
-                        # If that leaves us with nothing to choose, raise the
-                        # end-of-chain KeyError; handle it in the exception
-                        # handler below
-                        raise KeyError(
-                            'No non-empty forward chain completion for: ' +
-                            repr(start))
+                choices = self._filter_completions(
+                    sentence, choices, allow_empty_completion, max_lf)
+                        # Handle line length limits and empty completions
+                # If nothing to choose, raise end-of-chain KeyError; handle it
+                # in the exception handler below
+                if not choices:
+                    raise KeyError(
+                        'No non-empty forward chain completion for: ' +
+                        repr(start))
                 sentence = sentence + choice(choices)[:length]
             except KeyError:
                 # End of chain--if anything was added to 'start', quit and
@@ -298,27 +301,33 @@ class PostgresMarkov(object):
                     break
         return self.chain_to_str(sentence)
 
-    def sentence_backward(self, start, length=4, allow_empty_completion=True):
-        """Generate a sentence backward from the start chain.  'length' sets
-        the size of the chain used to extend the sentence in words.
-        If 'allow_empty_completion' is False, do not return a chain identical
-        to the start chain, but always a non-empty chain completion (return
-        KeyError if this is not possible)."""
+    def sentence_backward(self, start, length=4, allow_empty_completion=True,
+                          max_lf=None):
+        """Generate a sentence backward from the start chain.
+        length:  Size of the chain used to extend the sentence in words
+        allow_empty_completion:  If False, do not return a chain identical
+          to the start chain, but always a non-empty chain completion (return
+          KeyError if this is not possible).
+        max_lf:  Limit number of line breaks in output sentence to this value
+          (None = unlimited)
+        """
         sentence = start = choice(self.backward(start))[0]
         while True:
             try:
                 choices = [t[1] for t in self.backward(sentence[:length])]
-                if not allow_empty_completion:
-                    # Remove empty completions from choices list if not
-                    # allowing empty completions
-                    choices = [c for c in choices if c != ('', '', '', '')]
-                    if not choices:
-                        # If that leaves us with nothing to choose, raise the
-                        # end-of-chain KeyError; handle it in the exception
-                        # handler below
-                        raise KeyError(
-                            'No non-empty backward chain completion for: ' +
-                            repr(start))
+                choices = self._filter_completions(
+                    sentence, choices, allow_empty_completion, max_lf,
+                    backwards=True)
+                        # Handle line length limits and empty completions
+                # If nothing to choose, raise end-of-chain KeyError; handle it
+                # in the exception handler below
+                if not choices:
+                    # If that leaves us with nothing to choose, raise the
+                    # end-of-chain KeyError; handle it in the exception
+                    # handler below
+                    raise KeyError(
+                        'No non-empty backward chain completion for: ' +
+                        repr(start))
                 sentence = choice(choices)[-length:] + sentence
             except KeyError:
                 # End of chain--if anything was added to 'start', quit and
@@ -329,13 +338,16 @@ class PostgresMarkov(object):
                     break
         return self.chain_to_str(sentence)
 
-    def sentence(self, start, forward_length=4, backward_length=4):
+    def sentence(self, start, forward_length=4, backward_length=4,
+                 max_lf_forward=None, max_lf_backward=None):
         """Generate a full sentence (forward and backward) from the start
-        chain, using chain lengths of forward_order (for forward direction) and
-        backward_order (for backward direction)."""
-        right = self.str_to_chain(self.sentence_forward(start, forward_length))
+        chain, using chain lengths of forward_length (for forward direction)
+        and backward_length (for backward direction).  Limit number of line
+        breaks to max_lf_forward and max_lf_backward (None = unlimited)"""
+        right = self.str_to_chain(
+            self.sentence_forward(start, forward_length, max_lf=max_lf_forward))
         back_chain = right[:backward_length]
         left = self.str_to_chain(
-            self.sentence_backward(back_chain, backward_length))
+            self.sentence_backward(back_chain, backward_length,
+                                   max_lf=max_lf_backward))
         return self.chain_to_str(left[:-len(back_chain)] + right)
-
