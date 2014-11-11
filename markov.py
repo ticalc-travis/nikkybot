@@ -278,11 +278,20 @@ class PostgresMarkov(object):
             try:
                 choices = [t[1] for t in self.forward(sentence[-length:])]
                 if not allow_empty_completion:
+                    # Remove empty completions from choices list if not
+                    # allowing empty completions
                     choices = [c for c in choices if c != ('', '', '', '')]
                     if not choices:
-                        raise KeyError('No non-empty forward chain completion for: ' + repr(start))
+                        # If that leaves us with nothing to choose, raise the
+                        # end-of-chain KeyError; handle it in the exception
+                        # handler below
+                        raise KeyError(
+                            'No non-empty forward chain completion for: ' +
+                            repr(start))
                 sentence = sentence + choice(choices)[:length]
             except KeyError:
+                # End of chain--if anything was added to 'start', quit and
+                # return result; otherwise re-raise the exception
                 if sentence == start:
                     raise
                 else:
@@ -300,11 +309,20 @@ class PostgresMarkov(object):
             try:
                 choices = [t[1] for t in self.backward(sentence[:length])]
                 if not allow_empty_completion:
+                    # Remove empty completions from choices list if not
+                    # allowing empty completions
                     choices = [c for c in choices if c != ('', '', '', '')]
                     if not choices:
-                        raise KeyError('No non-empty backward chain completion for: ' + repr(start))
+                        # If that leaves us with nothing to choose, raise the
+                        # end-of-chain KeyError; handle it in the exception
+                        # handler below
+                        raise KeyError(
+                            'No non-empty backward chain completion for: ' +
+                            repr(start))
                 sentence = choice(choices)[-length:] + sentence
             except KeyError:
+                # End of chain--if anything was added to 'start', quit and
+                # return result; otherwise re-raise the exception
                 if sentence == start:
                     raise
                 else:
