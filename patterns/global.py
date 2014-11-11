@@ -37,12 +37,11 @@ def rule(nikky, fmt):
                        "Go", "No more", "No * allowed", "Kick * in the",
                        "Use only", "Only use"))
         chain = nikky.markov.str_to_chain(seed, wildcard="*")
-        out = nikky.markov_forward(chain, src_nick=fmt[0], max_lf=1)
+        out = nikky.markov_forward(chain, src_nick=fmt[0], max_lf=0)
         try:
             out = nikky.check_output_response(out, add_response=True)
         except nikkyai.Bad_response_error:
             continue
-        out = out.replace('\n','... ')
         return out
     return "???"
 
