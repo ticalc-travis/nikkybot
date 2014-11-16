@@ -124,7 +124,7 @@ patterns = (
         Markov('mlp'),
     ),
 ),
-(r'(\bnsa\b|\bspy|\bspies\b|\bdrone)', 98,
+(r'(\bgov\b|\bgovernment|\bnsa\b|\bspy|\bspies\b|\bdrone)', 98,
     R(
         Markov('nsa'),
         Markov('spy'),
