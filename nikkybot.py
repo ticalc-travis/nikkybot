@@ -451,7 +451,9 @@ class NikkyBot(irc.IRCClient, Sensitive):
                     not nikky.is_personality_valid(parms[0]) or
                     not nikky.is_personality_valid(parms[1])):
                 reactor.callLater(2, self.notice, src_nick, usage_msg)
-                reactor.callLater(4, self.give_personalities_list, src_nick)
+                reactor.callLater(
+                    4, self.notice, src_nick,
+                    'Say "personalities" for a list of personalities')
             else:
                 nick1 = nikky.normalize_personality(parms[0])
                 nick2 = nikky.normalize_personality(parms[1])
