@@ -142,6 +142,7 @@ personalities = {
     'kermmartian': 'kerm',
     'merthsoft': 'merth',
     'shaun': 'merth',
+    'netham': 'netham45',
 }
 
 # Fill in primary personas...
