@@ -34,7 +34,7 @@ def rule(nikky, fmt):
         seed = choice(("Don't be", "Don't use", "Don't talk", "Don't bring",
                        "Don't mention", "Don't do", "Don't act", "Just kick",
                        "Just ban", "Don't forget to", "Just stop", "Stop",
-                       "Go", "No more", "No * allowed", "Kick * in the",
+                       "Go", "Get", "No more", "No * allowed", "Kick * in the",
                        "Use only", "Only use"))
         chain = nikky.markov.str_to_chain(seed, wildcard="*")
         out = nikky.markov_forward(chain, src_nick=fmt[0], max_lf=0)
