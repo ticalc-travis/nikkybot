@@ -195,7 +195,7 @@ def update(pname, reset):
                for x in
             ('calcgames', 'cemetech', 'tcpa', 'ti', 'omnimaga', 'flood',
              'caleb', 'caleb-spam', 'hp48', 'markov', 'nspired', 'nspire-lua',
-             'prizm', 'wikiti', 'cemetech-mc')]:
+             'prizm', 'wikiti', 'cemetech-mc', 'codewalrus')]:
         with open(os.path.join(home, fn), 'r') as f:
             line_group = []
             for line in f:
@@ -221,6 +221,7 @@ def update(pname, reset):
 
                 if date < last_updated or date > target_date:
                     continue
+                # TODO: Need to parse WalriiBot messages
                 if re.match('^'+pregex[0]+'$', nick, re.I):
                     line_group.append(msg)
                 elif pregex[1] and (nick.lower().startswith('saxjax') or
