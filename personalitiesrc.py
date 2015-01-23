@@ -19,6 +19,10 @@
 # Regexes must contain at least one parenthesized group!
 
 personality_regexes = {
+    'ephraimb':
+        (r'(ephraim|harryp|lazygeek).*',
+         r'(ephraim b).*',
+         None),
     'redstone':
         (r'(redstone|asian).*',
          r'(redstonepizza).*',
@@ -68,7 +72,7 @@ personality_regexes = {
          r'(netham45)',
          r'(netham45)'),
     'kevino':
-        (r'(.*?kevin_o.*?|dj_omni.*?|dj_o.*?|`-`|celtic3.*?|celticiii.*?|xlibman.*?|omnom|nom|ragol666.*?)',
+        (r'(.*?kevin_o.*?|dj_omni.*?|dj_o.*?|djowalrii|`-`|celtic3.*?|celticiii.*?|xlibman.*?|omnom|nom|ragol666.*?)',
          r'(dj.omnimaga|dj.o)',
          r'(dj.omnimaga|dj.o).*?'),
     'brandonw':
@@ -143,6 +147,7 @@ personalities = {
     'merthsoft': 'merth',
     'shaun': 'merth',
     'netham': 'netham45',
+    'ephraim': 'ephraimb'
 }
 
 # Fill in primary personas...
