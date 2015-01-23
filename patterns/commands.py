@@ -115,7 +115,7 @@ patterns = (
 # pattern regexp, last reply, priority, action, allow repeat?
 
 # Help
-(r'^\W*help', -99,
+(r"(^\W*help|(what'?s|who'?s|what is|who is|what are|who are) (you|{0})$)", -99,
     S("I'm a Markov-chain bot representing Nikky. https://raw.githubusercontent.com/ticalc-travis/nikkybot/master/README"),
 True),
 

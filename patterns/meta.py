@@ -59,9 +59,6 @@ patterns = (
         'no\nit sucks',
     )
 ),
-(r'\b(what|who) (are you|is {0})\b', -1,
-    Recurse('help'),
-),
 (r"\b(who (made|wrote|programmed) you|(who\'s|whose) are you|who (runs|operates) you|(who is|who's) your (creator|programmer|maker|admin|administrator))\b", -2,
     R(
         "It's tev",
@@ -117,7 +114,7 @@ patterns = (
         'Where did you hear that?'
     )
 ),
-(r'\b(are you|is {0}) (a |an |) ?([^][.;,!?(){{}}]+)', 1,
+(r'\b(are you|is {0}) (a |an |) ?([^][.;,!?(){{}}]+)', 2,
     R(
         'yes',
         'no',
@@ -167,8 +164,8 @@ patterns = (
 (r'\bYou should introduce yourself in this thread\b', 0,
     R("I wasn't programmed to post in forums, silly")
 ),
-(r"\b(birthday|birthdate)", 0,
-    R('My birthday is October 30, 2012'),
+(r"\b(birthday|birthdate|how old is {0}|how old are you)", -3,
+    R('My birthday is October 30, 2012'), True,
 ),
 (r"\b(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -3, E(try_mimic), True),
 
