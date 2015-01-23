@@ -28,7 +28,7 @@ from twisted.python.rebuild import rebuild
 import markov
 rebuild(markov)        # Update in case of dynamic reload
 
-DEFAULT_MARKOV_LENGTH=3         # Valid values:  1-4
+DEFAULT_MARKOV_LENGTH=4         # Valid values:  1-4
 
 #------------------------------------------------------------------------------
 
