@@ -64,4 +64,10 @@ patterns = (
     )
 ),
 (r'(.*?)\S*more like\S*$', -10, E(more_like)),
+(r'\b(care|cares|careometer|care-o-meter)', -10,
+    R(
+        Markov_forward('* care-o-meter'),
+        Markov_forward('* cares'),
+    ),
+),
 )

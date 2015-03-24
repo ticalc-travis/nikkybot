@@ -365,7 +365,7 @@ patterns = (
         Markov_forward('anybody who'),
     ),
 ),
-(r'\bwho', 0,
+(r'\bwho\b', 0,
     R(
         'nobody', 'somebody', 'everybody', 'anybody',
         Markov_forward('nobody that'),
@@ -529,6 +529,29 @@ patterns = (
     Recurse('what do you think of {2}')
 ),
 (r"\btell (me|us) about (.*)", -2, Recurse('{2}')),
+(r'(what|who)(|.s|s)? (is )?(your|{0})(.s|s)? (.*?)$', -5,
+    R(
+        Markov_forward('my {6} is'),
+        Markov_forward('my {6} was'),
+        Markov_forward('my {6} will'),
+        Markov_forward("my {6} isn't"),
+        Markov_forward('my {6} is not'),
+        Markov_forward("my {6} won't"),
+        Markov_forward("my {6} can't"),
+        Markov_forward('my {6}'),
+        Markov_forward('the {6}'),
+    )
+),
+(r'(what|who)(|.s|s)? (is )?(the|your|{0})(.s|s)? (favorite|favorit|preferred) (.*?)( of choice)?$', -5,
+    R(
+        # TODO: This needs an exact-match Markov() function (like Markov_forward
+        # but with backward completion too) to work better
+        Markov('favorite {7}'),
+        Markov('best {7}'),
+        Markov('superior {7}'),
+        Markov('coolest {7}'),
+    ),
+),
 
 ## Special ##
 

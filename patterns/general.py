@@ -78,6 +78,18 @@ patterns = (
 ),
 
 # General
+(r'\b(suck|sucks|sucking|sucked)\b', 3,
+    R(
+        ':(\nDo I suck?',
+        ':(',
+        'You suck',
+        Markov_forward('So does'),
+        Markov('sucks'),
+        Markov('suck'),
+        Recurse('no'),
+        Recurse('yes'),
+    ),
+),
 (r'\b(you suck|your .* sucks|go away|diaf|foad|gtfo|stfu)\b', 1,
     R(
         ':(',
@@ -86,7 +98,6 @@ patterns = (
         'STFU',
         'Suck it',
         'Suck it dry',
-        ':(\nDo I suck?',
         Markov_forward('So does'),
         Markov_forward('whatever', force_completion=False),
         Markov_forward('then * you', force_completion=False),
