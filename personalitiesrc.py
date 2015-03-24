@@ -22,9 +22,9 @@ personality_regexes = {
     'ephraimb':
         (r'(ephraim|harryp|lazygeek).*',
          r'(ephraim b).*',
-         None),
+         r'(ephraim).*'),
     'redstone':
-        (r'(redstone|asian).*',
+        (r'(redstone|asian|imbanned).*',
          r'(redstonepizza).*',
          None),
     'sircmpwn':
@@ -68,7 +68,7 @@ personality_regexes = {
          r'(CalebHansberry)',
          None),
     'netham45':
-        (r'(netham45|netbot45).*',
+        (r'(netham45|netbot45|ham\\).*',
          r'(netham45)',
          r'(netham45)'),
     'kevino':
@@ -88,7 +88,7 @@ personality_regexes = {
          r'(merth|merthsoft|shaun).*?',
          r'(merth|merthsoft|shaun).*?'),
     'randomist':
-        (r'(randomist|korinidos|.*arch|metalrand|randeimos|dama).*?',
+        (r'(randomist|korinidos|.*arch|metalrand|randeimos|dama|dam\\|damvista).*?',
          None,
          None),
     'sirlewk':
