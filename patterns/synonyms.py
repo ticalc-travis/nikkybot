@@ -54,6 +54,7 @@ patterns = (
         Markov('kerm martian'),
         Markov('christopher'),
         Markov('christopher mitchell'),
+        Markov('repo'),
     )
 ),
 (r'\b(djomni|dj.omni|dj.o|kevin_o)', 98,
@@ -159,7 +160,7 @@ patterns = (
         Markov('coding'),
     ),
 ),
-(r'\b(git|mercurial|svn|cvs|commit|merge)', 98,
+(r'\b(git|mercurial|svn|cvs|commit|merge)', 0,
     R(
         Markov('git'),
         Markov('mercurial'),
@@ -169,7 +170,7 @@ patterns = (
         Markov('merge'),
     ),
 ),
-(r'\b(news|cnn|fox|cbs)', 98,
+(r'\b(news|cnn|fox|cbs)', 0,
     R(
         Markov('news outlet'),
         Markov('cnn'),
@@ -177,7 +178,7 @@ patterns = (
         Markov('cbs'),
     ),
 ),
-(r'\b(browser|firefox|opera|mosaic|netscape|chrome|chromium)', 98,
+(r'\b(browser|firefox|opera|mosaic|netscape|chrome|chromium)', 0,
     R(
         Markov('browser'),
         Markov('firefox'),
@@ -188,13 +189,31 @@ patterns = (
         Markov('chromium'),
     ),
 ),
-(r'\b(os|windows|mac|linux|unix)', 98,
+(r'\b(irc client|weechat|irssi|\w*chat|kiwiirc|web client|webchat|web chat|mirc|bitchx|sax)', 0,
+    R(
+        Markov('irc client'),
+        Markov('bitchx'),
+        Markov('irssi'),
+        Markov('weechat'),
+        Markov('mirc'),
+    ),
+),
+(r'\b(os|windows|mac|linux|unix)', 0,
     R(
         Markov('os'),
         Markov('windows'),
         Markov('mac'),
         Markov('linux'),
         Markov('unix'),
+    ),
+),
+(r'\b(speak|talk|words)', 98,
+    R(
+        Markov('speak'),
+        Markov('talk'),
+        Markov('words'),
+        Markov('speaking'),
+        Markov('talking'),
     ),
 ),
 
