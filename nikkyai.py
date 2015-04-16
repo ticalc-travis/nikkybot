@@ -195,7 +195,8 @@ class NikkyAI(object):
                 raise IndexError('Pattern reply tuple must be length 3, 4, or 5, not {} (pattern: {})'.format(len(p), p))
             # Does input msg match?
             try:
-                m = re.search(pattern.format(self.nick), msg, flags=re.I)
+                m = re.search(pattern.format(re.escape(self.nick)), msg,
+                              flags=re.I)
             except Exception as e:
                 self.printdebug('Regex: {}, {}'.format(pattern, e))
                 raise e
