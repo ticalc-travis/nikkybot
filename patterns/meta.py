@@ -46,6 +46,15 @@ patterns = (
 # pattern regexp, priority, action, allow repeat?
 # pattern regexp, last reply, priority, action, allow repeat?
 
+(r'\byour name\b', -10,
+    R(
+        Markov_forward('My name is'),
+        Markov_forward("My name's"),
+        S(
+            R('', "I'm ", 'My name is '), 'NikkyBot'
+        ),
+    ), True
+),
 (r'\b((how much|how many lines (of)?|how much) (code|coding|programming)|how long .* to (make|program|code|design|write) you)', -10,
     R(
         E(age),
