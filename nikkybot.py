@@ -68,6 +68,8 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
     def nickChanged(self, nick):
         """Update NikkyAIs with new nick"""
+        # FIXME: Huh? Nothing's actually being done here. Are NikkyAIs being
+        # updated *at all*?
         irc.IRCClient.nickChanged(self, nick)
 
     def alterCollidedNick(self, nickname):
