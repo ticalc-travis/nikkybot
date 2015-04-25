@@ -4,8 +4,8 @@
 # This script will need to be modified to grab the desired lines from whatever
 # IRC logs are on hand.  (Mine are all disorganized and in several different
 # formats, so this script is longer and more convoluted than would probably
-# normally be necessary.)  The lines will be fed to the Markov generator and
-# saved in database files under markov/
+# normally be necessary.)  The lines will be fed to the Markov trainer which
+# will update the DB.
 
 import os
 import re
