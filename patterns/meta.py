@@ -170,7 +170,7 @@ patterns = (
         )
     )
 ),
-(r'\bYou should introduce yourself in this thread\b', 0,
+(r'\bYou should introduce yourself .* thread\b', 0,
     R("I wasn't programmed to post in forums, silly")
 ),
 (r"\b(birthday|birthdate|how old is {0}|how old are you|what's your age|what is your age|what's {0}(.s|s)? age|what is {0}(.s|s)? age|when were {0} born|when were you born)", -3,
