@@ -27,7 +27,7 @@ def update(pname, reset):
     try:
         pregex = personality_regexes[pname]
     except KeyError:
-        raise UpdateError
+        raise BadPersonalityError
 
     stdout.write('Starting {} Markov generation.\n'.format(table_name))
 
