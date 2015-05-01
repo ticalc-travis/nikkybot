@@ -475,13 +475,13 @@ class NikkyBot(irc.IRCClient, Sensitive):
                     d.addCallback(self.return_bot_chat)
 
         elif re.match((r"\b(quit|stop|don.?t|do not)\b.*\b(hilite|hilight|highlite|highlight).*\bme"), msg, re.I):
-            self._cmd_add_munge(src_nick)
+            self._cmd_add_munge(src_nick.lower())
             msg = "Sorry, {}, I'll stop (tell me 'highlight me' to undo)".format(self.nikkies[None].munge_word(src_nick))
             reactor.callLater(2, self.msg, sender, msg)
 
         elif re.match((r"\b(hilite|hilight|highlite|highlight) me"), msg,
                       re.I):
-            self._cmd_delete_munge(src_nick)
+            self._cmd_delete_munge(src_nick.lower())
             msg = "Okay, {}!".format(src_nick)
             reactor.callLater(2, self.msg, sender, msg)
 
