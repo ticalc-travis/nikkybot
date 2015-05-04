@@ -579,8 +579,8 @@ class NikkyAI(object):
         if sourcenick and randint(0, 10):
             msg = re.sub(r'\S+: ', sourcenick + ': ', msg)
 
-        msg = self.dehighlight_sentence(msg)
         msg = self.replace_nicks(msg, sourcenick)
+        msg = self.dehighlight_sentence(msg)
         msg = self.fix_nonmatching_punctuation(msg)
         return msg
 
