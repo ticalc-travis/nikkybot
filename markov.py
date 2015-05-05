@@ -219,7 +219,6 @@ class PostgresMarkov(object):
         # Gather a list of columns forward in context to cover length of
         # given chain
         context_cols = ['rawword','next1','next2','next3','next4'][:len(chain)]
-        #context_cols.reverse()
         context_cols = ', '.join(context_cols)
 
         q1 = 'SELECT {}, prev4, prev3, prev2, prev1 FROM "{}" WHERE '.format(
@@ -238,7 +237,6 @@ class PostgresMarkov(object):
         q = q1 + ' AND '.join(q2)
         self.doquery(q)
         if not self.cursor.rowcount:
-            #chain.reverse()     # Back to original order for error message
             raise KeyError("{}: chain not found".format(chain))
         return [(t[:len(chain)], t[len(chain):]) for t in
                 self.cursor.fetchall()]

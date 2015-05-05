@@ -25,7 +25,6 @@ import subprocess
 from time import time as now
 import traceback
 import sys
-import psycopg2
 
 from twisted.python.rebuild import Sensitive, rebuild
 from twisted.words.protocols import irc
