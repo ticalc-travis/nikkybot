@@ -4,11 +4,15 @@
 # This script will need to be modified to grab the desired lines from whatever
 # IRC logs are on hand.  (Mine are all disorganized and in several different
 # formats, so this script is longer and more convoluted than would probably
-# normally be necessary.)  The lines will be fed to the Markov trainer which
-# will update the DB.
+# normally be necessary.)  The lines will be processed and used to populate the
+# Markov and relevance/context data in the database.
+
+# Number of previous spoken IRC lines to include in Markov context data
+CONTEXT_LINES = 10
 
 import os
 import re
+from collections import deque
 from datetime import datetime
 from sys import stdout, argv, exit
 import psycopg2
@@ -16,20 +20,57 @@ import psycopg2
 import markov
 from personalitiesrc import personality_regexes
 
+class TrainingCorpus(object):
+    def __init__(self, nick_regexes, context_lines=CONTEXT_LINES):
+        self.nick_regexes = nick_regexes
+        self.context_group = deque([], maxlen=context_lines)
+        self.spoken_group = []
+        self._corpus = []
+
+    def check_line(self, nick, line):
+        m = None
+        for regex in self.nick_regexes:
+            if regex:
+                m = re.match(regex, nick, re.I)
+                if m:
+                    break
+        if m:
+            self.add_spoken(line)
+        else:
+            self.add_context(line)
+
+    def add_spoken(self, line):
+        self.spoken_group.append(line)
+
+    def add_context(self, line):
+        self.update()
+        self.context_group.append(line)
+
+    def update(self):
+        if self.spoken_group:
+            self._corpus.append(
+                ('\n'.join(self.spoken_group),
+                 '\n'.join(self.context_group))
+            )
+            self.spoken_group = []
+        self.context_group.clear()
+
+    def get_corpus(self):
+        self.update()
+        return self._corpus
+
 class BadPersonalityError(KeyError):
     pass
 
 def update(pname, reset):
     NEVER_UPDATED = datetime(1970, 1, 1, 0, 0)
     home = os.environ['HOME']
-    training_glob = []
-    table_name = '{}'.format(pname)
     try:
         pregex = personality_regexes[pname]
     except KeyError:
         raise BadPersonalityError
 
-    stdout.write('Starting {} Markov generation.\n'.format(table_name))
+    stdout.write('Starting {} Markov generation.\n'.format(pname))
 
     # Get last updated date
     conn = psycopg2.connect('dbname=markovmix user=markovmix')
@@ -39,7 +80,7 @@ def update(pname, reset):
     cur.execute('CREATE TABLE IF NOT EXISTS ".last-updated" '
         '(name VARCHAR PRIMARY KEY, updated TIMESTAMP NOT NULL DEFAULT NOW())')
     cur.execute('SELECT updated FROM ".last-updated" WHERE name=%s',
-                (table_name,))
+                (pname,))
     target_date = datetime.now()
     if not reset and cur.rowcount:
         last_updated = cur.fetchone()[0]
@@ -48,9 +89,11 @@ def update(pname, reset):
     # Updated last updated date (will only be written to DB if entire process
     # finishes to the commit call at the end of the script)
     cur.execute('UPDATE ".last-updated" SET updated = NOW() WHERE name=%s',
-                (table_name,))
+                (pname,))
     if not cur.rowcount:
-        cur.execute('INSERT INTO ".last-updated" VALUES (%s)', (table_name,))
+        cur.execute('INSERT INTO ".last-updated" VALUES (%s)', (pname,))
+
+    corpus = TrainingCorpus(pregex)
 
     if last_updated == NEVER_UPDATED:
 
@@ -64,80 +107,61 @@ def update(pname, reset):
                 ('calcgames.log', 'cemetech.log', 'tcpa.log', 'ti.log',
                 'efnet_#tiasm.log', 'omnimaga.log')]:
             with open(os.path.join(home, fn), 'r') as f:
-                line_group = []
                 for line in f:
                     line = line.strip()
-                    m = re.match(r'^\[.*\] \[.*\] <'+pregex[0]+r'>\t(.*)',
-                                line, re.I)
+                    m = re.match(r'^\[.*\] \[.*\] <(.*?)>\t(.*)',
+                                 line, re.I)
                     if not m and pregex[1]:
-                        m = re.match(r'^\[.*\] \[.*\] <saxjax>\t\(.\) \[?'+pregex[1]+r'[:\]] (.*)', line, re.I)
+                        m = re.match(r'^\[.*\] \[.*\] <saxjax>\t\(.\) \[?(.*?)[:\]] (.*)', line, re.I)
                     if m:
-                        line_group.append(m.group(2))
-                    else:
-                        if line_group:
-                            training_glob.append('\n'.join(line_group))
-                        line_group = []
+                        corpus.check_line(m.group(1), m.group(2))
+            corpus.update()
 
         # Old #tcpa logs from elsewhere
         log_path = os.path.join('/home/retrotcpa',
                                 os.path.join('log_irc_retro'))
         for dn in [os.path.join(log_path, x) for x in os.listdir(log_path)]:
             for fn in os.listdir(dn):
-                with open(os.path.join(log_path, os.path.join(dn, fn)), 'r') as f:
-                    line_group = []
+                with open(os.path.join(log_path, os.path.join(dn, fn)),
+                          'r') as f:
                     for line in f:
                         line = line.strip()
-                        m = re.match(r'^\[[0-9]{2}:[0-9]{2}:[0-9]{2}\] <[ @+]?'+pregex[0]+'> (.*)', line, re.I)
+                        m = re.match(r'^\[[0-9]{2}:[0-9]{2}:[0-9]{2}\] <[ @+]?(.*?)> (.*)', line, re.I)
                         if m:
-                            line_group.append(m.group(2))
-                        else:
-                            if line_group:
-                                training_glob.append('\n'.join(line_group))
-                            line_group = []
+                            corpus.check_line(m.group(1), m.group(2))
+            corpus.update()
 
         # Old #calcgames logs from elsewhere
         log_path = os.path.join('/home/retrotcpa',
                                 os.path.join('log_calcgames'))
         for fn in os.listdir(log_path):
             with open(os.path.join(log_path, fn), 'r') as f:
-                line_group = []
                 for line in f:
                     line = line.strip()
-                    m = re.match(r'^[0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?'+pregex[0]+'> (.*)', line, re.I)
+                    m = re.match(r'^[0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?(.*?)> (.*)', line, re.I)
                     if m:
-                        line_group.append(m.group(2))
-                    else:
-                        if line_group:
-                            training_glob.append('\n'.join(line_group))
-                        line_group = []
+                        corpus.check_line(m.group(1), m.group(2))
+            corpus.update()
 
         # More miscellaneous junk I threw in a separate huge file because it
         # was too scattered around my system
         with open('misc_irc_lines.txt', 'r') as f:
-            line_group = []
             for line in f:
                 line = line.strip()
-                m = re.match(r'^\[?[0-9]{2}:[0-9]{2}(:[0-9]{2})?\]? <[ @+]?'+pregex[0]+'> (.*)', line, re.I)
+                m = re.match(r'^\[?[0-9]{2}:[0-9]{2}(:[0-9]{2})?\]? <[ @+]?(.*?)> (.*)', line, re.I)
                 if m:
-                    line_group.append(m.group(3))
-                else:
-                    if line_group:
-                        training_glob.append('\n'.join(line_group))
-                    line_group = []
+                    corpus.check_line(m.group(2), m.group(3))
 
         if pname == 'nikky':
             # !TODO! Generalize this
             # And some stuff from elsewhere, too!
             with open('manually-added.txt', 'r') as f:
-                line_group = []
                 for line in f:
                     line = line.strip()
-                    if re.match(r'(.+)', line, re.I):
-                        line_group.append(line)
+                    if line:
+                        corpus.add_spoken(line)
                     else:
-                        if line_group:
-                            training_glob.append('\n'.join(line_group))
-                        line_group = []
+                        corpus.update()
 
         # irssi logs
         log_path = os.path.join(home, os.path.join('log_irc_irssi'))
@@ -152,7 +176,6 @@ def update(pname, reset):
                                 'inspired', 'nspire-lua', 'prizm', 'tcpa',
                                 'ti', 'caleb', 'wikiti', 'markov')):
                             with open(os.path.join(log_path, dn, fn), 'r') as f:
-                                line_group = []
                                 for line in f:
                                     line = line.strip()
                                     m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?(.*)> (.*)', line, re.I)
@@ -169,22 +192,20 @@ def update(pname, reset):
                                             elif nick.lower().startswith('nikky'):
                                                 nick = 'nikkybot'
 
-                                        if re.match('^'+pregex[0]+'$', nick):
-                                            line_group.append(msg)
-                                            continue
+                                        corpus.check_line(nick, msg)
 
                                     if pregex[1]:
-                                        m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?saxjax> \(.\) \[?'+pregex[1]+r'[:\]] (.*)', line, re.I)
+                                        m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?saxjax> \(.\) \[?(.*?)[:\]] (.*)', line, re.I)
                                         if m:
-                                            line_group.append(m.group(2))
+                                            corpus.check_line(m.group(1),
+                                                              m.group(2))
                                         elif pregex[2]:
-                                            m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?omnomirc.?> (?:\(.\))?<'+pregex[2]+r'> (.*)', line, re.I)
+                                            m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?omnomirc.?> (?:\(.\))?<(.*?)> (.*)', line, re.I)
                                             if m:
-                                                line_group.append(m.group(2))
-                                    if not m:
-                                        if line_group:
-                                            training_glob.append('\n'.join(line_group))
-                                        line_group = []
+                                                corpus.check_line(m.group(1),
+                                                                  m.group(2))
+                    corpus.update()
+
             except OSError as e:
                 if e.errno == 20:
                     continue
@@ -197,7 +218,6 @@ def update(pname, reset):
              'caleb', 'caleb-spam', 'hp48', 'markov', 'nspired', 'nspire-lua',
              'prizm', 'wikiti', 'cemetech-mc', 'codewalrus')]:
         with open(os.path.join(home, fn), 'r') as f:
-            line_group = []
             for line in f:
                 line = line.strip()
                 m1 = re.match(r'^([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2})\t[+@]?(.*)\t(.*)', line)
@@ -222,31 +242,27 @@ def update(pname, reset):
                 if date < last_updated or date > target_date:
                     continue
                 # TODO: Need to parse WalriiBot messages
-                if re.match('^'+pregex[0]+'$', nick, re.I):
-                    line_group.append(msg)
-                elif pregex[1] and (nick.lower().startswith('saxjax') or
-                                    nick.lower().startswith('cemetecmc')):
-                    m = re.match(r'^\(.\) \[?'+pregex[1]+r'[:\]] (.*)',
-                                 msg, re.I)
-                    if m:
-                        line_group.append(m.group(2))
+                if pregex[1] and (nick.lower().startswith('saxjax') or
+                                  nick.lower().startswith('cemetecmc')):
+                    m = re.match(r'^\(.\) \[?(.*?)[:\]] (.*)', msg, re.I)
                 elif pregex[2] and nick.lower().startswith('omnomnirc'):
-                    m = re.match(r'^(?:\(.\))?<'+pregex[2]+r'> (.*)',
-                                 msg, re.I)
-                    if m:
-                        line_group.append(m.group(2))
+                    m = re.match(r'^(?:\(.\))?<(.*?)> (.*)', msg, re.I)
                 else:
-                    if line_group:
-                        training_glob.append('\n'.join(line_group))
-                    line_group = []
+                    m = None
+                if m:
+                    nick, msg = m.group(1), m.group(2)
+                corpus.check_line(nick, msg)
+        corpus.update()
 
-    items = len(training_glob)
+    c = corpus.get_corpus()
+    num_items = len(c)
     if last_updated == NEVER_UPDATED:
         mk.clear()
-    for i, l in enumerate(training_glob):
-        stdout.write('Training {}/{}...\r'.format(i+1, items))
+    for i, citem in enumerate(c):
+        stdout.write('Training {}/{}...\r'.format(i+1, num_items))
         stdout.flush()
-        mk.add(l)
+        spoken, context = citem
+        mk.add(spoken, context)
 
     stdout.write('\nClosing...\n')
     mk.commit()
