@@ -21,6 +21,36 @@ import re
 import psycopg2
 
 DEFAULT_IGNORE_CHARS = '\\]\\-!"&`()*,./:;<=>?[\\^=\'{|}~_'
+DEFAULT_CONTEXT_IGNORE_WORDS = (
+'\n', '_', 'nikkybot',
+'a', 'about', 'above', 'after', 'again', 'against', 'ah', 'all', 'also',
+'am', 'an', 'and', 'any', 'anything', 'are', 'as', 'at', 'back', 'be', 'been',
+'before', 'being', 'below', 'between', 'both', 'but', 'by', 'can', 'cant',
+'come', 'could', 'did', 'didnt', 'do', 'does', 'doesnt', 'doing', 'dont',
+'down', 'during', 'each', 'even', 'ever', 'else', 'everything', 'few', 'first',
+'for', 'from', 'further', 'get', 'getting', 'give', 'go', 'goes', 'going',
+'good', 'got', 'had', 'has', 'have', 'havent', 'having', 'he', 'hello', 'her',
+'here', 'hers', 'herself', 'hi', 'him', 'himself', 'his', 'how', 'i', 'id',
+'if', 'ill', 'im', 'in', 'into', 'is', 'it', 'its', 'itself', 'just', 'know',
+'like', 'look', 'make', 'me', 'more', 'most', 'much', 'my', 'myself', 'new',
+'no', 'nor', 'not', 'now', 'of', 'off', 'ok', 'okay', 'on', 'once', 'one',
+'only', 'or', 'other', 'our', 'ours', 'ourselves', 'out', 'over', 'own',
+'people', 'same', 'say', 'see', 'she', 'should', 'since', 'so', 'some',
+'something', 'such', 'take', 'than', 'that', 'thatd', 'thats', 'the', 'their',
+'theirs', 'them', 'themselves', 'then', 'there', 'these', 'they', 'thing',
+'think', 'this', 'those', 'though', 'through', 'to', 'too', 'two', 'under',
+'until', 'up', 'us', 'use', 'very', 'want', 'was', 'way', 'we', 'well', 'were',
+'what', 'when', 'where', 'which', 'while', 'who', 'whom', 'why', 'will',
+'with', 'work', 'would', 'yeah', 'yes', 'yep', 'you', 'your', 'yours',
+'yourself', 'yourselves',
+)
+DEFAULT_CONTEXT_IGNORE_PREFIXES = (
+'re', 'un',
+)
+DEFAULT_CONTEXT_IGNORE_SUFFIXES = (
+'s', 'est', 'es', 'ies', 'ion', 'er', 'en', 'ed', 'ly', 'y', 'ing', 'ings',
+'t', 've', 're', 'd', 'm',
+)
 
 class PostgresMarkov(object):
     """tev's Markov chain implementation using a PostgreSQL backend to store
@@ -28,14 +58,21 @@ class PostgresMarkov(object):
 
     def __init__(self, connect, table_name,
             case_sensitive=True,
-            ignore_chars=DEFAULT_IGNORE_CHARS):
+            ignore_chars=DEFAULT_IGNORE_CHARS,
+            ignore_words=DEFAULT_CONTEXT_IGNORE_WORDS,
+            ignore_prefixes=DEFAULT_CONTEXT_IGNORE_PREFIXES,
+            ignore_suffixes=DEFAULT_CONTEXT_IGNORE_SUFFIXES):
 
-        self._case_sensitive = case_sensitive
-        self._ignore_chars = ignore_chars
+        self.case_sensitive = case_sensitive
+        self.ignore_chars = ignore_chars
+        self.ignore_words = [self.conv_key(w) for w in ignore_words]
+        self.ignore_prefixes = ignore_prefixes
+        self.ignore_suffixes = ignore_suffixes
 
         # Set up connection if it's a string; else assume it's a connection
         # object
         self.table_name = table_name
+        self.context_table_name = table_name + '.context'
         try:
             self.connection = psycopg2.connect(connect)
         except TypeError:
@@ -43,10 +80,12 @@ class PostgresMarkov(object):
         self.cursor = self.connection.cursor()
 
         # Set up tables if needed
+
+        # Markov
         try:
             self.doquery(
                 'CREATE TABLE "{}"'
-                '(word VARCHAR, rawword VARCHAR,'
+                ' (word VARCHAR, rawword VARCHAR,'
                 ' next1key VARCHAR DEFAULT NULL,'
                 ' next2key VARCHAR DEFAULT NULL,'
                 ' next3key VARCHAR DEFAULT NULL,'
@@ -74,6 +113,23 @@ class PostgresMarkov(object):
                     self.table_name))
             self.commit()
 
+        # Context
+        try:
+            self.doquery(
+                'CREATE TABLE "{}"'
+                ' (inword VARCHAR NOT NULL, outword VARCHAR NOT NULL,'
+                '  freq INTEGER DEFAULT 1 CHECK (freq > 0) NOT NULL,'
+                '  UNIQUE (inword, outword))'.format(
+                    self.context_table_name)
+            )
+        except psycopg2.ProgrammingError:
+            self.rollback()
+        else:
+            self.doquery(
+                'CREATE INDEX ON "{}" (outword, inword)'.format(
+                    self.context_table_name))
+            self.commit()
+
     def doquery(self, querystr, args=None):
         if args is not None:
             args = [unicode(s, encoding='utf8', errors='replace') for s in args]
@@ -91,7 +147,7 @@ class PostgresMarkov(object):
     def conv_key(self, s):
         """Convert a string or sequence of strings to lowercase if case
         sensitivity is disabled, and strip characters contained in
-        self._ignore_chars.  Non-strings are returned as-is."""
+        self.ignore_chars.  Non-strings are returned as-is."""
         try:
             s.lower()
         except AttributeError:
@@ -102,13 +158,32 @@ class PostgresMarkov(object):
         else:
             if not s:
                 return s
-            s = re.sub('[{}]'.format(self._ignore_chars), '', s)
-            if not self._case_sensitive:
+            s = re.sub('[{}]'.format(self.ignore_chars), '', s)
+            if not self.case_sensitive:
                 s = s.lower()
             if s.strip(' '):
                 return s
             else:
                 return '_'
+
+    def normalize_word(self, word):
+        """Normalize a word for context checking--convert to lowercase, strip
+        characters in self.ignore_chars, and remove common word suffixes."""
+        word = self.conv_key(word)
+        remove = ''
+        for r in self.ignore_prefixes:
+            r = r.lower()
+            if word.endswith(r) and len(r) > len(remove):
+                remove = r
+        if remove:
+            word = word[len(remove):]
+        for r in self.ignore_suffixes:
+            r = r.lower()
+            if word.endswith(r) and len(r) > len(remove):
+                remove = r
+        if remove:
+            word = word[:-len(remove)]
+        return word
 
     def str_to_chain(self, string, wildcard=None):
         """Convert a normal sentence in a string to a list of words.
@@ -127,10 +202,12 @@ class PostgresMarkov(object):
         chain = [s.strip(' ') for s in chain]
         return ' '.join(chain).replace(' \n ', '\n').strip(' ')
 
-    def add(self, sentence):
-        """Parse and add a string of words to the chain"""
+    def add(self, sentence, context=None):
+        """Parse and add a string of words to the chain; update context
+        information from 'context' string if given"""
         words = self.str_to_chain(sentence)
         words = ['']*4 + [x.strip(' ') for x in words] + ['']*4
+        context_words = self.str_to_chain(context) if context else []
         for i, word in enumerate(words):
             if not word or i < 4 or i > len(words)-5:
                 continue
@@ -149,6 +226,9 @@ class PostgresMarkov(object):
                 [self.conv_key(word), word] + forward_key + backward_key +
                 forward_chain + backward_chain
             )
+            # Update context/relevance table if context is provided
+            for cword in context_words:
+                self.add_context(cword, word)
 
     def train(self, filename):
         """Train from all lines from the given text file"""
@@ -156,9 +236,67 @@ class PostgresMarkov(object):
         for line in f:
             self.add(line)
 
+    def add_context(self, in_word, out_word):
+        """Associate in_word with out_word, keeping track of frequency of
+        associations, to estimate relative relation between the two words."""
+
+        if (self.conv_key(in_word) in self.ignore_words or
+                self.conv_key(out_word) in self.ignore_words):
+            return
+        in_word, out_word = (self.normalize_word(in_word),
+                             self.normalize_word(out_word))
+        if not in_word or not out_word:
+            return
+        # Don't record information for generic words
+        self.doquery(
+            'SELECT * FROM "{}" WHERE inword=%s AND outword=%s'.format(
+                self.context_table_name),
+            (in_word, out_word))
+        if not self.cursor.rowcount:
+            # Add new entry
+            self.doquery(
+                'INSERT INTO "{}" (inword, outword) VALUES'
+                ' (%s, %s)'.format(self.context_table_name),
+                (in_word, out_word))
+        else:
+            # Increment frequency of existing entry
+            self.doquery(
+                'UPDATE "{}" SET freq = freq + 1 WHERE'
+                ' inword=%s AND outword=%s'.format(self.context_table_name),
+                (in_word, out_word))
+
+    def get_context_freq(self, in_word, out_word):
+        """Return number of times in_word was associated with out_word in
+        context."""
+        in_word, out_word = (self.normalize_word(in_word),
+                             self.normalize_word(out_word))
+        self.doquery(
+            'SELECT freq FROM "{}" WHERE inword=%s AND outword=%s'.format(
+                self.context_table_name),
+            (in_word, out_word))
+        if self.cursor.rowcount:
+            return self.cursor.fetchone()[0]
+        else:
+            return 0
+
+    def get_context_score(self, output_candidate, context):
+        """Scores the relevance of words in 'output_candidate' string to the
+        words in the 'context' string based on trained context information."""
+        in_words = [self.normalize_word(w) for w in self.str_to_chain(context)]
+        out_words = [self.normalize_word(w) for w in
+                     self.str_to_chain(output_candidate)]
+        score = count = 0
+        for ow in out_words:
+            for iw in in_words:
+                score += self.get_context_freq(iw, ow)
+                count += 1
+        return score / float(count) if count else 0.
+
     def clear(self):
-        """Delete all trained data; restart with a completely empty state"""
+        """Delete all trained data and context; restart with a completely empty
+        state"""
         self.doquery('DELETE FROM "{}"'.format(self.table_name))
+        self.doquery('DELETE FROM "{}"'.format(self.context_table_name))
 
     def forward(self, start):
         """Return a list of available chains from the given chain forward in
