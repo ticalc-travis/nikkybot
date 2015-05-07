@@ -210,7 +210,7 @@ class PostgresMarkov(object):
         chain = [s.strip(' ') for s in chain]
         return ' '.join(chain).replace(' \n ', '\n').strip(' ')
 
-    def add(self, sentence, context=None):
+    def add(self, sentence, context=None, context_bias=1):
         """Parse and add a string of words to the chain; update context
         information from 'context' string if given"""
         words = self.str_to_chain(sentence)
@@ -236,7 +236,7 @@ class PostgresMarkov(object):
             )
             # Update context/relevance table if context is provided
             for cword in context_words:
-                self.add_context(cword, word)
+                self.add_context(cword, word, context_bias)
 
     def train(self, filename):
         """Train from all lines from the given text file"""
@@ -244,12 +244,13 @@ class PostgresMarkov(object):
         for line in f:
             self.add(line)
 
-    def add_context(self, in_word, out_word):
+    def add_context(self, in_word, out_word, bias=1):
         """Associate in_word with out_word, keeping track of frequency of
         associations, to estimate relative relation between the two words."""
 
-        if (self.conv_key(in_word) in self.ignore_words or
-                self.conv_key(out_word) in self.ignore_words):
+        key_in, key_out = self.conv_key(in_word), self.conv_key(out_word)
+        if (key_in in self.ignore_words or key_out in self.ignore_words or
+                key_in == key_out):
             return
         in_word, out_word = (self.normalize_word(in_word),
                              self.normalize_word(out_word))
@@ -263,15 +264,15 @@ class PostgresMarkov(object):
         if not self.cursor.rowcount:
             # Add new entry
             self.doquery(
-                'INSERT INTO "{}" (inword, outword) VALUES'
-                ' (%s, %s)'.format(self.context_table_name),
-                (in_word, out_word))
+                'INSERT INTO "{}" (inword, outword, freq) VALUES'
+                ' (%s, %s, %s)'.format(self.context_table_name),
+                (in_word, out_word, bias))
         else:
             # Increment frequency of existing entry
             self.doquery(
-                'UPDATE "{}" SET freq = freq + 1 WHERE'
+                'UPDATE "{}" SET freq = freq + %s WHERE'
                 ' inword=%s AND outword=%s'.format(self.context_table_name),
-                (in_word, out_word))
+                (bias, in_word, out_word))
 
     def get_context_freq(self, in_word, out_word):
         """Return number of times in_word was associated with out_word in

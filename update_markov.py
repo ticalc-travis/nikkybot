@@ -20,6 +20,7 @@ import psycopg2
 import markov
 from personalitiesrc import personality_regexes
 
+
 class TrainingCorpus(object):
     def __init__(self, nick_regexes, context_lines=CONTEXT_LINES):
         self.nick_regexes = nick_regexes
@@ -27,14 +28,14 @@ class TrainingCorpus(object):
         self.spoken_group = []
         self._corpus = []
 
-    def check_line(self, nick, line):
-        m = None
+    def is_nick(self, search):
         for regex in self.nick_regexes:
-            if regex:
-                m = re.match(regex, nick, re.I)
-                if m:
-                    break
-        if m:
+            if regex and re.match(regex, search, re.I):
+                return True
+        return False
+
+    def check_line(self, nick, line):
+        if self.is_nick(nick):
             self.add_spoken(line)
         else:
             self.add_context(line)
@@ -262,7 +263,8 @@ def update(pname, reset):
         stdout.write('Training {}/{}...\r'.format(i+1, num_items))
         stdout.flush()
         spoken, context = citem
-        mk.add(spoken, context)
+        bias = 100 if corpus.is_nick(context) else 1
+        mk.add(spoken, context, bias)
     stdout.write('\nClosing...\n')
     mk.commit()
     stdout.write('Finished!\n\n')
