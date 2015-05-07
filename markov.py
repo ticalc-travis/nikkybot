@@ -131,9 +131,17 @@ class PostgresMarkov(object):
             self.commit()
 
     def doquery(self, querystr, args=None):
-        if args is not None:
-            args = [unicode(s, encoding='utf8', errors='replace') for s in args]
-        return self.cursor.execute(querystr, args)
+        if args is None:
+            new_args = None
+        else:
+            new_args = []
+            for a in args:
+                try:
+                    new_args.append(unicode(a, encoding='utf8',
+                                            errors='replace'))
+                except TypeError:
+                    new_args.append(a)
+        return self.cursor.execute(querystr, new_args)
 
     def begin(self):
         self.doquery('BEGIN')

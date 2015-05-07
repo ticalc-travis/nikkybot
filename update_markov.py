@@ -263,7 +263,6 @@ def update(pname, reset):
         stdout.flush()
         spoken, context = citem
         mk.add(spoken, context)
-
     stdout.write('\nClosing...\n')
     mk.commit()
     stdout.write('Finished!\n\n')
