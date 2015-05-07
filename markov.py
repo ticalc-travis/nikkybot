@@ -41,7 +41,6 @@ class PostgresMarkov(object):
         except TypeError:
             self.connection = connect
         self.cursor = self.connection.cursor()
-        self.doquery = self.cursor.execute
 
         # Set up tables if needed
         try:
@@ -74,6 +73,11 @@ class PostgresMarkov(object):
                 '(word,prev1key,prev2key,prev3key,prev4key)'.format(
                     self.table_name))
             self.commit()
+
+    def doquery(self, querystr, args=None):
+        if args is not None:
+            args = [unicode(s, encoding='utf8', errors='replace') for s in args]
+        return self.cursor.execute(querystr, args)
 
     def begin(self):
         self.doquery('BEGIN')
