@@ -531,6 +531,10 @@ class NikkyAI(object):
         else:
             speaker_nick, msg = '', msg
 
+        # Remove multiple consecutive spaces that could throw off message
+        # parsing
+        msg = re.sub(' +', ' ', msg)
+
         # Remove highlight at beginning of line, if it exists
         m = re.match(re.escape(self.nick) + r'\W *(.*)', msg, re.I)
         if m:
