@@ -57,9 +57,9 @@ else:
     tag1 = tag2 = None
 
 bot1 = nikkyai.NikkyAI(recurse_limit=10, debug=False, max_lf_l=10, max_lf_r=10,
-                       personality=nick1, id='*botchat*')
+                       personality=nick1, id='*botchat*', search_time=.1)
 bot2 = nikkyai.NikkyAI(recurse_limit=10, debug=False, max_lf_l=10, max_lf_r=10,
-                       personality=nick2, id='*botchat*')
+                       personality=nick2, id='*botchat*', search_time=.1)
 
 tw = textwrap.TextWrapper(subsequent_indent=' '*20, expand_tabs=True, width=80)
 

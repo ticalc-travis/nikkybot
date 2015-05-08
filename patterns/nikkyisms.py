@@ -21,24 +21,29 @@ import nikkyai
 
 # Distinctive “Nikky-like” phrases
 
-def more_like(nikkyai, fmt):
+def more_like(nikkyai, context, fmt):
     src_nick = fmt[0]
     word = fmt[1].strip()
     if not word:
-        return nikkyai.markov_reply(
-            '<{}> \nmore like'.format(src_nick), failmsg='',
+        out = nikkyai.markov_reply(
+            '<{}> \nmore like'.format(src_nick), failmsg='', context=context,
             add_response=False, max_lf_l=2, max_lf_r=2)
     else:
-        out1 = nikkyai.markov_forward(
-            (word, '\n', 'more', 'like'), failmsg='', src_nick=src_nick,
-            max_lf=3)
-        out2 = nikkyai.markov_forward(
-            (word, 'more', 'like'), failmsg='', src_nick=src_nick,
-            max_lf=3)
-        out3 = '{}\n{}'.format(
-            word, nikkyai.markov_forward(
-                ('more', 'like'), failmsg='', src_nick=src_nick, max_lf=1))
-        return choice((out1, out2, out3))
+        c = randint(0, 2)
+        if not c:
+            out = nikkyai.markov_forward(
+                (word, '\n', 'more', 'like'), failmsg='', context=context,
+                 src_nick=src_nick, max_lf=3)
+        elif c == 1:
+            out = nikkyai.markov_forward(
+                (word, 'more', 'like'), failmsg='', context=context,
+                 src_nick=src_nick, max_lf=3)
+        elif c == 2:
+            out = '{}\n{}'.format(
+                word, nikkyai.markov_forward(
+                    ('more', 'like'), failmsg='', context=context,
+                     src_nick=src_nick, max_lf=1))
+    return out
 
 
 patterns = (

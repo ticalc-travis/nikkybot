@@ -19,13 +19,13 @@
 from _table import *
 from nikkyai import Bad_personality_error
 
-def age(nikkyai, fmt):
+def age(nikkyai, context, fmt):
     from datetime import datetime
     return ('About ' +
             str((datetime.now() - datetime(2012, 10, 30)).days) +
             " days' worth ongoing so far, give or take")
 
-def try_mimic(nikkyai, fmt):
+def try_mimic(nikkyai, context, fmt):
     pers = fmt[6]
     personalities = nikkyai.get_personalities()
     try:
@@ -34,7 +34,8 @@ def try_mimic(nikkyai, fmt):
         out = ''
     else:
         out = '{}...\n"{}"'.format(pers,
-                                   nikkyai.reply('', add_response=True))
+                                   nikkyai.reply('', context=context,
+                                                 add_response=True))
     finally:
         nikkyai.set_personality('nikky')
     return out

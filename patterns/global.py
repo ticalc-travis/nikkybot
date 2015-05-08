@@ -19,7 +19,7 @@
 from _table import *
 import nikkyai
 
-def rule(nikky, fmt):
+def rule(nikky, context, fmt):
     # Do our own repeated response checking--this lets us avoid giving the same
     # “rule” more than once in the same list, even if several are being
     # combined at once into a single output message
@@ -30,6 +30,7 @@ def rule(nikky, fmt):
     # check the response here, add it to the list, and then check it again
     # in nikkyai, which will always reject it as a duplicate before ever being
     # output).
+    saved_search_time = nikky.search_time
     for i in xrange(0, nikky.recurse_limit):
         seed = choice(("Don't be", "Don't use", "Don't talk", "Don't bring",
                        "Don't mention", "Don't do", "Don't act", "Just kick",
@@ -37,7 +38,10 @@ def rule(nikky, fmt):
                        "Go", "Get", "No more", "No * allowed", "Kick * in the",
                        "Use only", "Only use"))
         chain = nikky.markov.str_to_chain(seed, wildcard="*")
-        out = nikky.markov_forward(chain, src_nick=fmt[0], max_lf=0)
+        nikky.search_time = 1
+        out = nikky.markov_forward(chain, src_nick=fmt[0], context=context,
+                                   max_lf=0)
+        nikky.search_time = saved_search_time
         try:
             out = nikky.check_output_response(out, add_response=True)
         except nikkyai.Bad_response_error:
@@ -45,7 +49,7 @@ def rule(nikky, fmt):
         return out
     return "???"
 
-def war(nikky, fmt):
+def war(nikky, context, fmt):
     recurse_count = 0
     subject = ''
     while not subject.strip():
@@ -56,7 +60,7 @@ def war(nikky, fmt):
         verb = choice(('arguing', 'bitching', 'complaining', 'yelling',
                        'shouting'))
         chain = (verb, 'about')
-        subject = nikky.markov_forward(chain, src_nick=fmt[0])
+        subject = nikky.markov_forward(chain, context=context, src_nick=fmt[0])
         if not subject.strip():
             continue
         subject = subject.replace('\n', '... ')
@@ -90,7 +94,7 @@ def war(nikky, fmt):
         # Reconstruct the subject string, force beginning word to lowercase
         subject = ' '.join(chain)
         subject = subject[0].lower() + subject[1:]
-        # Return it
+    # Return it
     return 'Are we arguing about ' + subject + ' again?'
 
 

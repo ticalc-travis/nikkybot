@@ -23,6 +23,7 @@ from os import fstat, stat, getpid
 import re
 import subprocess
 import psycopg2
+from time import time
 from twisted.python.rebuild import rebuild
 
 import markov
@@ -60,7 +61,7 @@ class NikkyAI(object):
                  recurse_limit=100, debug=True, max_lf_l=1, max_lf_r=2,
                  remark_chance_no_keywords=1000, remark_chance_keywords=200,
                  pattern_response_expiry=timedelta(90),
-                 personality='nikky', id=None):
+                 personality='nikky', id=None, search_time=1):
 
         # Markov chain initialization
         self.dbconn = psycopg2.connect(db_connect)
@@ -73,6 +74,7 @@ class NikkyAI(object):
         self.remark_chance_no_keywords = remark_chance_no_keywords
         self.remark_chance_keywords = remark_chance_keywords
         self.pattern_response_expiry = pattern_response_expiry
+        self.search_time = search_time
 
         # Init AI
         self.last_reply = ''
@@ -88,20 +90,22 @@ class NikkyAI(object):
         self.id = id
         self.load_state()
 
-    def reply(self, msg, add_response=True):
+    def reply(self, msg, context='', add_response=True):
         """Generic reply method.  Try to use pattern_reply; if no response
         found, fall back to markov_reply.  Do check_output_response().
         """
         try:
-            out = self.pattern_reply(msg, add_response=add_response)
+            out = self.pattern_reply(msg, context=context,
+                                     add_response=add_response)
         except Dont_know_how_to_respond_error:
-            out = self.markov_reply(msg, add_response=add_response)
+            out = self.markov_reply(msg, context=context,
+                                    add_response=add_response)
 
         # This function should be guaranteed to give a non-null output
         assert([line for line in out.split('\n') if line])
         return out
 
-    def decide_remark(self, msg):
+    def decide_remark(self, msg, context=''):
         """Determine whether a random response to a line not directed to
         nikkybot should be made.  Do check_output_response().
         """
@@ -115,12 +119,12 @@ class NikkyAI(object):
         if not randint(0, c):
             # Output random message
             if has_keywords:
-                return self.reply(msg)
+                return self.reply(msg, context=context)
             else:
                 if randint(0, 1):
                     return self.remark(msg)
                 else:
-                    return self.reply(msg)
+                    return self.reply(msg, context=context)
         return ''
 
     def remark(self, msg='', add_response=True):
@@ -155,23 +159,27 @@ class NikkyAI(object):
             # Not supported for non-nikky personas
             return ''
 
-    def pattern_reply(self, msg, add_response=True):
+    def pattern_reply(self, msg, context='', add_response=True):
         """Generate a reply using predefined pattern/response patterns.
         Check for and avoid repeated responses.  Add new response to
         add_response to self.last_replies if add_response.
         Do check_output_response().
         """
+        search_time_save = self.search_time
         for i in xrange(self.recurse_limit):
-            response, allow_repeat = self._pattern_reply(msg)
+            response, allow_repeat = self._pattern_reply(msg, context)
             response = self.dehighlight_sentence(response)
             try:
-                return self.check_output_response(
+                out = self.check_output_response(
                     response, allow_repeat, add_response=add_response)
             except Bad_response_error:
-                pass
+                self.search_time /= 2
+            else:
+                self.search_time = search_time_save
+                return out
         raise Dont_know_how_to_respond_error
 
-    def _pattern_reply(self, msg):
+    def _pattern_reply(self, msg, context):
         sourcenick, msg = self.filter_input(msg)
 
         # Find matching responses for msg, honoring priorities
@@ -225,7 +233,7 @@ class NikkyAI(object):
             self.printdebug("DEBUG: pattern_reply: sourcenick {}, msg {}: Chose match {}".format(repr(sourcenick), repr(msg), repr(match.re.pattern)))
         fmt_list = [sourcenick,] + [self.sanitize(s) for s in match.groups()]
         try:
-            return (reply.get(self, fmt_list), allow_repeat)
+            return (reply.get(self, context, fmt_list), allow_repeat)
         except AttributeError as e:
             if str(e).endswith("'get'"):
                 # In case of a plain string
@@ -233,7 +241,7 @@ class NikkyAI(object):
             else:
                 raise e
 
-    def markov_reply(self, msg, failmsg=None, add_response=True,
+    def markov_reply(self, msg, context='', failmsg=None, add_response=True,
                      max_lf_l=None, max_lf_r=None):
         """Generate a reply using Markov chaining. Check and avoid repeated
         responses.  If unable to generate a suitable response, return a random
@@ -244,78 +252,65 @@ class NikkyAI(object):
         max_lf_l, max_lf_r = self.get_max_lf(max_lf_l, max_lf_r)
         nick, msg = self.filter_input(msg)
         msg = self.filter_markov_input(nick, msg)
+        if not context:
+            self.printdebug('[markov_reply] No context given, using input')
+            context = '{} {}'.format(nick, msg)
 
-        for i in xrange(self.recurse_limit):
-            out = self.filter_markov_output(
-                nick, self._markov_reply(nick, msg, max_lf_l, max_lf_r))
-            try:
-                out = self.check_output_response(
-                    out, add_response=add_response)
-            except Bad_response_error:
-                continue
-            if self.markov.conv_key(out) == self.markov.conv_key(msg):
-                continue
-            return out
-        if failmsg is None:
+        words = self.markov.str_to_chain(msg)
+        best_score, best_resp = 0, ''
+        start_time = time()
+
+        class ResponseTimeUp(Exception):
+            pass
+
+        try:
+            while msg.strip():
+                for order in (5, 4, 3, 2, 1):
+                    for i in xrange(len(words) - (order-1)):
+                        if time() > start_time + self.search_time:
+                            raise ResponseTimeUp
+
+                        chain = tuple(words[i:i+order])
+                        try:
+                            candidate = self.markov.sentence(
+                                chain, forward_length=DEFAULT_MARKOV_LENGTH,
+                                backward_length=DEFAULT_MARKOV_LENGTH,
+                                max_lf_forward=max_lf_r,
+                                max_lf_backward=max_lf_l)
+                        except KeyError:
+                            continue
+                        else:
+                            # Do output filtering, duplicate checks, etc.
+                            candidate = self.filter_markov_output(nick,
+                                                                  candidate)
+                            try:
+                                candidate = self.check_output_response(
+                                    candidate, add_response=False)
+                            except Bad_response_error:
+                                continue
+                            if (self.markov.conv_key(candidate) ==
+                                    self.markov.conv_key(msg)):
+                                continue
+
+                            # Everything's okay, score and consider the
+                            # candidate response
+                            score = self.markov.get_context_score(candidate,
+                                                                  context)
+                            self.printdebug(
+                                '[markov_reply] Score: {}, Candidate: {}'.format(
+                                    score, repr(candidate)))
+                            if score >= best_score:
+                                best_score, best_resp = score, candidate
+        except ResponseTimeUp:
+            pass
+
+        if best_resp:
+            return self.check_output_response(best_resp,
+                                              add_response=add_response)
+        elif failmsg is None:
             return self.random_markov(src_nick=nick, add_response=add_response)
         else:
             return failmsg
-
-    def _markov_reply(self, nick, msg, max_lf_l, max_lf_r):
-        """Generate a Markov-chained reply for msg"""
-
-        # Search for a sequence of input words to Markov chain from: use the
-        # longest possible chain matching any regexp from preferred_patterns;
-        # failing that, use the longest possible chain of any words found in
-        # the Markov database.
-        words = self.markov.str_to_chain(msg)
-        high_priority_replies = {1:[]}
-        low_priority_replies = {1:[]}
-        for order in (5, 4, 3, 2):
-            high_priority_replies[order] = []
-            low_priority_replies[order] = []
-            for i in xrange(len(words) - (order-1)):
-                chain = tuple(words[i:i+order])
-                try:
-                    response = self.markov.sentence(
-                        chain, forward_length=DEFAULT_MARKOV_LENGTH,
-                        backward_length=DEFAULT_MARKOV_LENGTH,
-                        max_lf_forward=max_lf_r, max_lf_backward=max_lf_l)
-                except KeyError:
-                    continue
-                else:
-                    for p in self.preferred_keywords:
-                        if re.search(p, response, re.I):
-                            high_priority_replies[order].append(response)
-                    else:
-                        low_priority_replies[order].append(response)
-
-        # Failing that, try to chain on the longest possible single input word,
-        # prioritizing on preferred keywords/patterns
-        words.sort(key=len, reverse=True)
-        for word in words:
-            try:
-                response = self.markov.sentence(
-                    (word,), forward_length=DEFAULT_MARKOV_LENGTH,
-                    backward_length=DEFAULT_MARKOV_LENGTH,
-                    max_lf_forward=max_lf_r, max_lf_backward=max_lf_l)
-            except KeyError:
-                continue
-            else:
-                for p in self.preferred_keywords:
-                    if re.search(p, word, re.I):
-                        high_priority_replies[1].append(response)
-                else:
-                    low_priority_replies[1].append(response)
-        for order in reversed(high_priority_replies.keys()):
-            if high_priority_replies[order]:
-                return choice(high_priority_replies[order])
-        for order in reversed(low_priority_replies.keys()):
-            if low_priority_replies[order]:
-                return choice(low_priority_replies[order])
-
-        # Failing *that*, return null and let caller deal with it
-        return ''
 
     def random_markov(self, src_nick='', add_response=True,
                       max_lf_l=None, max_lf_r=None):
@@ -356,23 +351,43 @@ class NikkyAI(object):
         return "I don't know what to say!"
 
     def markov_forward(self, chain, failmsg='', src_nick='',
-                       max_lf=None, force_completion=True):
+                       max_lf=None, force_completion=True,
+                       context=''):
         """Generate sentence from the current chain forward only and not
-        backward.  Do NOT do check_output_response().
+        backward.  Do NOT do check_output_response().  Produce the best
+        matching response if 'context' string is given.  Spend no more than
+        'search_time' seconds looking for a response.
         """
         if max_lf is None:
             max_lf = self.max_lf_r
         if len(chain) > 5:
             chain = chain[:5]
             self.printdebug('NikkyAI.markov_forward:  Warning:  chain length too long; truncating')
-        try:
-            out = self.markov.sentence_forward(
-                chain, length=DEFAULT_MARKOV_LENGTH,
-                allow_empty_completion=not force_completion, max_lf=max_lf)
-        except KeyError:
-            return failmsg
-        else:
-            return self.filter_markov_output(src_nick, out)
+        if not context:
+            self.printdebug('[markov_forward] No context given')
+        best_score, best_resp = 0, failmsg
+        start_time = time()
+        while True:
+            try:
+                candidate = self.markov.sentence_forward(
+                    chain, length=DEFAULT_MARKOV_LENGTH,
+                    allow_empty_completion=not force_completion, max_lf=max_lf)
+            except KeyError:
+                break
+            else:
+                if context:
+                    score = self.markov.get_context_score(candidate, context)
+                    self.printdebug(
+                        '[markov_forward] Score: {}, Candidate: {}'.format(
+                            score, repr(candidate)))
+                    if (score >= best_score):
+                        best_score, best_resp = score, candidate
+                else:
+                    best_resp = candidate
+            if ((not context and best_resp) or
+                    (time() > start_time + self.search_time)):
+                break
+        return self.filter_markov_output(src_nick, best_resp)
 
     def manual_markov(self, order, msg, max_lf=None):
         """Return manually-invoked Markov operation (output special error

@@ -19,7 +19,7 @@
 # Pattern table objects
 
 
-from random import choice
+from random import choice, randint
 
 
 MANUAL_MAX_LF = 5       # Maximum line breaks allowed in “markov” commands
@@ -32,11 +32,11 @@ class S(list):
         self.match = None
         list.__init__(self, args)
 
-    def get(self, nikkyai, fmt=None):
+    def get(self, nikkyai, context='', fmt=None):
         s = ''
         for i in self:
             try:
-                s += i.get(nikkyai, fmt)
+                s += i.get(nikkyai, context, fmt)
             except AttributeError as e:
                 if str(e).endswith("'get'"):
                     s += i.format(*fmt)
@@ -47,10 +47,10 @@ class S(list):
 
 class R(S):
     """Random table"""
-    def get(self, nikkyai, fmt=None):
+    def get(self, nikkyai, context='', fmt=None):
         i = choice(self)
         try:
-            return i.get(nikkyai, fmt)
+            return i.get(nikkyai, context, fmt)
         except AttributeError as e:
             if str(e).endswith("'get'"):
                 return i.format(*fmt)
@@ -63,10 +63,10 @@ class E(object):
     def __init__(self, func):
         self.foreign_func = func
 
-    def get(self, nikkyai, fmt=None):
+    def get(self, nikkyai, context='', fmt=None):
         if fmt is None:
             fmt = []
-        return self.foreign_func(nikkyai, fmt)
+        return self.foreign_func(nikkyai, context, fmt)
 
 
 class Markov_forward(object):
@@ -80,19 +80,20 @@ class Markov_forward(object):
         self.max_lf=max_lf
         self.force_completion = force_completion
 
-    def get(self, nikkyai, fmt=None):
+    def get(self, nikkyai, context='', fmt=None):
         if fmt is None:
             fmt = []
         failmsg = choice(self.failmsglist)
         try:
-            failmsg = failmsg.get(nikkyai, fmt)
+            failmsg = failmsg.get(nikkyai, context, fmt)
         except AttributeError:
             failmsg = failmsg.format(*fmt)
         chain = nikkyai.markov.str_to_chain(
             self.string.format(*fmt), wildcard='*')
         return nikkyai.markov_forward(chain, failmsg, src_nick=fmt[0],
                                       max_lf=self.max_lf,
-                                      force_completion=self.force_completion)
+                                      force_completion=self.force_completion,
+                                      context=context)
 
 
 class Manual_markov(object):
@@ -101,7 +102,7 @@ class Manual_markov(object):
         self.order = order
         self.text = text
 
-    def get(self, nikkyai, fmt=None):
+    def get(self, nikkyai, context='', fmt=None):
         if fmt is None:
             fmt = []
         return nikkyai.manual_markov(
@@ -115,7 +116,7 @@ class Manual_markov_forward(object):
         self.order = order
         self.text = text
 
-    def get(self, nikkyai, fmt=None):
+    def get(self, nikkyai, context='', fmt=None):
         if fmt is None:
             fmt = []
         return nikkyai.manual_markov_forward(
@@ -133,22 +134,23 @@ class Markov(object):
             text = '<{0}> ' + text
         self.text = text
 
-    def get(self, nikkyai, fmt=None):
+    def get(self, nikkyai, context='', fmt=None):
         if fmt is None:
             fmt = []
         failmsg = choice(self.failmsglist)
         try:
-            failmsg = failmsg.get(fmt)
+            failmsg = failmsg.get(nikkyai, fmt, context)
         except AttributeError:
             failmsg = failmsg.format(*fmt)
         return nikkyai.markov_reply(
-            self.text.format(*fmt), add_response=False, failmsg=failmsg)
+            self.text.format(*fmt), add_response=False, failmsg=failmsg,
+            context=context)
 
 
 class Recurse(str):
     """Recursively find a response"""
-    def get(self, nikkyai, fmt=None):
+    def get(self, nikkyai, context='', fmt=None):
         if fmt is None:
             fmt = ['']
         return nikkyai.reply('<{}> {}'.format(
-            fmt[0], self.format(*fmt)), add_response=False)
+            fmt[0], self.format(*fmt)), add_response=False, context=context)

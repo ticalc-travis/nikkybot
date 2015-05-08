@@ -21,11 +21,11 @@ from _table import *
 # Special commands
 
 
-def random_nikkysim(nikkyai, fmt):
+def random_nikkysim(nikkyai, context, fmt):
     return nikkyai.nikkysim(strip_number=False)[0]
 
 
-def nikkysim_no(nikkyai, fmt):
+def nikkysim_no(nikkyai, context, fmt):
     w, x, y = fmt[1], fmt[2], fmt[3]
     if w == None:
         w = 'B-'
@@ -43,13 +43,13 @@ def nikkysim_no(nikkyai, fmt):
         return "No such thing as a {}type quote yet".format(w)
 
 
-def tell_us_something(nikkyai, fmt):
+def tell_us_something(nikkyai, context, fmt):
     pre = choice(
         ["","","","","","Okay\\n","k\\n","kk\\n","Fine\\n"])
     return pre + nikkyai.nikkysim(strip_number=True)[0]
 
 
-def random_number(nikkyai, fmt):
+def random_number(nikkyai, context, fmt):
     from random import randint
     c = randint(0, 3)
     if c == 0:
@@ -61,7 +61,7 @@ def random_number(nikkyai, fmt):
     return out
 
 
-def mimic(nikkyai, fmt):
+def mimic(nikkyai, context, fmt):
     from nikkyai import Bad_personality_error
     src_nick, persona, msg = fmt[0], fmt[2], fmt[3]
     persona = nikkyai.normalize_personality(persona)
@@ -71,13 +71,14 @@ def mimic(nikkyai, fmt):
         out = "No such personality '{}'; say \"{}: personalities\" to get the list".format(persona, nikkyai.nick)
     else:
         in_msg = '<{}> {}'.format(src_nick, msg)
-        out = '"' + nikkyai.reply(in_msg, add_response=True) + '"'
+        out = ('"' + nikkyai.reply(
+            in_msg, context=context, add_response=True) + '"')
     finally:
         nikkyai.set_personality('nikky')
     return out
 
 
-def mimic_random(nikkyai, fmt):
+def mimic_random(nikkyai, context, fmt):
     from random import choice
     from nikkyai import Bad_personality_error
     src_nick = fmt[0]
@@ -93,13 +94,13 @@ def mimic_random(nikkyai, fmt):
     else:
         in_msg = '<{}> {}'.format(src_nick, msg)
         out = '<{}> {}'.format(
-            persona, nikkyai.reply(in_msg, add_response=True))
+            persona, nikkyai.reply(in_msg, context=context, add_response=True))
     finally:
         nikkyai.set_personality('nikky')
     return out
 
 
-def list_personas(nikkyai, fmt):
+def list_personas(nikkyai, context, fmt):
     personas = [nikkyai.munge_word(p) for p in nikkyai.get_personalities()]
     return ('List of personalities: \n{}\n'
             'Say "{}: mimic <personality> <message>" to "talk" to that '
