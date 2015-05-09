@@ -98,6 +98,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         self.pending_msg_time = now()
         self.versionName = self.opts.client_version
         self.pending_nick_reclaim_timer = False
+        self.last_lines = {}
 
         irc.IRCClient.connectionMade(self)
 
@@ -137,11 +138,16 @@ class NikkyBot(irc.IRCClient, Sensitive):
             has_leading_highlight = True
             msg = m.group(1).strip()
 
-        # Determine what to do (reply, maybe reply, run command)
+        # Format message with nick
         if nick:
             msg_with_nick = '<{}> {}'.format(nick, msg)
         else:
             msg_with_nick = msg
+
+        # Log context
+        self.nikkies[sender].last_lines.append(msg_with_nick)
+
+        # Determine what to do (reply, maybe reply, run command)
         if is_private or is_highlight:
             if is_private or has_leading_highlight:
                 try:
@@ -535,11 +541,15 @@ class NikkyBot(irc.IRCClient, Sensitive):
         """Output an AI response for the given msg to target (user or channel)
         trapping for exceptions"""
 
+        nikky = self.nikkies[target]
+        nikky.search_time = self.opts.direct_response_time
+        context = ' '.join(nikky.last_lines)
+
         # Make sure it knows its correct nick
-        self.nikkies[target].nick = self.nickname
+        nikky.nick = self.nickname
 
         try:
-            reply = self.nikkies[target].reply(msg).split('\n')
+            reply = nikky.reply(msg, context=context).split('\n')
         except Exception:
             self.report_error(target, silent_errors)
         else:
@@ -552,11 +562,16 @@ class NikkyBot(irc.IRCClient, Sensitive):
             log_response=False):
         """Occasionally reply to the msg given, or say a random remark"""
 
+        nikky = self.nikkies[target]
+        nikky.search_time = self.opts.random_response_time
+        context = ' '.join(nikky.last_lines)
+
         # Make sure it knows its correct nick
         self.nikkies[target].nick = self.nickname
 
         try:
-            reply = self.nikkies[target].decide_remark(msg).split('\n')
+            reply = self.nikkies[target].decide_remark(
+                msg, context=context).split('\n')
         except Exception:
             self.report_error(target, silent_errors)
         else:

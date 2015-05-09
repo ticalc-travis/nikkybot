@@ -20,6 +20,7 @@
 from __future__ import print_function
 
 from collections import defaultdict
+from collections import deque
 
 import argparse
 import cPickle
@@ -35,12 +36,12 @@ import nikkybot
 import nikkyai
 
 OPTS = argparse.Namespace()
-
+CONTEXT_LINES = 10
 
 class DefaultNikkyAIDict(dict):
     def __getitem__(self, k):
         if k not in self:
-            self[k] = nikkyai.NikkyAI(id=k)
+            self[k] = nikkyai.NikkyAI(id=k, context_lines=CONTEXT_LINES)
         return dict.__getitem__(self, k)
 
 
@@ -121,11 +122,17 @@ if __name__ == '__main__':
     ap.add_argument('--nick-retry-wait', default=300, type=float,
                     help='Seconds to wait before trying to reclain preferred '
                          'nick')
-    ap.add_argument('--initial-reply-delay', default=2, type=float,
+    ap.add_argument('--initial-reply-delay', default=1, type=float,
                     help='Seconds to wait before first line sent')
     ap.add_argument('--simulated-typing-speed', default=.1, type=float,
                     help='Seconds per character to delay message (simulated '
                          'typing delay)')
+    ap.add_argument('--direct-response-time', default=4, type=float,
+                    help='Seconds to search for responses to highlight '
+                         'messages')
+    ap.add_argument('--random-response-time', default=10, type=float,
+                    help='Seconds to search for responses to non-highlight '
+                         'messages')
     ap.add_argument('--state-cleanup-interval', default=60*60*24, type=float,
                     help='Seconds to do AI state housekeeping/cleanup')
     ap.add_argument('--channel-check-interval', default=300, type=float,

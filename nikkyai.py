@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import deque
 from datetime import datetime, timedelta
 from random import randint, choice
 import cPickle
@@ -61,7 +62,8 @@ class NikkyAI(object):
                  recurse_limit=100, debug=True, max_lf_l=1, max_lf_r=2,
                  remark_chance_no_keywords=1000, remark_chance_keywords=200,
                  pattern_response_expiry=timedelta(90),
-                 personality='nikky', id=None, search_time=1):
+                 personality='nikky', id=None, search_time=1,
+                 context_lines=10):
 
         # Markov chain initialization
         self.dbconn = psycopg2.connect(db_connect)
@@ -80,6 +82,7 @@ class NikkyAI(object):
         self.last_reply = ''
         self.last_replies = {}
         self.nick = 'nikkybot'
+        self.last_lines = deque([], maxlen=context_lines)
 
         # Init state lists
         self.preferred_keywords = set()
