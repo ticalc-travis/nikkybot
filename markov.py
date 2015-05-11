@@ -56,12 +56,11 @@ class PostgresMarkov(object):
     """tev's Markov chain implementation using a PostgreSQL backend to store
     the data"""
 
-    def __init__(self, connect, table_name,
-            case_sensitive=True,
-            ignore_chars=DEFAULT_IGNORE_CHARS,
-            ignore_words=DEFAULT_CONTEXT_IGNORE_WORDS,
-            ignore_prefixes=DEFAULT_CONTEXT_IGNORE_PREFIXES,
-            ignore_suffixes=DEFAULT_CONTEXT_IGNORE_SUFFIXES):
+    def __init__(self, connect, table_name, case_sensitive=True,
+                 ignore_chars=DEFAULT_IGNORE_CHARS,
+                 ignore_words=DEFAULT_CONTEXT_IGNORE_WORDS,
+                 ignore_prefixes=DEFAULT_CONTEXT_IGNORE_PREFIXES,
+                 ignore_suffixes=DEFAULT_CONTEXT_IGNORE_SUFFIXES):
 
         self.case_sensitive = case_sensitive
         self.ignore_chars = ignore_chars
@@ -80,55 +79,51 @@ class PostgresMarkov(object):
         self.cursor = self.connection.cursor()
 
         # Set up tables if needed
+        self.create_tables()
+        self.commit()
 
-        # Markov
-        try:
-            self.doquery(
-                'CREATE TABLE "{}"'
-                ' (word VARCHAR, rawword VARCHAR,'
-                ' next1key VARCHAR DEFAULT NULL,'
-                ' next2key VARCHAR DEFAULT NULL,'
-                ' next3key VARCHAR DEFAULT NULL,'
-                ' next4key VARCHAR DEFAULT NULL,'
-                ' prev1key VARCHAR DEFAULT NULL,'
-                ' prev2key VARCHAR DEFAULT NULL,'
-                ' prev3key VARCHAR DEFAULT NULL,'
-                ' prev4key VARCHAR DEFAULT NULL,'
-                ' next1 VARCHAR DEFAULT NULL, next2 VARCHAR DEFAULT NULL,'
-                ' next3 VARCHAR DEFAULT NULL, next4 VARCHAR DEFAULT NULL,'
-                ' prev1 VARCHAR DEFAULT NULL, prev2 VARCHAR DEFAULT NULL,'
-                ' prev3 VARCHAR DEFAULT NULL, '
-                ' prev4 VARCHAR DEFAULT NULL)'.format(self.table_name)
-            )
-        except psycopg2.ProgrammingError:
-            self.rollback()
-        else:
-            self.doquery(
-                'CREATE INDEX ON "{}" '
-                '(word,next1key,next2key,next3key,next4key)'.format(
-                    self.table_name))
-            self.doquery(
-                'CREATE INDEX ON "{}" '
-                '(word,prev1key,prev2key,prev3key,prev4key)'.format(
-                    self.table_name))
-            self.commit()
+    def create_tables(self):
+        """Create data tables for underlying Postgres backend"""
+        self.doquery(
+            'CREATE TABLE IF NOT EXISTS "{}"'
+            ' (word VARCHAR, rawword VARCHAR,'
+            ' next1key VARCHAR DEFAULT NULL,'
+            ' next2key VARCHAR DEFAULT NULL,'
+            ' next3key VARCHAR DEFAULT NULL,'
+            ' next4key VARCHAR DEFAULT NULL,'
+            ' prev1key VARCHAR DEFAULT NULL,'
+            ' prev2key VARCHAR DEFAULT NULL,'
+            ' prev3key VARCHAR DEFAULT NULL,'
+            ' prev4key VARCHAR DEFAULT NULL,'
+            ' next1 VARCHAR DEFAULT NULL, next2 VARCHAR DEFAULT NULL,'
+            ' next3 VARCHAR DEFAULT NULL, next4 VARCHAR DEFAULT NULL,'
+            ' prev1 VARCHAR DEFAULT NULL, prev2 VARCHAR DEFAULT NULL,'
+            ' prev3 VARCHAR DEFAULT NULL, '
+            ' prev4 VARCHAR DEFAULT NULL)'.format(self.table_name)
+        )
+        self.doquery(
+            'CREATE TABLE IF NOT EXISTS "{}"'
+            ' (inword VARCHAR NOT NULL, outword VARCHAR NOT NULL,'
+            '  freq INTEGER DEFAULT 1 CHECK (freq > 0) NOT NULL)'.format(
+                self.context_table_name)
+        )
 
-        # Context
-        try:
-            self.doquery(
-                'CREATE TABLE "{}"'
-                ' (inword VARCHAR NOT NULL, outword VARCHAR NOT NULL,'
-                '  freq INTEGER DEFAULT 1 CHECK (freq > 0) NOT NULL,'
-                '  UNIQUE (inword, outword))'.format(
-                    self.context_table_name)
-            )
-        except psycopg2.ProgrammingError:
-            self.rollback()
-        else:
-            self.doquery(
-                'CREATE INDEX ON "{}" (outword, inword)'.format(
-                    self.context_table_name))
-            self.commit()
+    def index_tables(self):
+        """Create indecs for underlying Postgres tables"""
+        self.doquery(
+            'CREATE INDEX ON "{}" '
+            '(word,next1key,next2key,next3key,next4key)'.format(
+                self.table_name))
+        self.doquery(
+            'CREATE INDEX ON "{}" '
+            '(word,prev1key,prev2key,prev3key,prev4key)'.format(
+                self.table_name))
+        self.doquery(
+            'ALTER TABLE "{}" ADD UNIQUE (inword, outword)'.format(
+                self.context_table_name))
+        self.doquery(
+            'CREATE INDEX ON "{}" (outword, inword)'.format(
+                self.context_table_name))
 
     def doquery(self, querystr, args=None):
         if args is None:
@@ -175,8 +170,8 @@ class PostgresMarkov(object):
                 return '_'
 
     def normalize_word(self, word):
-        """Normalize a word for context checking--convert to lowercase, strip
-        characters in self.ignore_chars, and remove common word suffixes."""
+        """Normalize a word for context checking--do conv_key and remove common
+        word prefixes and suffixes."""
         word = self.conv_key(word)
         remove = ''
         for r in self.ignore_prefixes:
@@ -210,12 +205,12 @@ class PostgresMarkov(object):
         chain = [s.strip(' ') for s in chain]
         return ' '.join(chain).replace(' \n ', '\n').strip(' ')
 
-    def add(self, sentence, context=None, context_bias=1):
-        """Parse and add a string of words to the chain; update context
-        information from 'context' string if given"""
+    def make_markov_rows(self, sentence):
+        """Generate and return a group of Markov data rows ready to insert into
+        the Markov chain DB table"""
+        rows = []
         words = self.str_to_chain(sentence)
         words = ['']*4 + [x.strip(' ') for x in words] + ['']*4
-        context_words = self.str_to_chain(context) if context else []
         for i, word in enumerate(words):
             if not word or i < 4 or i > len(words)-5:
                 continue
@@ -224,39 +219,42 @@ class PostgresMarkov(object):
             backward_chain.reverse()
             forward_key = self.conv_key(forward_chain)
             backward_key = self.conv_key(backward_chain)
-            self.doquery(
-                'INSERT INTO "{}" '
-                '(word, rawword, next1key, next2key, next3key, next4key,'
-                ' prev1key, prev2key, prev3key, prev4key,'
-                ' next1, next2, next3, next4, prev1, prev2, prev3, prev4) '
-                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,'
-                '%s, %s, %s, %s, %s, %s, %s, %s, %s)'.format(self.table_name),
-                [self.conv_key(word), word] + forward_key + backward_key +
-                forward_chain + backward_chain
-            )
-            # Update context/relevance table if context is provided
-            for cword in context_words:
-                self.add_context(cword, word, context_bias)
+            rows.append([self.conv_key(word), word] + forward_key +
+                        backward_key + forward_chain + backward_chain)
+        return rows
 
-    def train(self, filename):
-        """Train from all lines from the given text file"""
-        f = open(filename, 'r')
-        for line in f:
-            self.add(line)
+    def add_markov_rows(self, rows):
+        """Add a list of tuples returned by make_markov_row to the DB table"""
+        self.cursor.executemany(
+            'INSERT INTO "{}" '
+            '(word, rawword, next1key, next2key, next3key, next4key,'
+            ' prev1key, prev2key, prev3key, prev4key,'
+            ' next1, next2, next3, next4, prev1, prev2, prev3, prev4) '
+            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,'
+            '%s, %s, %s, %s, %s, %s, %s, %s, %s)'.format(self.table_name),
+            rows
+        )
+
+    def normalize_context(self, in_word, out_word):
+        """Normalize in_word (context) and out_word (bot/persona spoken) and
+        return them as a tuple in_word, out_word, or return None if the given
+        words are not valid (in the ignored words list)."""
+        key_in, key_out = self.conv_key(in_word), self.conv_key(out_word)
+        # Return None for generic words; we don't want to save those, or for
+        # words that match each other, which might make the weighting too high
+        if (key_in in self.ignore_words or key_out in self.ignore_words or
+                key_in == key_out):
+            return None
+        norm_in, norm_out = (self.normalize_word(in_word),
+                             self.normalize_word(out_word))
+        if not norm_in or not norm_out:
+            return None
+        return norm_in, norm_out
 
     def add_context(self, in_word, out_word, bias=1):
         """Associate in_word with out_word, keeping track of frequency of
         associations, to estimate relative relation between the two words."""
 
-        key_in, key_out = self.conv_key(in_word), self.conv_key(out_word)
-        if (key_in in self.ignore_words or key_out in self.ignore_words or
-                key_in == key_out):
-            return
-        in_word, out_word = (self.normalize_word(in_word),
-                             self.normalize_word(out_word))
-        if not in_word or not out_word:
-            return
-        # Don't record information for generic words
         self.doquery(
             'SELECT * FROM "{}" WHERE inword=%s AND outword=%s'.format(
                 self.context_table_name),

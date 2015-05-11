@@ -9,10 +9,12 @@
 
 # Number of previous spoken IRC lines to include in Markov context data
 CONTEXT_LINES = 10
+# Frequency to update the progress indicator
+PROGRESS_EVERY = 5000
 
 import os
 import re
-from collections import deque
+from collections import deque, Counter
 from datetime import datetime
 from sys import stdout, argv, exit
 import psycopg2
@@ -22,11 +24,13 @@ from personalitiesrc import personality_regexes
 
 
 class TrainingCorpus(object):
-    def __init__(self, nick_regexes, context_lines=CONTEXT_LINES):
+    def __init__(self, nick_regexes, markov, context_lines=CONTEXT_LINES):
         self.nick_regexes = nick_regexes
         self.context_group = deque([], maxlen=context_lines)
         self.spoken_group = []
         self._corpus = []
+        self._context = Counter()
+        self.markov = markov
 
     def is_nick(self, search):
         for regex in self.nick_regexes:
@@ -35,6 +39,8 @@ class TrainingCorpus(object):
         return False
 
     def check_line(self, nick, line):
+        nick = unicode(nick, encoding='utf8', errors='replace')
+        line = unicode(line, encoding='utf8', errors='replace')
         if self.is_nick(nick):
             self.add_spoken(line)
         else:
@@ -49,16 +55,49 @@ class TrainingCorpus(object):
 
     def update(self):
         if self.spoken_group:
-            self._corpus.append(
-                ('\n'.join(self.spoken_group),
-                 '\n'.join(self.context_group))
-            )
+            self._corpus.append('\n'.join(self.spoken_group))
+            self._update_context()
             self.spoken_group = []
         self.context_group.clear()
 
-    def get_corpus(self):
+    def _update_context(self):
+        spoken = self.markov.str_to_chain('\n'.join(self.spoken_group))
+        for cline in self.context_group:
+            bias = 100 if self.is_nick(cline) else 1
+            context = self.markov.str_to_chain(cline)
+            for cword in context:
+                for sword in spoken:
+                    t = self.markov.normalize_context(cword, sword)
+                    if t:
+                        in_word, out_word = t
+                        self._context[(in_word, out_word)] += bias
+
+    def markov_rows(self, limit=PROGRESS_EVERY):
         self.update()
-        return self._corpus
+        rows = []
+        n = len(self._corpus)
+        for i, group in enumerate(self._corpus):
+            rows += self.markov.make_markov_rows(group)
+            if len(rows) >= limit:
+                yield (i, n), rows[:limit]
+                rows = rows[limit:]
+        if rows:
+            yield (n, n), rows
+        raise StopIteration
+
+    def context_rows(self, limit=PROGRESS_EVERY):
+        self.update()
+        rows = []
+        i, n = 0, len(self._context)
+        for word_pair, freq in self._context.items():
+            rows.append((word_pair[0], word_pair[1], freq))
+            i += 1
+            if len(rows) == limit:
+                yield (i, n), rows
+                rows = []
+        if rows:
+            yield (n, n), rows
+        raise StopIteration
 
 class BadPersonalityError(KeyError):
     pass
@@ -75,28 +114,26 @@ def update(pname, reset):
 
     # Get last updated date
     conn = psycopg2.connect('dbname=markovmix user=markovmix')
-    mk = markov.PostgresMarkov(conn, '{}'.format(pname), case_sensitive=False)
+    mk = markov.PostgresMarkov(conn, pname, case_sensitive=False)
     mk.begin()
-    cur = conn.cursor()
-    cur.execute('CREATE TABLE IF NOT EXISTS ".last-updated" '
+    mk.doquery('CREATE TABLE IF NOT EXISTS ".last-updated" '
         '(name VARCHAR PRIMARY KEY, updated TIMESTAMP NOT NULL DEFAULT NOW())')
-    cur.execute('SELECT updated FROM ".last-updated" WHERE name=%s',
-                (pname,))
+    mk.doquery('SELECT updated FROM ".last-updated" WHERE name=%s', (pname,))
     target_date = datetime.now()
-    if not reset and cur.rowcount:
-        last_updated = cur.fetchone()[0]
+    if not reset and mk.cursor.rowcount:
+        last_updated = mk.cursor.fetchone()[0]
     else:
         last_updated = NEVER_UPDATED
     # Updated last updated date (will only be written to DB if entire process
     # finishes to the commit call at the end of the script)
-    cur.execute('UPDATE ".last-updated" SET updated = NOW() WHERE name=%s',
-                (pname,))
-    if not cur.rowcount:
-        cur.execute('INSERT INTO ".last-updated" VALUES (%s)', (pname,))
+    mk.doquery(
+        'UPDATE ".last-updated" SET updated = NOW() WHERE name=%s', (pname,))
+    if not mk.cursor.rowcount:
+        mk.doquery('INSERT INTO ".last-updated" VALUES (%s)', (pname,))
 
-    corpus = TrainingCorpus(pregex)
+    corpus = TrainingCorpus(pregex, mk)
 
-    if last_updated == NEVER_UPDATED:
+    if reset:
 
         ## Never updated yet ##
         stdout.write('Parsing old logs...\n')
@@ -221,6 +258,7 @@ def update(pname, reset):
         with open(os.path.join(home, fn), 'r') as f:
             for line in f:
                 line = line.strip()
+
                 m1 = re.match(r'^([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2})\t[+@]?(.*)\t(.*)', line)
                 m2 = re.match(r'^(..., [0-9]{2} ... [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}) [-+][0-9]{4}\t[+@]?(.*)\t(.*)', line)
                 if m1:
@@ -255,18 +293,48 @@ def update(pname, reset):
                 corpus.check_line(nick, msg)
         corpus.update()
 
-    c = corpus.get_corpus()
-    num_items = len(c)
-    if last_updated == NEVER_UPDATED:
+    if reset:
         mk.clear()
-    for i, citem in enumerate(c):
-        stdout.write('Training {}/{}...\r'.format(i+1, num_items))
+
+    # Write Markov data
+    if reset:
+        stdout.write('Reinitializing tables...\n')
+        mk.doquery('DROP TABLE IF EXISTS ".markov.old"')
+        mk.doquery('DROP TABLE IF EXISTS ".context.old"')
+        mk.doquery('ALTER TABLE "{}" RENAME TO ".markov.old"'.format(
+            mk.table_name))
+        mk.doquery('ALTER TABLE "{}" RENAME TO ".context.old"'.format(
+            mk.context_table_name))
+        mk.create_tables()
+
+    for progress, rows in corpus.markov_rows():
+        mk.add_markov_rows(rows)
+        stdout.write('Inserting Markov data {}/{}...\r'.format(
+            progress[0], progress[1]))
         stdout.flush()
-        spoken, context = citem
-        bias = 100 if corpus.is_nick(context) else 1
-        mk.add(spoken, context, bias)
-    stdout.write('\nClosing...\n')
+    stdout.write('\n')
+
+    # Write context data
+    for progress, rows in corpus.context_rows(PROGRESS_EVERY if reset else 1):
+        if reset:
+            mk.cursor.executemany(
+                'INSERT INTO "{}" (inword, outword, freq) VALUES'
+                ' (%s, %s, %s)'.format(mk.context_table_name), rows)
+        else:
+            inword, outword, freq = rows[0]
+            mk.add_context(inword, outword, freq)
+        stdout.write('Inserting context data {}/{}...\r'.format(
+            progress[0], progress[1]))
+        stdout.flush()
+
+    stdout.write('\n')
+    if reset:
+        stdout.write('Indexing tables...\n')
+        mk.index_tables()
+
+    stdout.write('Closing...\n')
     mk.commit()
+    conn.close()
     stdout.write('Finished!\n\n')
 
 if __name__ == '__main__':
@@ -287,4 +355,3 @@ if __name__ == '__main__':
     except BadPersonalityError:
         print "Personality '{}' not defined in personalitiesrc.py".format(pname)
         exit(2)
-
