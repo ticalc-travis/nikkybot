@@ -240,10 +240,8 @@ class PostgresMarkov(object):
         return them as a tuple in_word, out_word, or return None if the given
         words are not valid (in the ignored words list)."""
         key_in, key_out = self.conv_key(in_word), self.conv_key(out_word)
-        # Return None for generic words; we don't want to save those, or for
-        # words that match each other, which might make the weighting too high
-        if (key_in in self.ignore_words or key_out in self.ignore_words or
-                key_in == key_out):
+        # Return None for generic words; we don't want to save those
+        if (key_in in self.ignore_words or key_out in self.ignore_words):
             return None
         norm_in, norm_out = (self.normalize_word(in_word),
                              self.normalize_word(out_word))
@@ -297,7 +295,7 @@ class PostgresMarkov(object):
             for iw in in_words:
                 score += self.get_context_freq(iw, ow)
                 count += 1
-        return score / float(count) if count else 0.
+        return score
 
     def clear(self):
         """Delete all trained data and context; restart with a completely empty
