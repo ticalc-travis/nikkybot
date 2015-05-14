@@ -60,11 +60,11 @@ personality_regexes = {
          None,
          None),
     'cvsoft':
-        (r'(CV|notipa).*',
+        (r'(cv|notipa).*',
          r'(CVSoft)',
          None),
     'calebh':
-        (r'(CalebH|Parse34).*',
+        (r'(calebh|parse34|cheleron).*',
          r'(CalebHansberry)',
          None),
     'netham45':
