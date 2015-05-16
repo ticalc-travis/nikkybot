@@ -69,24 +69,24 @@ patterns = (
         'no\nit sucks',
     )
 ),
-(r"\b(who (made|wrote|programmed) you|(who\'s|whose) are you|who (runs|operates) you|(who is|who's) your (creator|programmer|maker|admin|administrator))\b", -2,
+(r"\b(who (made|wrote|programmed) you|(who'?s|whose) are you|who (runs|operates) you|(who is|who'?s) your (creator|programmer|maker|admin|administrator))\b", -2,
     R(
         "It's tev",
         'tev did',
         Markov_forward('tev is')
     )
 ),
-(r"\b(why did you (restart|disconnect|quit|cycle)|(where did|where'd) you go)", -1,
+(r"\b(why did you (restart|disconnect|quit|cycle)|(where did|where'?d) you go)", -1,
     R(
         'tev told me to\nProbably code change or even reboot\nwho knows'
     ), True
 ),
-(r"\b(({0}'s|your) source code|the source code (to|of|for) (you|{0}))\b", -1,
+(r"\b(({0}'?s|your) source code|the source code (to|of|for) (you|{0}))\b", -1,
     R(
         '{0}: https://github.com/ticalc-travis/nikkybot',
     ), True
 ),
-(r"\bthat ((made|makes|is making) (no )?sense|does not .* make (any |no )?sense|(doesn't|doesnt|dosen't|dosent) .* ?make (any |no )?sense|.* sense make)\b", 1,
+(r"\bthat ((made|makes|is making) (no )?sense|does not .* make (any |no )?sense|(doesn'?t|dosen'?t) .* ?make (any |no )?sense|.* sense make)\b", 1,
     R(
         'Sorry',
         'sorry\n:(',
@@ -95,7 +95,7 @@ patterns = (
         'I wish I could do better\n*sob*'
     ), True
 ),
-(r"\b(we have|there is|there's|it's|a) ?(\ba\b )?{0}\b", 1,
+(r"\b(we have|there is|there'?s|it'?s|a) ?(\ba\b )?{0}\b", 1,
     R(
         "I'm filling in for the real nikky",
         'Yes',
@@ -152,7 +152,7 @@ patterns = (
         "No\nyou're just incompatible"
     ), True
 ),
-(r"\byour (a|an|my|his|her|its|it's|dumb|stupid)\b", 1,
+(r"\byour (a|an|my|his|her|it'?s|dumb|stupid)\b", 1,
     R('"Your" retarded', "*You're")
 ),
 (r'\bsorry\b', 1, R('you should be')),
@@ -174,8 +174,8 @@ patterns = (
 (r'\bYou should introduce yourself .* thread\b', 0,
     R("I wasn't programmed to post in forums, silly")
 ),
-(r"\b(birthday|birthdate|how old is {0}|how old are you|what's your age|what is your age|what's {0}(.s|s)? age|what is {0}(.s|s)? age|when were {0} born|when were you born)", -3,
+(r"\b(birthday|birthdate|how old is {0}|how old are you|what'?s your age|what is your age|what'?s {0}(.s|s)? age|what is {0}(.s|s)? age|when were {0} born|when were you born)", -3,
     R('My birthday is October 30, 2012'), True,
 ),
-(r"\b(what do you think|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -3, E(try_mimic), True),
+(r"\b(what do you think|how do you feel|(what is|what'?s|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -3, E(try_mimic), True),
 )

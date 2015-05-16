@@ -28,7 +28,7 @@ patterns = (
 # pattern regexp, last reply, priority, action, allow repeat?
 
 # Basics
-(r"\b(hi|hello|hey|sup|what's up|welcome)\b", 0,
+(r"\b(hi|hello|hey|sup|what'?s up|welcome)\b", 0,
     R(
         'Shut up',
         'Flood your face!',
@@ -40,7 +40,7 @@ patterns = (
         Markov_forward('I heard that {0}'),
     ),
 ),
-(r"\b(how are you|how are we|how's your|how is your)\b", 0,
+(r"\b(how are you|how are we|how'?s your|how is your)\b", 0,
     R('Super', 'Awesome', 'Better than your face',
         Markov_forward('better than'),
         Markov_forward('better than your'),
@@ -53,7 +53,7 @@ patterns = (
         Markov_forward('sweet dreams')
     )
 ),
-(r"\b(bye|bye bye|goodbye|good bye|see you later|night|good night|g'night)\b",
+(r"\b(bye|bye bye|goodbye|good bye|see you later|night|good night|g'?night)\b",
 0,
     R(
         'Bye forever',
@@ -183,7 +183,7 @@ patterns = (
         S("No, it's your ", R("mom's", "face's"), " fault")
     )
 ),
-(r"\bi don't feel like\b", 1,
+(r"\bi don'?t feel like\b", 1,
     R(
         'lazy',
         'slacker',
@@ -193,7 +193,7 @@ patterns = (
         'DO IT ANYWAY'
     )
 ),
-(r"^(is|are|am|should|can|do|does|which|what|what's|who|who's)(?: \S+)+[ -](.*?)\W+or (.*)\b", -1,
+(r"^(is|are|am|should|can|do|does|which|what|what's|who|who'?s)(?: \S+)+[ -](.*?)\W+or (.*)\b", -1,
     S(
         R(
             S('{2}', R(' by far', ', of course', ', naturally', '\nduh')),

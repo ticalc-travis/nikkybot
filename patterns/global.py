@@ -108,14 +108,14 @@ patterns = (
 
 ## Basics ##
 
-(r"\b(hi|hello|hey|sup|what's up|welcome)\b", 50,
+(r"\b(hi|hello|hey|sup|what'?s up|welcome)\b", 50,
     R(
         Markov_forward('{1}'),
         Markov_forward('{1} {0}'),
         '{1}, {0}',
     ),
 ),
-(r"\b(how are you|how are we|how's your|how is your)\b", 49,
+(r"\b(how are you|how are we|how'?s your|how is your)\b", 49,
     R(
         Markov_forward('ok', force_completion=False),
         Markov_forward('okay', force_completion=False),
@@ -183,7 +183,7 @@ patterns = (
         "I'm glad we agree."
     ),
 ),
-(r"\b(no|nope|nuh-uh|you aren't)\b", 1,
+(r"\b(no|nope|nuh-uh|you aren'?t)\b", 1,
     R(
         Markov_forward('well'),
         Markov_forward('okay, well'),
@@ -197,7 +197,7 @@ patterns = (
         Markov_forward('* you then', force_completion=False),
     ),
 ),
-(r"^(but|don't)\b", 0,
+(r"^(but|don'?t)\b", 0,
     R(
         Markov_forward('well'),
         Markov_forward('okay, well'),
@@ -233,10 +233,10 @@ patterns = (
         Recurse("what's"),
     ),
 ),
-(r"(what do you|what is going|what's going)", -2,
+(r"(what do you|what is going|what'?s going)", -2,
     Recurse('what are you doing')
 ),
-(r"(what is|what's|whats) (a|the) (\w+) (\w+)", -1,
+(r"(what is|what'?s) (a|the) (\w+) (\w+)", -1,
     R(
         Markov('is a * {4}'),
         Markov('is the * {4}'),
@@ -248,7 +248,7 @@ patterns = (
         Markov('the {3} {4} is'),
     ),
 ),
-(r"(what|what's|whats|for which)", 1,
+(r"(what|what'?s|for which)", 1,
     R(
         Markov_forward('a'),
         Markov_forward('an'),
@@ -262,7 +262,7 @@ patterns = (
         Recurse('how many'),
     ),
 ),
-(r"(who is|who's|what is|what's|how's|how is) (the |a |an |your |my )?(\w+)", 0,
+(r"(who is|who'?s|what is|what'?s|how'?s|how is) (the |a |an |your |my )?(\w+)", 0,
     R(
         Markov_forward('{3} is'),
         Markov_forward('{3}'),
@@ -275,14 +275,14 @@ patterns = (
         Recurse("what's"),
     ),
 ),
-(r"(who are|who're|what are|what're|how're|how are) (\w+)", 0,
+(r"(who are|who'?re|what are|what'?re|how'?re|how are) (\w+)", 0,
     R(
         Markov_forward('{2} are'),
         Markov_forward("They're"),
         Markov_forward('They are'),
     ),
 ),
-(r"(what are|what're) .*ing\b", -1,
+(r"(what are|what'?re) .*ing\b", -1,
     Recurse("what's"),
 ),
 (r'where\b', 0,
@@ -406,11 +406,11 @@ patterns = (
 (r"(\S+)\s+(\S+)\s+(what|who|whom|which)\b", -2, Markov_forward('{1} {2}')),
 (r"(\S+)\s+(what|who|whom|which)\b", -1, Markov_forward('{1}')),
 
-(r"(is|isn't|are|am|does|should|would|can|do|did)\b", 2,
+(r"(is|isn'?t|are|am|does|should|would|can|do|did)\b", 2,
     Recurse('***yes/no***')
 ),
 (r'(do you think|what about|really)\b', 0, R(Recurse('***yes/no***'))),
-(r"(is|are|am|should|would|can|do|does|which|what|what's|who|who's)(?: \S+)+[ -](.*?)\W+or (.*)\b", -1,
+(r"(is|are|am|should|would|can|do|does|which|what|what'?s|who|who'?s)(?: \S+)+[ -](.*?)\W+or (.*)\b", -1,
     S(
         R(
             'both',
@@ -429,7 +429,7 @@ patterns = (
         Markov_forward("it's time"),
     ),
 ),
-(r"\b(will|should|can|going to|won't|wouldn't|would|can't|isn't|won't) (\w+)\b", 5,
+(r"\b(will|should|can|going to|won'?t|wouldn'?t|would|can'?t|isn'?t|won'?t) (\w+)\b", 5,
     R(
         Markov_forward('and'),
         Markov_forward('and just'),
@@ -523,7 +523,7 @@ patterns = (
         Markov_forward("I'm actually"),
     )
 ),
-(r"\b(what do you think|what do you know|tell us about|tell me about|how do you feel|(what is |what's |what are )?your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -3,
+(r"\b(what do you think|what do you know|tell us about|tell me about|how do you feel|(what is |what'?s |what are )?your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )(a |the |an )?(.*?)\W?$", -3,
     R(
         Markov_forward('{6} is'),
         Markov_forward('{6}'),
@@ -536,13 +536,13 @@ patterns = (
     ),
 ),
 (r"\bis (.*) (any good|good)", 1, Recurse('what do you think of {1}')),
-(r"^(what do you think|what do you know|tell us about|tell me about|how do you feel|(what is|what's|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )me\W?$", -3,
+(r"^(what do you think|what do you know|tell us about|tell me about|how do you feel|(what is|what'?s|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )me\W?$", -3,
     R(
         Markov_forward('you'),
         Recurse('what do you think of {0}')
     )
 ),
-(r"^(how is|how's|do you like|you like|you liek) (.*?)\W?$", -3,
+(r"^(how is|how'?s|do you like|you like|you liek) (.*?)\W?$", -3,
     Recurse('what do you think of {2}')
 ),
 (r"\btell (me|us) about (.*)", -2, Recurse('{2}')),
