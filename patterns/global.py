@@ -233,7 +233,9 @@ patterns = (
         Recurse("what's"),
     ),
 ),
-(r"(what do you|what is going|what's going)", -2, Recurse('for what')),
+(r"(what do you|what is going|what's going)", -2,
+    Recurse('what are you doing')
+),
 (r"(what is|what's|whats) (a|the) (\w+) (\w+)", -1,
     R(
         Markov('is a * {4}'),
@@ -344,7 +346,7 @@ patterns = (
         Markov_forward('not enough', force_completion=False),
     )
 ),
-(r'\b(what|who) (are you|is {0})\b', -1,
+(r'\b(what|who) (are you|is {0}) doing\b', -1,
     R(
         Markov_forward("I'm"),
         Markov_forward("I am"),
