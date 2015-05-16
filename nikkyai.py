@@ -603,65 +603,7 @@ class NikkyAI(object):
 
         msg = self.replace_nicks(msg, sourcenick)
         msg = self.dehighlight_sentence(msg)
-        msg = self.fix_nonmatching_punctuation(msg)
         return msg
-
-    def fix_nonmatching_punctuation(self, sentence):
-        """Correct non-matching sets of characters like ", (), [], etc."""
-
-        # Handle punctuation with separate open/close characters first
-        for opener, closer in (('(', ')'), ('[', ']'), ('{', '}'),
-                               ('“', '”'), ('‘', '’')):
-            open_count = sentence.count(opener)
-            close_count = sentence.count(closer)
-
-            # Don't count emoticons or digits as unclosed parentheses
-            # :) :-) ;) :-( :( ): (: etc. -- just ignore them
-            emot_chars = ':;-0123456789'
-            if closer in ')]}':
-                for emot_char in emot_chars:
-                    close_count -= sentence.count(emot_char + closer)
-                    close_count -= sentence.count(closer + emot_char)
-            if opener in '([{':
-                for emot_char in emot_chars:
-                    open_count -= sentence.count(opener + emot_char)
-                    open_count -= sentence.count(emot_char + opener)
-
-            # Tack any necessary extra punctuation to the beginning or end
-            if open_count > close_count:
-                sentence += closer*(open_count-close_count)
-            elif open_count < close_count:
-                sentence = opener*(close_count-open_count) + sentence
-
-        # Now the tricky, ambiguous quotes.  Try to guess whether they're
-        # opening or closing and tally them up
-        non_word_chars = ' "\'!?.,:;()[]{}“”‘’\t\n'
-        for char in '\'"':
-            splits = sentence.split(char)
-            open_count = close_count = 0
-            last_seen = 'open'
-            for i in xrange(len(splits)-1):
-                left, right = splits[i], splits[i+1]
-                if not left and not right:
-                    if last_seen == 'open':
-                        open_count += 1
-                    else:
-                        close_count += 1
-                elif not left or left[-1] in ' -—\n\t':
-                    open_count += 1
-                    last_seen = 'open'
-                elif not right or right[0] in non_word_chars:
-                    close_count += 1
-                    last_seen = 'close'
-                # If neither side bordered with non-word char, maybe it's an
-                # apostrophe or mistyped double-quote where apostrophe
-                # should be--just ignore it
-            # Now try to fix sentence
-            if open_count > close_count:
-                sentence += char*(open_count-close_count)
-            elif open_count < close_count:
-                sentence = char*(close_count-open_count) + sentence
-        return sentence
 
     def sanitize(self, s):
         """Remove control characters from 's' if it's a string; return it as is
