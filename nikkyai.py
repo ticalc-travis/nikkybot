@@ -599,7 +599,7 @@ class NikkyAI(object):
         # Transform initial highlights to a highlight to the speaker for a
         # sense of realism
         if sourcenick and randint(0, 10):
-            msg = re.sub(r'\S+: ', sourcenick + ': ', msg)
+            msg = re.sub(r'^\S+: ', sourcenick + ': ', msg, count=1)
 
         msg = self.replace_nicks(msg, sourcenick)
         msg = self.dehighlight_sentence(msg)
