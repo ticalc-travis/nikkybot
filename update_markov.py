@@ -190,16 +190,16 @@ def update(pname, reset):
                 if m:
                     corpus.check_line(m.group(2), m.group(3))
 
-        if pname == 'nikky':
-            # !TODO! Generalize this
-            # And some stuff from elsewhere, too!
-            with open('manually-added.txt', 'r') as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        corpus.add_spoken(line)
-                    else:
-                        corpus.update()
+        # Stuff from elsewhere or not in my logs that I wanted to add
+        with open('manually_added.txt', 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    m = re.match(r'^<(.*?)> (.*)', line, re.I)
+                    if m:
+                        corpus.check_line(m.group(1), m.group(2))
+                else:
+                    corpus.update()
 
         # irssi logs
         log_path = os.path.join(home, os.path.join('log_irc_irssi'))
