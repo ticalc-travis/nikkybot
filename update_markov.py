@@ -53,12 +53,16 @@ class TrainingCorpus(object):
         self.update()
         self.context_group.append(line)
 
+    def new_context(self):
+        self.update()
+        self.context_group.clear()
+
     def update(self):
         if self.spoken_group:
             self._corpus.append('\n'.join(self.spoken_group))
             self._update_context()
             self.spoken_group = []
-        self.context_group.clear()
+            self.context_group.clear()
 
     def _update_context(self):
         spoken = self.markov.str_to_chain('\n'.join(self.spoken_group))
@@ -153,13 +157,14 @@ def update(pname, reset):
                         m = re.match(r'^\[.*\] \[.*\] <saxjax>\t\(.\) \[?(.*?)[:\]] (.*)', line, re.I)
                     if m:
                         corpus.check_line(m.group(1), m.group(2))
-            corpus.update()
+            corpus.new_context()
 
         # Old #tcpa logs from elsewhere
         log_path = os.path.join('/home/retrotcpa',
                                 os.path.join('log_irc_retro'))
-        for dn in [os.path.join(log_path, x) for x in os.listdir(log_path)]:
-            for fn in os.listdir(dn):
+        for dn in [os.path.join(log_path, x) for x in sorted(
+                os.listdir(log_path))]:
+            for fn in sorted(os.listdir(dn)):
                 with open(os.path.join(log_path, os.path.join(dn, fn)),
                           'r') as f:
                     for line in f:
@@ -167,19 +172,19 @@ def update(pname, reset):
                         m = re.match(r'^\[[0-9]{2}:[0-9]{2}:[0-9]{2}\] <[ @+]?(.*?)> (.*)', line, re.I)
                         if m:
                             corpus.check_line(m.group(1), m.group(2))
-            corpus.update()
+        corpus.new_context()
 
         # Old #calcgames logs from elsewhere
         log_path = os.path.join('/home/retrotcpa',
                                 os.path.join('log_calcgames'))
-        for fn in os.listdir(log_path):
+        for fn in sorted(os.listdir(log_path)):
             with open(os.path.join(log_path, fn), 'r') as f:
                 for line in f:
                     line = line.strip()
                     m = re.match(r'^[0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?(.*?)> (.*)', line, re.I)
                     if m:
                         corpus.check_line(m.group(1), m.group(2))
-            corpus.update()
+        corpus.new_context()
 
         # More miscellaneous junk I threw in a separate huge file because it
         # was too scattered around my system
@@ -189,6 +194,7 @@ def update(pname, reset):
                 m = re.match(r'^\[?[0-9]{2}:[0-9]{2}(:[0-9]{2})?\]? <[ @+]?(.*?)> (.*)', line, re.I)
                 if m:
                     corpus.check_line(m.group(2), m.group(3))
+        corpus.new_context()
 
         # Stuff from elsewhere or not in my logs that I wanted to add
         with open('manually_added.txt', 'r') as f:
@@ -199,20 +205,26 @@ def update(pname, reset):
                     if m:
                         corpus.check_line(m.group(1), m.group(2))
                 else:
-                    corpus.update()
+                    corpus.new_context()
+        corpus.new_context()
 
         # irssi logs
         log_path = os.path.join(home, os.path.join('log_irc_irssi'))
         for dn in [os.path.join(log_path, x) for x in os.listdir(log_path)]:
             try:
-                for fn in os.listdir(dn):
-                    m = re.match('#(.*)_([0-9]{4})-([0-9]{2})-([0-9]{2})\.log', fn)
+                last_channel = None
+                for fn in sorted(os.listdir(dn)):
+                    m = re.match(
+                        '#(.*)_([0-9]{4})-([0-9]{2})-([0-9]{2})\.log', fn)
                     if m:
                         channel, year, month, day = m.groups()
                         if (channel in
                                 ('calcgames', 'cemetech', 'flood', 'hp48',
                                 'inspired', 'nspire-lua', 'prizm', 'tcpa',
                                 'ti', 'caleb', 'wikiti', 'markov')):
+                            if channel != last_channel:
+                                corpus.new_context()
+                                last_channel = channel
                             with open(os.path.join(log_path, dn, fn), 'r') as f:
                                 for line in f:
                                     line = line.strip()
@@ -242,11 +254,11 @@ def update(pname, reset):
                                             if m:
                                                 corpus.check_line(m.group(1),
                                                                   m.group(2))
-                    corpus.update()
 
             except OSError as e:
                 if e.errno == 20:
                     continue
+        corpus.new_context()
 
     # Parse current weechat logs
     stdout.write('Parsing current logs...\n')
@@ -291,7 +303,7 @@ def update(pname, reset):
                 if m:
                     nick, msg = m.group(1), m.group(2)
                 corpus.check_line(nick, msg)
-        corpus.update()
+        corpus.new_context()
 
     if reset:
         mk.clear()
