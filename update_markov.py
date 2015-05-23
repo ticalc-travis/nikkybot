@@ -292,12 +292,15 @@ def update(pname, reset):
 
                 if date < last_updated or date > target_date:
                     continue
-                # TODO: Need to parse WalriiBot messages
                 if pregex[1] and (nick.lower().startswith('saxjax') or
                                   nick.lower().startswith('cemetecmc')):
                     m = re.match(r'^\(.\) \[?(.*?)[:\]] (.*)', msg, re.I)
                 elif pregex[2] and nick.lower().startswith('omnomnirc'):
                     m = re.match(r'^(?:\(.\))?<(.*?)> (.*)', msg, re.I)
+                elif pregex[3] and (nick.lower().startswith('walriibot') or
+                                    nick.lower().startswith('wb') or
+                                    nick.lower().startswith('i|')):
+                    m = re.match(r'^(?:\(.*?\))?<(.*?)> (.*)', msg, re.I)
                 else:
                     m = None
                 if m:
