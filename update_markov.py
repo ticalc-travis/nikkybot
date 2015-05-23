@@ -228,7 +228,7 @@ def update(pname, reset):
                             with open(os.path.join(log_path, dn, fn), 'r') as f:
                                 for line in f:
                                     line = line.strip()
-                                    m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?(.*)> (.*)', line, re.I)
+                                    m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?(.*?)> (.*)', line, re.I)
                                     if m:
                                         nick, msg = m.groups()
 
@@ -271,8 +271,8 @@ def update(pname, reset):
             for line in f:
                 line = line.strip()
 
-                m1 = re.match(r'^([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2})\t[+@]?(.*)\t(.*)', line)
-                m2 = re.match(r'^(..., [0-9]{2} ... [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}) [-+][0-9]{4}\t[+@]?(.*)\t(.*)', line)
+                m1 = re.match(r'^([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2})\t[+@]?(.*?)\t(.*)', line)
+                m2 = re.match(r'^(..., [0-9]{2} ... [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}) [-+][0-9]{4}\t[+@]?(.*?)\t(.*)', line)
                 if m1:
                     date, nick, msg = m1.groups()
                     date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
