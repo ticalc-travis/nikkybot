@@ -33,6 +33,32 @@ from twisted.internet import reactor, threads
 import nikkyai
 
 
+def hostmask_match(testmask, knownmask):
+    """Check if knownmask matches against testmask, resolving wildcards
+    in testmask"""
+    testmask = \
+        testmask.replace('.', '\\.').replace('?', '.').replace('*', '.*')
+    return re.match(testmask, knownmask)
+
+
+def any_hostmask_match(testmasks, knownmask):
+    """Check if knownmask matches against any of the masks in iterable
+    testmasks, resolving wildcards in testmasks"""
+    for mask in testmasks:
+        if hostmask_match(mask, knownmask):
+            return True
+    return False
+
+
+def irc_lower(string):
+    """Convert string to IRC's idea of lowercase"""
+    string = string.lower()
+    symb_lower = {'[': '{', ']': '}', '\\': '|', '~': '^'}
+    for up, low in symb_lower.items():
+        string = string.replace(up, low)
+    return string
+
+
 class BotError(Exception):
     pass
 
@@ -122,7 +148,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         nick, msg = self.preparse_msg(user, msg)
         is_private = target == self.nickname
         sender = nick if is_private else target
-        is_admin = self.any_hostmask_match(self.opts.admin_hostmasks, user)
+        is_admin = any_hostmask_match(self.opts.admin_hostmasks, user)
         is_highlight = self.is_highlight(msg)
 
         # Log private messages
@@ -145,7 +171,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
             msg_with_nick = msg
 
         # Log context
-        self.nikkies[sender].last_lines.append(msg_with_nick)
+        self.nikkies[irc_lower(sender)].last_lines.append(msg_with_nick)
 
         # Determine what to do (reply, maybe reply, run command)
         if is_private or is_highlight:
@@ -184,8 +210,8 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
     def irc_unknown(self, prefix, command, parms):
         if command == "INVITE":
-            if parms[1] in self.opts.channels:
-                self.join(parms[1])
+            if irc_lower(parms[1]) in self.opts.channels:
+                self.join(irc_lower(parms[1]))
                 print('Received invite to {}; trying to join'.format(parms[1]))
             else:
                 print('Ignoring invite to unrecognized channel '
@@ -214,21 +240,6 @@ class NikkyBot(irc.IRCClient, Sensitive):
             self.pending_nick_reclaim_timer = True
             reactor.callLater(self.opts.nick_retry_wait, self.reclaim_nick)
 
-    def hostmask_match(self, testmask, knownmask):
-        """Check if knownmask matches against testmask, resolving wildcards
-        in testmask"""
-        testmask = \
-            testmask.replace('.', '\\.').replace('?', '.').replace('*', '.*')
-        return re.match(testmask, knownmask)
-
-    def any_hostmask_match(self, testmasks, knownmask):
-        """Check if knownmask matches against any of the masks in iterable
-        testmasks, resolving wildcards in testmasks"""
-        for mask in testmasks:
-            if self.hostmask_match(mask, knownmask):
-                return True
-        return False
-
     def is_highlight(self, msg):
         """Check if msg contains an instance of bot's current nickname"""
         if re.search(r'\b{}\b'.format(re.escape(self.nickname)),
@@ -243,7 +254,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         msg = raw_msg.strip()
 
         # Parse/convert saxjax's messages
-        if self.hostmask_match('*!~saxjax@*', user):
+        if hostmask_match('*!~saxjax@*', user):
             m = re.match(r'\(.\) \[(.*)\] (.*)', msg)
             if m:
                 # Normal chat speaking
@@ -336,31 +347,32 @@ class NikkyBot(irc.IRCClient, Sensitive):
         elif cmd == '?join':
             if not is_admin:
                 raise UnauthorizedCommandError
-            if not args in self.opts.channels:
-                self.opts.channels.append(args)
-            self.join(args)
+            channel, chankey = args, irc_lower(args)
+            self.opts.channels.add(chankey)
+            self.join(channel)
             # Update preferred keywords/munges for new channel
             pk = set()
             ml = set()
             rnl = set()
-            self.nikkies[args]      # Summon new channel NikkyAI into existence
+            self.nikkies[chankey]   # Summon new channel NikkyAI into existence
             for nikky in self.nikkies.values():
                 pk = pk.union(nikky.preferred_keywords)
                 ml = ml.union(nikky.munge_list)
                 rnl = rnl.union(nikky.replace_nicks_list)
-            self.nikkies[args].preferred_keywords = pk
-            self.nikkies[args].munge_list = ml
-            self.nikkies[args].replace_nicks_list = rnl
-            self.nikkies[args].save_state()
+            self.nikkies[chankey].preferred_keywords = pk
+            self.nikkies[chankey].munge_list = ml
+            self.nikkies[chankey].replace_nicks_list = rnl
+            self.nikkies[chankey].save_state()
 
         elif cmd == '?part':
             if not is_admin:
                 raise UnauthorizedCommandError
+            channel, chankey = args, irc_lower(args)
             try:
-                self.opts.channels.remove(args)
+                self.opts.channels.remove(chankey)
             except ValueError:
                 pass
-            self.part(args)
+            self.part(channel)
 
         elif cmd == '?addword':
             if not is_admin:
@@ -541,7 +553,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         """Output an AI response for the given msg to target (user or channel)
         trapping for exceptions"""
 
-        nikky = self.nikkies[target]
+        nikky = self.nikkies[irc_lower(target)]
         nikky.search_time = self.opts.direct_response_time
         context = ' '.join(nikky.last_lines)
 
@@ -562,15 +574,15 @@ class NikkyBot(irc.IRCClient, Sensitive):
             log_response=False):
         """Occasionally reply to the msg given, or say a random remark"""
 
-        nikky = self.nikkies[target]
+        nikky = self.nikkies[irc_lower(target)]
         nikky.search_time = self.opts.random_response_time
         context = ' '.join(nikky.last_lines)
 
         # Make sure it knows its correct nick
-        self.nikkies[target].nick = self.nickname
+        self.nikkies[irc_lower(target)].nick = self.nickname
 
         try:
-            reply = self.nikkies[target].decide_remark(
+            reply = self.nikkies[irc_lower(target)].decide_remark(
                 msg, context=context).split('\n')
         except Exception:
             self.report_error(target, silent_errors)

@@ -52,6 +52,8 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
     def __init__(self, opts):
 
         self.opts = opts
+        self.opts.channels = set([nikkybot.irc_lower(c) for c in
+                                 self.opts.channels])
 
         self.servers = [(s.split(':')[0], int(s.split(':')[1])) for s in
                         opts.servers]
