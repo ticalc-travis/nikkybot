@@ -43,12 +43,6 @@ def nikkysim_no(nikkyai, context, fmt):
         return "No such thing as a {}type quote yet".format(w)
 
 
-def tell_us_something(nikkyai, context, fmt):
-    pre = choice(
-        ["","","","","","Okay\\n","k\\n","kk\\n","Fine\\n"])
-    return pre + nikkyai.nikkysim(strip_number=True)[0]
-
-
 def random_number(nikkyai, context, fmt):
     from random import randint
     c = randint(0, 3)
@@ -130,9 +124,18 @@ True),
 (r'\brandom number\b', -2, E(random_number)),
 
 # Misc
-(r'\b(tell|tell us|tell me|say) (something|anything) (.*)(smart|intelligent|funny|interesting|cool|awesome|bright|thoughtful|entertaining|amusing|exciting|confusing|sensical|inspiring|inspirational|random|wise)\b', -10,
-    E(tell_us_something)
+(r'(\b(tell|tell us|tell me|say) (something|anything)|gossip)', -10,
+    R(
+        Markov_forward('did you know', order=3),
+        Markov_forward('fun fact', order=3),
+        Markov_forward('fact', order=3),
+        Markov_forward('I heard', order=3),
+        Markov_forward('I hear', order=3),
+        Markov_forward('a recent study', order=3),
+        Markov_forward('guess what', order=3),
+    )
 ),
+(r'\bfun *fact', -10, Markov_forward('fun fact', order=3)),
 
 # Mimic
 (r'^\W*(mimic|impersonate|act like|imitate)\s*$', -98, E(mimic_random), True),
