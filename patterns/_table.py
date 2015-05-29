@@ -72,13 +72,14 @@ class E(object):
 class Markov_forward(object):
     """Return a Markov chain from word or chain forward"""
     def __init__(self, string, failmsglist=None, max_lf=None,
-                 force_completion=True):
+                 force_completion=True, order=None):
         self.string = string
         if failmsglist is None:
             failmsglist = ['']
         self.failmsglist = failmsglist
         self.max_lf=max_lf
         self.force_completion = force_completion
+        self.order = order
 
     def get(self, nikkyai, context='', fmt=None):
         if fmt is None:
@@ -93,7 +94,8 @@ class Markov_forward(object):
         return nikkyai.markov_forward(chain, failmsg, src_nick=fmt[0],
                                       max_lf=self.max_lf,
                                       force_completion=self.force_completion,
-                                      context=context)
+                                      context=context,
+                                      order=self.order)
 
 
 class Manual_markov(object):
@@ -126,13 +128,14 @@ class Manual_markov_forward(object):
 class Markov(object):
     """Force standard Markov processing on the given message and return
     result, even if message would otherwise match another regexp pattern"""
-    def __init__(self, text, failmsglist=None):
+    def __init__(self, text, failmsglist=None, order=None):
         if failmsglist is None:
             failmsglist = ['']
         self.failmsglist = failmsglist
         if not text.startswith('<{0}>'):
             text = '<{0}> ' + text
         self.text = text
+        self.order = order
 
     def get(self, nikkyai, context='', fmt=None):
         if fmt is None:
@@ -144,7 +147,7 @@ class Markov(object):
             failmsg = failmsg.format(*fmt)
         return nikkyai.markov_reply(
             self.text.format(*fmt), add_response=False, failmsg=failmsg,
-            context=context)
+            context=context, order=self.order)
 
 
 class Recurse(str):

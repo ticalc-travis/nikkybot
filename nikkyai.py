@@ -245,13 +245,15 @@ class NikkyAI(object):
                 raise e
 
     def markov_reply(self, msg, context='', failmsg=None, add_response=True,
-                     max_lf_l=None, max_lf_r=None):
+                     max_lf_l=None, max_lf_r=None,
+                     order=DEFAULT_MARKOV_LENGTH):
         """Generate a reply using Markov chaining. Check and avoid repeated
         responses.  If unable to generate a suitable response, return a random
         Markov sentence if failmsg is None; else return failmsg.  Add new
         response to self.last_replies if add_response.  Do
         check_output_response().
         """
+        order = order if order else DEFAULT_MARKOV_LENGTH
         max_lf_l, max_lf_r = self.get_max_lf(max_lf_l, max_lf_r)
         nick, msg = self.filter_input(msg)
         msg = self.filter_markov_input(nick, msg)
@@ -268,16 +270,16 @@ class NikkyAI(object):
 
         try:
             while msg.strip():
-                for order in (5, 4, 3, 2, 1):
-                    for i in xrange(len(words) - (order-1)):
+                for o in (5, 4, 3, 2, 1):
+                    for i in xrange(len(words) - (o-1)):
                         if time() > start_time + self.search_time:
                             raise ResponseTimeUp
 
-                        chain = tuple(words[i:i+order])
+                        chain = tuple(words[i:i+o])
                         try:
                             candidate = self.markov.sentence(
-                                chain, forward_length=DEFAULT_MARKOV_LENGTH,
-                                backward_length=DEFAULT_MARKOV_LENGTH,
+                                chain, forward_length=order,
+                                backward_length=order,
                                 max_lf_forward=max_lf_r,
                                 max_lf_backward=max_lf_l)
                         except KeyError:
@@ -311,15 +313,18 @@ class NikkyAI(object):
             return self.check_output_response(best_resp,
                                               add_response=add_response)
         elif failmsg is None:
-            return self.random_markov(src_nick=nick, add_response=add_response)
+            return self.random_markov(src_nick=nick, add_response=add_response,
+                                      order=order)
         else:
             return failmsg
 
     def random_markov(self, src_nick='', add_response=True,
-                      max_lf_l=None, max_lf_r=None):
+                      max_lf_l=None, max_lf_r=None,
+                      order=DEFAULT_MARKOV_LENGTH):
         """Pick any random Markov-chained sentence and output it.  Do
         check_output_response().
         """
+        order = order if order else DEFAULT_MARKOV_LENGTH
         max_lf_l, max_lf_r = self.get_max_lf(max_lf_l, max_lf_r)
         generic_words = (
             'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have',
@@ -339,9 +344,9 @@ class NikkyAI(object):
             chain = self.markov.str_to_chain(choice(generic_words))
             try:
                 msg = self.markov.sentence(
-                    chain, forward_length=DEFAULT_MARKOV_LENGTH,
-                    backward_length=DEFAULT_MARKOV_LENGTH,
-                    max_lf_forward=max_lf_r, max_lf_backward=max_lf_l)
+                    chain, forward_length=order,
+                    backward_length=order, max_lf_forward=max_lf_r,
+                    max_lf_backward=max_lf_l)
             except KeyError:
                 continue
             else:
@@ -355,12 +360,13 @@ class NikkyAI(object):
 
     def markov_forward(self, chain, failmsg='', src_nick='',
                        max_lf=None, force_completion=True,
-                       context=''):
+                       context='', order=DEFAULT_MARKOV_LENGTH):
         """Generate sentence from the current chain forward only and not
         backward.  Do NOT do check_output_response().  Produce the best
         matching response if 'context' string is given.  Spend no more than
         'search_time' seconds looking for a response.
         """
+        order = order if order else DEFAULT_MARKOV_LENGTH
         if max_lf is None:
             max_lf = self.max_lf_r
         if len(chain) > 5:
@@ -373,7 +379,7 @@ class NikkyAI(object):
         while True:
             try:
                 candidate = self.markov.sentence_forward(
-                    chain, length=DEFAULT_MARKOV_LENGTH,
+                    chain, length=order,
                     allow_empty_completion=not force_completion, max_lf=max_lf)
             except KeyError:
                 break
