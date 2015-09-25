@@ -16,6 +16,11 @@
 # }
 
 personality_regexes = {
+    'tari':
+        (r'tari',
+         r'tari',
+         r'tari',
+         r'tari'),
     'geekboy':
         (r'geek',
          r'geekboy',
@@ -107,7 +112,7 @@ personality_regexes = {
          r'merth|merthsoft|shaun',
          r'merth|merthsoft|shaun'),
     'randomist':
-        (r'randomist|korinidos|.*arch|metalrand|randeimos|dama|dam\\|damvista',
+        (r'randomist|korinidos|.*arch|metalrand|randeimos|dama|dam\\|damvista|devoidofw|psychodro',
          None,
          None,
          None),
