@@ -295,7 +295,7 @@ class PostgresMarkov(object):
             for iw in in_words:
                 score += self.get_context_freq(iw, ow)
                 count += 1
-        return score
+        return score / float(count) if count else 0.
 
     def clear(self):
         """Delete all trained data and context; restart with a completely empty

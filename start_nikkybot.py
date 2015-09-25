@@ -36,7 +36,7 @@ import nikkybot
 import nikkyai
 
 OPTS = argparse.Namespace()
-CONTEXT_LINES = 10
+CONTEXT_LINES = 5
 
 class DefaultNikkyAIDict(dict):
     def __getitem__(self, k):

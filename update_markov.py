@@ -8,7 +8,7 @@
 # Markov and relevance/context data in the database.
 
 # Number of previous spoken IRC lines to include in Markov context data
-CONTEXT_LINES = 10
+CONTEXT_LINES = 5
 # Frequency to update the progress indicator
 PROGRESS_EVERY = 5000
 
