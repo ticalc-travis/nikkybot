@@ -475,6 +475,12 @@ patterns = (
         Markov('contest')
     )
 ),
+(r'\b(talk|discuss|mention|topic|off-topic)', -1,
+    R(
+        Markov_forward("Let's discuss"),
+        Markov_forward("Let's talk about"),
+    ),
+),
 
 ## Meta ##
 

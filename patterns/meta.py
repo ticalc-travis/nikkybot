@@ -69,14 +69,14 @@ patterns = (
         'no\nit sucks',
     )
 ),
-(r"\b(who (made|wrote|programmed) you|(who'?s|whose) are you|who (runs|operates) you|(who is|who'?s) your (creator|programmer|maker|admin|administrator))\b", -2,
+(r"\b(who (made|wrote|programmed|created) you|(who'?s|whose) are you|who (runs|operates) you|(who is|who'?s) your (creator|programmer|maker|admin|administrator))\b", -2,
     R(
         "It's tev",
         'tev did',
         Markov_forward('tev is')
-    )
+    ), True
 ),
-(r"\b(why did you (restart|disconnect|quit|cycle)|(where did|where'?d) you go)", -1,
+(r"\b((why|y) (did )?(you|u) (restart|disconnect|quit|cycle)|(where did|where'?d) (you|u) go)", -1,
     R(
         'tev told me to\nProbably code change or even reboot\nwho knows'
     ), True
