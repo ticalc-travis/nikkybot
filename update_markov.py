@@ -299,7 +299,9 @@ def update(pname, reset):
                     m = re.match(r'^(?:\(.\))?<(.*?)> (.*)', msg, re.I)
                 elif pregex[3] and (nick.lower().startswith('walriibot') or
                                     nick.lower().startswith('wb') or
-                                    nick.lower().startswith('i|')):
+                                    nick.lower().startswith('i|') or
+                                    nick.lower().startswith('l|') or
+                                    nick.lower().startswith('yukitg')):
                     m = re.match(r'^(?:\(.*?\))?<(.*?)> (.*)', msg, re.I)
                 else:
                     m = None
