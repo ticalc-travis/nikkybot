@@ -104,7 +104,7 @@ patterns = (
         'hi'
     ), True
 ),
-(r'\b((nicky|niccy|nicci|nikki|nikk|nik|niky)(boy|bot|bott)?)\b', 0,
+(r'\b((nicky|niccy|nicci|nikki|nikk|niky)(boy|bot|bott)?)\b', 0,
     R(
         'Who the hell is "{1}"?',
         Markov('{1}'),
