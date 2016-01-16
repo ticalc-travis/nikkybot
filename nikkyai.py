@@ -565,7 +565,7 @@ class NikkyAI(object):
         msg = re.sub(' +', ' ', msg)
 
         # Remove highlight at beginning of line, if it exists
-        m = re.match(re.escape(self.nick) + r'\W *(.*)', msg, re.I)
+        m = re.match(re.escape(self.nick) + r'[ :,;.!?*] *(.*)', msg, re.I)
         if m:
             msg = m.group(1)
         return (speaker_nick, msg)
