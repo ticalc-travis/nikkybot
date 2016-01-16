@@ -272,7 +272,6 @@ class NikkyBot(irc.IRCClient, Sensitive):
                     if m:
                         nick = m.group(1)
                         msg = m.group(2)
-            print('[preparse_msg] Saxjax message: <{}> {}'.format(nick, msg))
         return nick, msg
 
     def report_error(self, source, silent=False):
