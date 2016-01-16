@@ -545,6 +545,11 @@ class NikkyAI(object):
         )
         self.save_state()
 
+    def clear_last_replies(self):
+        """Delete all last reply memory"""
+        self.last_replies.clear()
+        self.save_state()
+
     def filter_input(self, msg):
         """Preprocess input msg in form "<speaking nick> msg".
         Return (speaker_nick, msg).

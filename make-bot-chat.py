@@ -58,8 +58,11 @@ else:
 
 bot1 = nikkyai.NikkyAI(recurse_limit=10, debug=False, max_lf_l=10, max_lf_r=10,
                        personality=nick1, id='*botchat*', search_time=.1)
+bot1.clear_last_replies()
 bot2 = nikkyai.NikkyAI(recurse_limit=10, debug=False, max_lf_l=10, max_lf_r=10,
                        personality=nick2, id='*botchat*', search_time=.1)
+# No need to also clear bot2's last replies list because it runs off of the same
+# ID and therefore shares the list with bot1
 
 tw = textwrap.TextWrapper(subsequent_indent=' '*20, expand_tabs=True, width=80)
 
