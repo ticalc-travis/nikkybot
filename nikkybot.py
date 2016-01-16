@@ -196,13 +196,14 @@ class NikkyBot(irc.IRCClient, Sensitive):
         """Just log private CTCPs for the heck of it"""
         for tag, data in messages:
             if channel == self.nickname:
-                print('private CTCP {} from {}: {}'.format(tag, user, data))
+                print('[ctcpQuery] private CTCP {} from {}: {}'.format(
+                    tag, user, data))
         irc.IRCClient.ctcpQuery(self, user, channel, messages)
 
     def noticed(self, user, channel, message):
         """Log private notices, too, but don't do anything else with them"""
         if channel == self.nickname:
-            print('private NOTICE from {}: {}'.format(user, message))
+            print('[noticed] private NOTICE from {}: {}'.format(user, message))
 
     def kickedFrom(self, channel, kicker, message):
         """On kick, automatically try to rejoin after a bit"""
@@ -212,14 +213,19 @@ class NikkyBot(irc.IRCClient, Sensitive):
         if command == "INVITE":
             if irc_lower(parms[1]) in self.opts.channels:
                 self.join(irc_lower(parms[1]))
-                print('Received invite to {}; trying to join'.format(parms[1]))
+                print('[irc_unknown] Received invite to {}; trying to join'.format(parms[1]))
             else:
-                print('Ignoring invite to unrecognized channel '
+                print('[irc_unknown] Ignoring invite to unrecognized channel '
                       '{}'.format(parms[1]))
         elif command == "PONG":
             pass
+        elif command == 'ERROR':
+            print('[irc_unknown] Server-reported error: {0}'.format(
+                parms[0]))
+            self.factory.clientConnectionFailed(None, parms[0])
         else:
-            print('unknown: {0}, {1}, {2}'.format(prefix, command, parms))
+            print('[irc_unknown] Unknown: {0}, {1}, {2}'.format(
+                prefix, command, parms))
 
     ## Custom methods ##
 
