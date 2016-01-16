@@ -130,7 +130,7 @@ patterns = (
     )
 ),
 (r'\b(karma|decbot3|decbot2|decbot)\b', 1, Recurse('***decbot karma***')),
-(r'nikkybot\+\+', 0,
+(r'\bnikkybot\+\+', 0,
     R(
         'Thanks',
         'Thanks {0}',

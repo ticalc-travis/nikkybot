@@ -64,7 +64,7 @@ patterns = (
         Markov('Kevin_O'),
     )
 ),
-(r'\b(omnimaga|omnidrama)', -1,
+(r'\b(omnimaga|omnidrama)', 98,
     R(
         Markov('omnimaga'),
         Markov('omnidrama'),

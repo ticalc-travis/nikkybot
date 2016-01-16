@@ -406,11 +406,11 @@ patterns = (
 (r"(\S+)\s+(\S+)\s+(what|who|whom|which)\b", -2, Markov_forward('{1} {2}')),
 (r"(\S+)\s+(what|who|whom|which)\b", -1, Markov_forward('{1}')),
 
-(r"(is|isn'?t|are|am|does|should|would|can|do|did)\b", 2,
+(r"\b(is|isn'?t|are|am|does|should|would|can|do|did)\b", 2,
     Recurse('***yes/no***')
 ),
-(r'(do you think|what about|really)\b', 0, R(Recurse('***yes/no***'))),
-(r"(is|are|am|should|would|can|do|does|which|what|what'?s|who|who'?s)(?: \S+)+[ -](.*?)\W+or (.*)\b", -1,
+(r'\b(do you think|what about|really)\b', 0, R(Recurse('***yes/no***'))),
+(r"\b(is|are|am|should|would|can|do|does|which|what|what'?s|who|who'?s)(?: \S+)+[ -](.*?)\W+or (.*)\b", -1,
     S(
         R(
             'both',
