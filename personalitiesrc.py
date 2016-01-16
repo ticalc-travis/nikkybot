@@ -16,6 +16,11 @@
 # }
 
 personality_regexes = {
+    'eeems':
+        (r'eeems',
+         r'eeems',
+         r'eeems',
+         r'eeems'),
     'tari':
         (r'tari',
          r'tari',
