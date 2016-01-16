@@ -315,8 +315,10 @@ class PostgresMarkov(object):
         chain = tuple(start)
         chain = self.conv_key(start)
         chain.reverse()
-        if len(chain) < 1 or len(chain) > 5:
-            raise IndexError("'start' must contain 1 to 5 items")
+        if len(chain) < 1:
+            raise IndexError("'start' must contain at least one item")
+        elif len(chain) > 5:
+            raise IndexError("'start' must contain no more than five items; received: "+repr(start))
         if not [x for x in chain if x is not None]:
             raise ValueError("'start' must contain at least one non-None item")
 
