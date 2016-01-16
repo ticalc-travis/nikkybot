@@ -138,9 +138,9 @@ personality_regexes = {
          None),
     'ej':
         (r'e-j|e-jl|el-j',
-        None,
-        None,
-        None),
+         None,
+         None,
+         None),
     'cricketb':
         (r'cricket_b|cricketb|chirp_b|truepika',
          None,
