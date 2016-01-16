@@ -266,7 +266,7 @@ def update(pname, reset):
                for x in
             ('calcgames', 'cemetech', 'tcpa', 'ti', 'omnimaga', 'flood',
              'caleb', 'caleb-spam', 'hp48', 'markov', 'nspired', 'nspire-lua',
-             'prizm', 'wikiti', 'cemetech-mc', 'codewalrus')]:
+             'prizm', 'wikiti', 'cemetech-mc', 'codewalrus', 'gbadev')]:
         with open(os.path.join(home, fn), 'r') as f:
             for line in f:
                 line = line.strip()
