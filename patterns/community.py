@@ -41,7 +41,7 @@ patterns = (
         'This channel sucks\ntoo much censorship'
     ),
 ),
-(r'^deleted a post in', 1,
+(r'^deleted a post in', -3,
     R(
         'CENSORSHIP',
         'Censorship',
@@ -56,12 +56,12 @@ patterns = (
         Recurse('spam post'),
     )
 ),
-(r'^((added|edited) a post in|created a new topic:) \[(.*)\]', 1,
+(r'(?:(?:added|edited) a post in|created a new topic) \[(.*)\]', -3,
     R(
-        Recurse('{3}'),
+        Recurse('{1}'),
     )
 ),
-(r'^has entered the room\.$', 1,
+(r'^entered the room$', -3,
     R(
         S(
             R('Sup ', "What's up "),
@@ -82,29 +82,23 @@ patterns = (
         Markov_forward('I heard that {0}', force_completion=False),
     ),
 ),
-(r'^uploaded new file "(.*)" to archives queue.', 1,
+(r"^uploaded (?:update to file|new file) '(.*)' to archives queue", -3,
     R(
         Recurse('{1}'),
         Recurse('{0}'),
         Markov_forward('{0}'),
     )
 ),
-(r'File (.*) by (.*) accepted into archives by (.*)', 1,
+(r'File \[(.*)\].* accepted into archives by (.*)', -3,
     R(
         Recurse('{1}'),
         Recurse('{2}'),
         Markov_forward('{2}'),
-        Recurse('{3}'),
-        Markov_forward('{3}'),
     ),
 ),
-(r'File (.*) by (.*) rejected from archives by (.*)', 1,
+(r"File '(.*)' rejected from archives", -3,
     R(
         Recurse('{1}'),
-        Recurse('{2}'),
-        Markov_forward('{2}'),
-        Recurse('{3}'),
-        Markov_forward('{3}'),
         Recurse('deleted a post in'),
         Markov_forward('reject')
     ),

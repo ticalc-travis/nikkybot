@@ -260,23 +260,19 @@ class NikkyBot(irc.IRCClient, Sensitive):
         msg = raw_msg.strip()
 
         # Parse/convert saxjax's messages
-        if hostmask_match('*!~saxjax@*', user):
-            m = re.match(r'\(.\) \[(.*)\] (.*)', msg)
+        if hostmask_match('saxjax!*@*', user):
+            m = re.match(r'(?:\(.\) )?\[(.*)\] (.*)', msg)
             if m:
                 # Normal chat speaking
                 nick = m.group(1)
                 msg = '{}'.format(m.group(2))
-            else:
-                m = re.match(r'\(.\) \*(.*?) (.*)', msg)
-                if m:
-                    if m.group(1) == 'File':
-                        # Approving/rejecting files
-                        nick = ''
-                        msg = '{} {}'.format(m.group(1), m.group(2))
-                    else:
-                        # Other stuff (log ins, log outs)
+                if nick == 'Cemetech':
+                    # ...or log ins/log outs/file uploads
+                    m = re.match(r'(.*?) ((?:entered|logged|uploaded|deleted|added).*)', msg)
+                    if m:
                         nick = m.group(1)
                         msg = m.group(2)
+            print('[preparse_msg] Saxjax message: <{}> {}'.format(nick, msg))
         return nick, msg
 
     def report_error(self, source, silent=False):
