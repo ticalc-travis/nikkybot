@@ -123,18 +123,6 @@ True),
 # Random number
 (r'\brandom number\b', -2, E(random_number)),
 
-# Misc
-(r'(\b(tell|tell us|tell me|say) (something|anything)|gossip)', -10,
-    R(
-        Markov_forward('did you know', order=3),
-        Markov_forward('fun fact', order=3),
-        Markov_forward('fact', order=3),
-        Markov_forward('I heard', order=3),
-        Markov_forward('I hear', order=3),
-        Markov_forward('a recent study', order=3),
-        Markov_forward('guess what', order=3),
-    )
-),
 (r'\bfun *fact', -10, Markov_forward('fun fact', order=3)),
 
 # Mimic
