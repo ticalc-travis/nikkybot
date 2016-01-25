@@ -198,7 +198,7 @@ patterns = (
         Markov('mirc'),
     ),
 ),
-(r'\b(os|windows|mac|linux|unix)', 0,
+(r'\b(os|windows|mac|linux|unix)\b', 0,
     R(
         Markov('os'),
         Markov('windows'),
