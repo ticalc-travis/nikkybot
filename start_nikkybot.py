@@ -102,7 +102,7 @@ if __name__ == '__main__':
     ap.add_argument('-c', '--channels', nargs='*', metavar='CHANNEL',
                     default=[], help='List of channels to join')
     ap.add_argument('--client-version',
-                    default="nikkybot (twisted IRC bot)--contact 'tev' or "
+                    default="NikkyBot (Twisted IRC bot)--contact: 'tev' or "
                             "travisgevans@gmail.com",
                     help='Client version response to give to CTCP VERSION '
                          'requests')
