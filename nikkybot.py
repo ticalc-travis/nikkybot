@@ -123,6 +123,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         self.joined_channels = set()
         self.user_threads = 0
         self.pending_msg_time = now()
+        self.realname = self.opts.real_name
         self.versionName = self.opts.client_version
         self.pending_nick_reclaim_timer = False
         self.last_lines = {}
