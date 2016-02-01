@@ -73,8 +73,6 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
     def clientConnectionFailed(self, connector, reason):
         print('Connection failed: {}'.format(reason))
         url, port = random.choice(self.servers)
-        print('Waiting {} seconds'.format(self.opts.reconnect_wait))
-        time.sleep(self.opts.reconnect_wait)
         print('Connecting to {}:{}'.format(url, port))
         self.connector = connector
         connector.host, connector.port = url, port
@@ -115,9 +113,6 @@ if __name__ == '__main__':
                              '*!~ijel@68.102.79.192',],
                     help='Trusted hostmasks to accept special admin commands '
                          'from')
-    ap.add_argument('--reconnect-wait', default=30, type=float,
-                    help='Seconds to wait before trying to reconnect on '
-                         'connection failure')
     ap.add_argument('--max-line-length', default=256, type=int,
                     help='Maximum characters to send per line in messages')
     ap.add_argument('--min-send-time', default=1, type=float,
