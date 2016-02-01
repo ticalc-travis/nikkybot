@@ -115,6 +115,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         print('Connection established.')
         self.factory.resetDelay()
         self.factory.shut_down = False
+        self.delayed_calls = []
         self.opts = self.factory.opts
         self.nickname = self.opts.nicks[0]
         self.nikkies = self.factory.nikkies
@@ -129,12 +130,16 @@ class NikkyBot(irc.IRCClient, Sensitive):
         irc.IRCClient.connectionMade(self)
 
         if self.opts.channel_check_interval:
-            reactor.callLater(self.opts.channel_check_interval, self.channel_check)
+            self.call_later(self.opts.channel_check_interval, self.channel_check)
         if self.opts.state_cleanup_interval:
-            reactor.callLater(self.opts.state_cleanup_interval, self.cleanup_state)
+            self.call_later(self.opts.state_cleanup_interval, self.cleanup_state)
 
     def connectionLost(self, reason):
         print('Connection lost: {}'.format(reason))
+        for dc in self.delayed_calls:
+            if dc.active():
+                dc.cancel()
+        self.delayed_calls = []
         irc.IRCClient.connectionLost(self, reason)
 
     def signedOn(self):
@@ -207,7 +212,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
     def kickedFrom(self, channel, kicker, message):
         """On kick, automatically try to rejoin after a bit"""
-        reactor.callLater(random.randint(5, 300), self.join, channel)
+        self.call_later(random.randint(5, 300), self.join, channel)
 
     def irc_unknown(self, prefix, command, parms):
         if command == "INVITE":
@@ -229,6 +234,14 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
     ## Custom methods ##
 
+    def call_later(self, delay, callable, *args, **kw):
+        """Set up a scheduled call to the reactor while keeping track of it so
+        we can clean it up properly when the IRC connection is lost or
+        killed."""
+        cl = reactor.callLater(delay, callable, *args, **kw)
+        self.delayed_calls.append(cl)
+        return cl
+
     def reclaim_nick(self):
         """Attempt to reclaim preferred nick (self.alterCollidedNick will
         set up this function to be called again later on failure)"""
@@ -244,7 +257,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         already set"""
         if not self.pending_nick_reclaim_timer:
             self.pending_nick_reclaim_timer = True
-            reactor.callLater(self.opts.nick_retry_wait, self.reclaim_nick)
+            self.call_later(self.opts.nick_retry_wait, self.reclaim_nick)
 
     def is_highlight(self, msg):
         """Check if msg contains an instance of bot's current nickname"""
@@ -470,20 +483,20 @@ class NikkyBot(irc.IRCClient, Sensitive):
             if (len(parms) != 2 or
                     not nikky.is_personality_valid(parms[0]) or
                     not nikky.is_personality_valid(parms[1])):
-                reactor.callLater(2, self.notice, src_nick, usage_msg)
-                reactor.callLater(
+                self.call_later(2, self.notice, src_nick, usage_msg)
+                self.call_later(
                     4, self.notice, src_nick,
                     'Say "personalities" for a list of personalities')
             else:
                 nick1 = nikky.normalize_personality(parms[0])
                 nick2 = nikky.normalize_personality(parms[1])
                 if self.user_threads >= self.opts.max_user_threads:
-                    reactor.callLater(
+                    self.call_later(
                         2, self.notice, src_nick,
                         "Sorry, I'm too busy at the moment. Please try again "
                         "later!")
                 else:
-                    reactor.callLater(
+                    self.call_later(
                         2, self.notice, src_nick,
                         "Generating the bot chat may take a while... I'll let "
                         "you know when it's done!")
@@ -495,13 +508,13 @@ class NikkyBot(irc.IRCClient, Sensitive):
         elif re.match((r"\b(quit|stop|don.?t|do not)\b.*\b(hilite|hilight|highlite|highlight).*\bme"), msg, re.I):
             self._cmd_add_munge(src_nick.lower())
             msg = "Sorry, {}, I'll stop (tell me 'highlight me' to undo)".format(self.nikkies[None].munge_word(src_nick))
-            reactor.callLater(2, self.msg, sender, msg)
+            self.call_later(2, self.msg, sender, msg)
 
         elif re.match((r"\b(hilite|hilight|highlite|highlight) me"), msg,
                       re.I):
             self._cmd_delete_munge(src_nick.lower())
             msg = "Okay, {}!".format(src_nick)
-            reactor.callLater(2, self.msg, sender, msg)
+            self.call_later(2, self.msg, sender, msg)
 
         else:
             raise UnrecognizedCommandError
@@ -543,7 +556,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         return nick, channel, out
 
     def bot_chat_error(self, failure, nick):
-        reactor.callLater(2, self.notice, nick,
+        self.call_later(2, self.notice, nick,
                           'Sorry, something went wrong. Tell tev!')
         self.user_threads -= 1
         assert(self.user_threads >= 0)
@@ -625,7 +638,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         last_time = max(0, self.pending_msg_time-now())
         while self.pending_responses:
             time, target, msg = self.pending_responses.pop(0)
-            reactor.callLater(time + last_time, self.msg, target,
+            self.call_later(time + last_time, self.msg, target,
                               self.escape_message(msg),
                               length=self.opts.max_line_length)
             last_time += time
@@ -655,10 +668,10 @@ class NikkyBot(irc.IRCClient, Sensitive):
         for c in self.opts.channels:
             if c not in self.joined_channels:
                 self.join(c)
-        reactor.callLater(self.opts.channel_check_interval, self.channel_check)
+        self.call_later(self.opts.channel_check_interval, self.channel_check)
 
     def cleanup_state(self):
         """Clean up any stale state data to reduce memory and disk usage"""
         self.factory.cleanup_state()
-        reactor.callLater(self.opts.state_cleanup_interval, self.cleanup_state)
+        self.call_later(self.opts.state_cleanup_interval, self.cleanup_state)
 
