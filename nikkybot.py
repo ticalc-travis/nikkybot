@@ -222,7 +222,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         elif command == 'ERROR':
             print('[irc_unknown] Server-reported error: {0}'.format(
                 parms[0]))
-            self.factory.clientConnectionFailed(None, parms[0])
+            self.transport.loseConnection()
         else:
             print('[irc_unknown] Unknown: {0}, {1}, {2}'.format(
                 prefix, command, parms))

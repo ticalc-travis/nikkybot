@@ -76,7 +76,9 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
         print('Waiting {} seconds'.format(self.opts.reconnect_wait))
         time.sleep(self.opts.reconnect_wait)
         print('Connecting to {}:{}'.format(url, port))
-        reactor.connectTCP(url, port, NikkyBotFactory(self.opts))
+        self.connector = connector
+        connector.host, connector.port = url, port
+        self.retry()
 
     def clientConnectionLost(self, connector, reason):
         if self.shut_down:
