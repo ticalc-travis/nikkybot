@@ -120,13 +120,14 @@ class NikkyBot(irc.IRCClient, Sensitive):
         self.nickname = self.opts.nicks[0]
         self.nikkies = self.factory.nikkies
         self.pending_responses = []
+        self.responses_scheduled = False
         self.joined_channels = set()
         self.user_threads = 0
-        self.pending_msg_time = now()
         self.realname = self.opts.real_name
         self.versionName = self.opts.client_version
         self.pending_nick_reclaim_timer = False
         self.last_lines = {}
+        self.lineRate = self.opts.min_send_time
 
         irc.IRCClient.connectionMade(self)
 
@@ -632,18 +633,26 @@ class NikkyBot(irc.IRCClient, Sensitive):
                     # Add line to output queue
                     self.pending_responses.append((time, target, line))
                     first_line = False
-        self.schedule_next_msg()
+        self._schedule_output()
 
-    def schedule_next_msg(self):
-        """Kick off timed event for next queued lines to be output"""
-        last_time = max(0, self.pending_msg_time-now())
-        while self.pending_responses:
+    def _schedule_output(self):
+        """Set up delayed output message scheduling if it's not
+        already running"""
+        if not self.responses_scheduled:
+            self.responses_scheduled = True
+            self._output_next_scheduled_msg()
+
+    def _output_next_scheduled_msg(self):
+        """Schedule next pending line of output, then kick off a timed
+        event to output it and then schedule the next one"""
+        if self.pending_responses:
             time, target, msg = self.pending_responses.pop(0)
-            self.call_later(time + last_time, self.msg, target,
-                              self.escape_message(msg),
-                              length=self.opts.max_line_length)
-            last_time += time
-        self.pending_msg_time = now() + last_time
+            self.call_later(time, self.msg, target,
+                            self.escape_message(msg),
+                            length=self.opts.max_line_length)
+            self.call_later(time, self._output_next_scheduled_msg)
+        else:
+            self.responses_scheduled = False
 
     def escape_message(self, msg):
         """'Escape' a message by inserting an invisible control character
