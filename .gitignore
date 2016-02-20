@@ -5,6 +5,7 @@ funstuff/
 *.pyc
 *.[oa]
 *~
+\#*#
 *.kate-swp
 install.sh
 manually-added.txt
