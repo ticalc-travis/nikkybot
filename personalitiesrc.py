@@ -16,6 +16,21 @@
 # }
 
 personality_regexes = {
+    'jonbush':
+        (r'jonbush',
+         None,
+         None,
+         None),
+    'ivoah':
+        (r'ivoah',
+         r'ivoah',
+         r'ivoah',
+         r'ivoah'),
+    'kinfinity':
+        (r'kinfinity',
+         r'kinginfinity',
+         None,
+         None),
     'eeems':
         (r'eeems',
          r'eeems',
@@ -185,7 +200,8 @@ personalities = {
     'merthsoft': 'merth',
     'shaun': 'merth',
     'netham': 'netham45',
-    'ephraim': 'ephraimb'
+    'ephraim': 'ephraimb',
+    'kinginfinity': 'kinfinity',
 }
 
 # Fill in primary personas...
