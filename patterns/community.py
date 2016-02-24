@@ -41,7 +41,7 @@ patterns = (
         'This channel sucks\ntoo much censorship'
     ),
 ),
-(r'^deleted a post in', -3,
+(r'deleted a post in', -3,
     R(
         'CENSORSHIP',
         'Censorship',
@@ -61,7 +61,7 @@ patterns = (
         Recurse('{1}'),
     )
 ),
-(r'^entered the room$', -3,
+(r'entered the room$', -3,
     R(
         S(
             R('Sup ', "What's up "),
@@ -82,7 +82,7 @@ patterns = (
         Markov_forward('I heard that {0}', force_completion=False),
     ),
 ),
-(r"^uploaded (?:update to file|new file) '(.*)' to archives queue", -3,
+(r"uploaded (?:update to file|new file) '(.*)' to archives queue", -3,
     R(
         Recurse('{1}'),
         Recurse('{0}'),
