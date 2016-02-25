@@ -276,11 +276,11 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
         # Parse/convert saxjax's messages
         if hostmask_match('saxjax!*@*', user):
-            m = re.match(r'(?:\(.\) )?\[(.*)\] (.*)', msg)
+            m = re.match(r'(?:\(.\) )?(?:\[(.*)\]|\*(.*?)) (.*)', msg)
             if m:
                 # Normal chat speaking
-                nick = m.group(1)
-                msg = '{}'.format(m.group(2))
+                nick = m.group(1) if m.group(1) else m.group(2)
+                msg = '{}'.format(m.group(3))
                 if nick == 'Cemetech':
                     # ...or log ins/log outs/file uploads
                     m = re.match(r'(.*?) ((?:entered|logged|uploaded|deleted|added).*)', msg)
