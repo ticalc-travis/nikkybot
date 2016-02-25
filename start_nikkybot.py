@@ -107,10 +107,7 @@ if __name__ == '__main__':
                     help='Client version response to give to CTCP VERSION '
                          'requests')
     ap.add_argument('--admin-hostmasks', nargs='*', metavar='ADMIN_HOSTMASK',
-                    default=['*!ijel@ip68-102-79-192.ks.ok.cox.net',
-                             '*!ijel@68.102.79.192', '*!travise@nvm2u.com',
-                             '*!~ijel@ip68-102-79-192.ks.ok.cox.net',
-                             '*!~ijel@68.102.79.192',],
+                    default=['*!admin@example.com',],
                     help='Trusted hostmasks to accept special admin commands '
                          'from')
     ap.add_argument('--max-line-length', default=256, type=int,
