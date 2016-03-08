@@ -16,6 +16,16 @@
 # }
 
 personality_regexes = {
+    'solarsoftware':
+        (None,
+         'solarsoftware',
+         None,
+         None),
+    'richardnixon':
+        (r'RichardNixon',
+         None,
+         None,
+         None),
     'jonbush':
         (r'jonbush',
          None,
@@ -202,6 +212,7 @@ personalities = {
     'netham': 'netham45',
     'ephraim': 'ephraimb',
     'kinginfinity': 'kinfinity',
+    'nixon': 'richardnixon'
 }
 
 # Fill in primary personas...
