@@ -47,7 +47,7 @@ def rule(nikky, context, fmt):
         except nikkyai.Bad_response_error:
             continue
         return out
-    return "???"
+    return "<No workable quotes found…>"
 
 def war(nikky, context, fmt):
     recurse_count = 0
