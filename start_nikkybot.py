@@ -59,6 +59,8 @@ class NikkyBotFactory(protocol.ReconnectingClientFactory):
                         opts.servers]
         self.shut_down = False
         self.nikkies = DefaultNikkyAIDict()
+        self.factor = 1.5
+        self.maxDelay = 600
 
     def cleanup_state(self):
         """Clean up any stale state data to reduce memory and disk usage"""
