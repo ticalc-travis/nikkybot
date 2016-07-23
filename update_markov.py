@@ -197,16 +197,21 @@ def update(pname, reset):
         corpus.new_context()
 
         # Stuff from elsewhere or not in my logs that I wanted to add
-        with open('manually_added.txt', 'r') as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    m = re.match(r'^<(.*?)> (.*)', line, re.I)
-                    if m:
-                        corpus.check_line(m.group(1), m.group(2))
-                else:
-                    corpus.new_context()
-        corpus.new_context()
+        log_path = [os.path.join('manual_corpus', x) for x in
+                    os.listdir('manual_corpus') if
+                    x.endswith('.txt') and not x.startswith('.') and not
+                    x.startswith('#')]
+        for fn in log_path:
+            with open(fn, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        m = re.match(r'^<(.*?)> (.*)', line, re.I)
+                        if m:
+                            corpus.check_line(m.group(1), m.group(2))
+                    else:
+                        corpus.new_context()
+            corpus.new_context()
 
         # irssi logs
         log_path = os.path.join(home, os.path.join('log_irc_irssi'))
