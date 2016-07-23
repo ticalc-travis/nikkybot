@@ -463,7 +463,7 @@ patterns = (
     ),
 ),
 (r"\b(really|orly|rly)\b", 0, Recurse('***yes/no***')),
-(r"\b(((tell|tell us|tell me|say) (something|anything)|gossip)|(what's .*\b(new|news)))", -10,
+(r"\b(((tell|tell us|tell me|say) (something|anything)|gossip)|(what's .*\b(new|news)))", -12,
     R(
         Markov_forward('did you know', order=3),
         Markov_forward('fun fact', order=3),
