@@ -599,6 +599,7 @@ class NikkyAI(object):
                     ('nikkybot:',
                         sourcenick + ':' if sourcenick else self.nick + ':'),
                     ('nikkybot', 'nikky'),
+                    ('nikkybutt', 'nikky'),
                 ):
             old, new = transform
             if msg.lower().startswith(old):
