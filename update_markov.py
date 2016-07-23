@@ -160,7 +160,7 @@ def update(pname, reset):
             corpus.new_context()
 
         # Old #tcpa logs from elsewhere
-        log_path = os.path.join('/home/retrotcpa',
+        log_path = os.path.join('/home/tcparetro',
                                 os.path.join('log_irc_retro'))
         for dn in [os.path.join(log_path, x) for x in sorted(
                 os.listdir(log_path))]:
@@ -175,7 +175,7 @@ def update(pname, reset):
         corpus.new_context()
 
         # Old #calcgames logs from elsewhere
-        log_path = os.path.join('/home/retrotcpa',
+        log_path = os.path.join('/home/tcparetro',
                                 os.path.join('log_calcgames'))
         for fn in sorted(os.listdir(log_path)):
             with open(os.path.join(log_path, fn), 'r') as f:
