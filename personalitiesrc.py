@@ -16,6 +16,11 @@
 # }
 
 personality_regexes = {
+    'avgn':
+        (r'AVGN',
+         None,
+         None,
+         None),
     'eightx84':
         (r'eightx84|someone26',
          'eightx84',
