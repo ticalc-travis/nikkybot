@@ -16,6 +16,11 @@
 # }
 
 personality_regexes = {
+    'eightx84':
+        (r'eightx84|someone26',
+         'eightx84',
+         'eightx84',
+         'eightx84'),
     'solarsoftware':
         (None,
          'solarsoftware',
