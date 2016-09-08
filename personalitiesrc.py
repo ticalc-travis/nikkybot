@@ -198,6 +198,10 @@ personality_regexes = {
          None),
 }
 
+personality_config = {
+    'avgn': {'order': 3},
+}
+
 personalities = {
     # Aliases...:
     'nikkybot': 'nikky',
