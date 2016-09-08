@@ -245,15 +245,14 @@ class NikkyAI(object):
                 raise e
 
     def markov_reply(self, msg, context='', failmsg=None, add_response=True,
-                     max_lf_l=None, max_lf_r=None,
-                     order=DEFAULT_MARKOV_LENGTH):
+                     max_lf_l=None, max_lf_r=None, order=None):
         """Generate a reply using Markov chaining. Check and avoid repeated
         responses.  If unable to generate a suitable response, return a random
         Markov sentence if failmsg is None; else return failmsg.  Add new
         response to self.last_replies if add_response.  Do
         check_output_response().
         """
-        order = order if order else DEFAULT_MARKOV_LENGTH
+        order = order if order else self.default_markov_length
         max_lf_l, max_lf_r = self.get_max_lf(max_lf_l, max_lf_r)
         nick, msg = self.filter_input(msg)
         msg = self.filter_markov_input(nick, msg)
@@ -319,12 +318,11 @@ class NikkyAI(object):
             return failmsg
 
     def random_markov(self, src_nick='', add_response=True,
-                      max_lf_l=None, max_lf_r=None,
-                      order=DEFAULT_MARKOV_LENGTH):
+                      max_lf_l=None, max_lf_r=None, order=None):
         """Pick any random Markov-chained sentence and output it.  Do
         check_output_response().
         """
-        order = order if order else DEFAULT_MARKOV_LENGTH
+        order = order if order else self.default_markov_length
         max_lf_l, max_lf_r = self.get_max_lf(max_lf_l, max_lf_r)
         generic_words = (
             'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have',
@@ -360,13 +358,13 @@ class NikkyAI(object):
 
     def markov_forward(self, chain, failmsg='', src_nick='',
                        max_lf=None, force_completion=True,
-                       context='', order=DEFAULT_MARKOV_LENGTH):
+                       context='', order=None):
         """Generate sentence from the current chain forward only and not
         backward.  Do NOT do check_output_response().  Produce the best
         matching response if 'context' string is given.  Spend no more than
         'search_time' seconds looking for a response.
         """
-        order = order if order else DEFAULT_MARKOV_LENGTH
+        order = order if order else self.default_markov_length
         if max_lf is None:
             max_lf = self.max_lf_r
         if len(chain) > 5:
@@ -636,6 +634,11 @@ class NikkyAI(object):
             max_lf_r = self.max_lf_r
         return max_lf_l, max_lf_r
 
+    def _set_personality_config(self, personality):
+        cfg = personalitiesrc.personality_config.get(personality, {})
+
+        self.default_markov_length = cfg.get('order', DEFAULT_MARKOV_LENGTH)
+
     def set_personality(self, personality):
         """Change Markov personality to given table name in Markov database"""
         personality = self.normalize_personality(personality)
@@ -643,6 +646,7 @@ class NikkyAI(object):
             self.markov = markov.PostgresMarkov(self.dbconn, personality,
                                                 case_sensitive=False)
             self.personality = personality
+            self._set_personality_config(personality)
         else:
             raise Bad_personality_error
 
