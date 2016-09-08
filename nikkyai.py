@@ -180,6 +180,7 @@ class NikkyAI(object):
             else:
                 self.search_time = search_time_save
                 return out
+        self.search_time = search_time_save
         raise Dont_know_how_to_respond_error
 
     def _pattern_reply(self, msg, context):
