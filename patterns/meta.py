@@ -81,7 +81,7 @@ patterns = (
         'tev told me to\nProbably code change or even reboot\nwho knows'
     ), True
 ),
-(r"\b(({0}'?s|your) source code|the source code (to|of|for) (you|{0}))\b", -1,
+(r"\b(({0}'?s|your) source ?(code)?|the source ?(code )?(to|of|for) (you|{0}))\b", -15,
     R(
         '{0}: https://github.com/ticalc-travis/nikkybot',
     ), True
