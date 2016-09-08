@@ -9,6 +9,8 @@
 
 # Number of previous spoken IRC lines to include in Markov context data
 CONTEXT_LINES = 5
+# Context-scoring relevance weight for lines highlighting personality
+CONTEXT_HIGHLIGHT_BIAS = 100
 # Frequency to update the progress indicator
 PROGRESS_EVERY = 5000
 
@@ -67,7 +69,7 @@ class TrainingCorpus(object):
     def _update_context(self):
         spoken = self.markov.str_to_chain('\n'.join(self.spoken_group))
         for cline in self.context_group:
-            bias = 100 if self.is_nick(cline) else 1
+            bias = CONTEXT_HIGHLIGHT_BIAS if self.is_nick(cline) else 1
             context = self.markov.str_to_chain(cline)
             for cword in context:
                 for sword in spoken:
