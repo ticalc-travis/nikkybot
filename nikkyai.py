@@ -262,8 +262,7 @@ class NikkyAI(object):
         nick, msg = self.filter_input(msg)
         msg = self.filter_markov_input(nick, msg)
         if not context:
-            self.printdebug('[markov_reply] No context given, using input')
-            context = '{} {}'.format(nick, msg)
+            self.printdebug('[markov_reply] No context given')
 
         words = self.markov.str_to_chain(msg)
         best_score, best_resp = 0, ''
