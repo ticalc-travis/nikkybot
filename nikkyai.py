@@ -32,6 +32,10 @@ rebuild(markov)        # Update in case of dynamic reload
 
 DEFAULT_MARKOV_LENGTH=4         # Valid values:  1-4
 
+CONTEXT_CHAIN_BIAS=100          # Adjust response-ranking priority of chain
+                                # length vs. context score (higher numbers
+                                # favor longer chain length more)
+
 #------------------------------------------------------------------------------
 
 
@@ -301,11 +305,12 @@ class NikkyAI(object):
                             # candidate response
                             score = self.markov.get_context_score(candidate,
                                                                   context)
+                            weighted_score = score + (o-1)*CONTEXT_CHAIN_BIAS
                             self.printdebug(
-                                '[markov_reply] Score: {}, Candidate: {}'.format(
-                                    score, repr(candidate)))
+                                '[markov_reply] Score: {}, Weighted: {}, Candidate: {}'.format(
+                                    score, weighted_score, repr(candidate)))
                             if score >= best_score:
-                                best_score, best_resp = score, candidate
+                                best_score, best_resp = weighted_score, candidate
         except ResponseTimeUp:
             pass
 
