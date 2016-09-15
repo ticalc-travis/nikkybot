@@ -91,17 +91,6 @@ class NikkyBot(irc.IRCClient, Sensitive):
             length = self.opts.max_line_length
         irc.IRCClient.msg(self, target, message, length)
 
-    def nickChanged(self, nick):
-        """Callback on IRC nick change.
-
-        NikkyAIs in self.nikkies should be notified of their nicks
-        when actually called upon to generate a response, rather than
-        here.  Since self.nikkies uses lazy instintiation, doing it
-        just on nick change events would mean that instances created
-        afterward would miss out on the memo.
-        """
-        irc.IRCClient.nickChanged(self, nick)
-
     def alterCollidedNick(self, nickname):
         """Resolve nick conflicts and set up automatic preferred nick
         reclaim task"""
@@ -570,19 +559,33 @@ class NikkyBot(irc.IRCClient, Sensitive):
         return failure
 
     def do_AI_reply(self, msg, target, silent_errors=False, log_response=True,
-            no_delay=False):
+                    no_delay=False):
         """Output an AI response for the given msg to target (user or channel)
         trapping for exceptions"""
+        self._do_AI_reply(msg, target, self.opts.direct_response_time,
+                          'reply', silent_errors, log_response, no_delay)
 
+    def do_AI_maybe_reply(self, msg, target, silent_errors=True,
+                          log_response=False):
+        """Occasionally reply to the msg given, or say a random remark"""
+        self._do_AI_reply(msg, target, self.opts.random_response_time,
+                          'decide_remark', silent_errors, log_response, False)
+
+    def _do_AI_reply(self, msg, target, search_time, reply_method_name,
+                     silent_errors, log_response, no_delay):
         nikky = self.nikkies[irc_lower(target)]
-        nikky.search_time = self.opts.direct_response_time
+        nikky.search_time = search_time
         context = ' '.join(nikky.last_lines)
 
-        # Make sure it knows its correct nick
+        # Notify NikkyAIs in self.nikkies of the current nick.  Since
+        # self.nikkies uses lazy instintiation, doing it just on nick
+        # change events rather than here would mean that instances
+        # created afterward would miss out on the memo.
         nikky.nick = self.nickname
 
+        m = getattr(nikky, reply_method_name)
         try:
-            reply = nikky.reply(msg, context=context).split('\n')
+            reply = m(msg, context=context).split('\n')
         except Exception:
             self.report_error(target, silent_errors)
         else:
@@ -590,28 +593,6 @@ class NikkyBot(irc.IRCClient, Sensitive):
                 print('privmsg to {}: {}'.format(target, repr(reply)))
             if reply:
                 self.output_timed_msg(target, reply, no_delay=no_delay)
-
-    def do_AI_maybe_reply(self, msg, target, silent_errors=True,
-            log_response=False):
-        """Occasionally reply to the msg given, or say a random remark"""
-
-        nikky = self.nikkies[irc_lower(target)]
-        nikky.search_time = self.opts.random_response_time
-        context = ' '.join(nikky.last_lines)
-
-        # Make sure it knows its correct nick
-        self.nikkies[irc_lower(target)].nick = self.nickname
-
-        try:
-            reply = self.nikkies[irc_lower(target)].decide_remark(
-                msg, context=context).split('\n')
-        except Exception:
-            self.report_error(target, silent_errors)
-        else:
-            if reply and log_response:
-                print('privmsg response to {}: {}'.format(target, repr(reply)))
-            if reply:
-                self.output_timed_msg(target, reply)
 
     def output_timed_msg(self, target, msg, no_delay=False):
         """Output msg paced at a simulated typing rate.  msg will be split
