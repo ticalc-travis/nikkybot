@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Simple Markov chain implementation
-# Copyright ©2012-2014 Travis Evans
+# Copyright ©2012-2016 Travis Evans
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
