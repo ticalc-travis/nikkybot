@@ -583,6 +583,9 @@ patterns = (
         Markov('best {7}'),
         Markov('superior {7}'),
         Markov('coolest {7}'),
+        Markov('only {7}'),
+        Markov('greatest {7}'),
+        Markov('most awesome {7}'),
     ),
 ),
 
