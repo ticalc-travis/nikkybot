@@ -92,9 +92,14 @@ class NikkyBot(irc.IRCClient, Sensitive):
         irc.IRCClient.msg(self, target, message, length)
 
     def nickChanged(self, nick):
-        """Update NikkyAIs with new nick"""
-        # FIXME: Huh? Nothing's actually being done here. Are NikkyAIs being
-        # updated *at all*?
+        """Callback on IRC nick change.
+
+        NikkyAIs in self.nikkies should be notified of their nicks
+        when actually called upon to generate a response, rather than
+        here.  Since self.nikkies uses lazy instintiation, doing it
+        just on nick change events would mean that instances created
+        afterward would miss out on the memo.
+        """
         irc.IRCClient.nickChanged(self, nick)
 
     def alterCollidedNick(self, nickname):
