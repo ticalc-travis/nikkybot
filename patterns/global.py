@@ -577,15 +577,13 @@ patterns = (
 ),
 (r'(what|who)(|.s|s)? (is )?(the|your|{0})(.s|s)? (favorite|favorit|preferred) (.*?)( of choice)?$', -5,
     R(
-        # TODO: This needs an exact-match Markov() function (like Markov_forward
-        # but with backward completion too) to work better
-        Markov('favorite {7}'),
-        Markov('best {7}'),
-        Markov('superior {7}'),
-        Markov('coolest {7}'),
-        Markov('only {7}'),
-        Markov('greatest {7}'),
-        Markov('most awesome {7}'),
+        Markov_backward('favorite {7}'),
+        Markov_backward('best {7}'),
+        Markov_backward('superior {7}'),
+        Markov_backward('coolest {7}'),
+        Markov_backward('only {7}'),
+        Markov_backward('greatest {7}'),
+        Markov_backward('most awesome {7}'),
     ),
 ),
 

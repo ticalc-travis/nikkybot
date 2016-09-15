@@ -361,27 +361,44 @@ class NikkyAI(object):
                     continue
         return "I don't know what to say!"
 
-    def markov_forward(self, chain, failmsg='', src_nick='',
-                       max_lf=None, force_completion=True,
-                       context='', order=None):
+    def markov_forward(self, chain, failmsg='', src_nick='', max_lf=None,
+                       force_completion=True, context='', order=None):
         """Generate sentence from the current chain forward only and not
         backward.  Do NOT do check_output_response().  Produce the best
         matching response if 'context' string is given.  Spend no more than
         'search_time' seconds looking for a response.
         """
+        return self._markov_one_way(True, chain, failmsg, src_nick, max_lf,
+                                    force_completion, context, order)
+
+    def markov_backward(self, chain, failmsg='', src_nick='', max_lf=None,
+                        force_completion=True, context='', order=None):
+        """Generate sentence from the current chain backward only and not
+        forward.  Do NOT do check_output_response().  Produce the best
+        matching response if 'context' string is given.  Spend no more than
+        'search_time' seconds looking for a response.
+        """
+        return self._markov_one_way(False, chain, failmsg, src_nick, max_lf,
+                                    force_completion, context, order)
+
+    def _markov_one_way(self, is_forward, chain, failmsg, src_nick, max_lf,
+                        force_completion, context, order):
         order = order if order else self.default_markov_length
         if max_lf is None:
-            max_lf = self.max_lf_r
+            max_lf = self.max_lf_r if is_forward else self.max_lf_l
         if len(chain) > 5:
             chain = chain[:5]
-            self.printdebug('[markov_forward] Warning: chain length too long; truncating')
+            self.printdebug(
+                '[_markov_one_way] Warning: chain length too long; truncating')
         if not context:
-            self.printdebug('[markov_forward] No context given')
+            self.printdebug('[_markov_one_way] No context given')
         best_score, best_resp = 0, failmsg
         start_time = time()
         while True:
+            m = (self.markov.sentence_forward if is_forward
+                 else self.markov.sentence_backward)
             try:
-                candidate = self.markov.sentence_forward(
+                candidate = m(
                     chain, length=order,
                     allow_empty_completion=not force_completion, max_lf=max_lf)
             except KeyError:
@@ -390,7 +407,7 @@ class NikkyAI(object):
                 if context:
                     score = self.markov.get_context_score(candidate, context)
                     self.printdebug(
-                        '[markov_forward] Score: {}, Candidate: {}'.format(
+                        '[_markov_one_way] Score: {}, Candidate: {}'.format(
                             score, repr(candidate)))
                     if (score >= best_score):
                         best_score, best_resp = score, candidate

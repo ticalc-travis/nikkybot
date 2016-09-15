@@ -81,6 +81,9 @@ class Markov_forward(object):
         self.force_completion = force_completion
         self.order = order
 
+    def get_markov_func(self, nikkyai):
+        return nikkyai.markov_forward
+
     def get(self, nikkyai, context='', fmt=None):
         if fmt is None:
             fmt = []
@@ -91,12 +94,16 @@ class Markov_forward(object):
             failmsg = failmsg.format(*fmt)
         chain = nikkyai.markov.str_to_chain(
             self.string.format(*fmt), wildcard='*')
-        return nikkyai.markov_forward(chain, failmsg, src_nick=fmt[0],
-                                      max_lf=self.max_lf,
-                                      force_completion=self.force_completion,
-                                      context=context,
-                                      order=self.order)
+        mf = self.get_markov_func(nikkyai)
+        return mf(chain, failmsg, src_nick=fmt[0], max_lf=self.max_lf,
+                  force_completion=self.force_completion,
+                  context=context, order=self.order)
 
+class Markov_backward(Markov_forward):
+    """Return a Markov chain from word or chain backward"""
+
+    def get_markov_func(self, nikkyai):
+        return nikkyai.markov_backward
 
 class Manual_markov(object):
     """Return a Markov-generated phrase of the given order"""
