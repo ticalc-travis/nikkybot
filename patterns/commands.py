@@ -21,28 +21,6 @@ from _table import *
 # Special commands
 
 
-def random_nikkysim(nikkyai, context, fmt):
-    return nikkyai.nikkysim(strip_number=False)[0]
-
-
-def nikkysim_no(nikkyai, context, fmt):
-    w, x, y = fmt[1], fmt[2], fmt[3]
-    if w == None:
-        w = 'B-'
-    if y == None:
-        y = '-0'
-    x, y = int(x), int(y.strip('-'))
-    if w == 'A-' or w == 'a-':
-        return "Only tev's TI-89 NikkySim can do the 'A-' quotes"
-    elif w == 'B-' or w == 'b-' or w is None:
-        if (x >= 0 and x <= 4294967295) and (y >= 0 and y <= 9999):
-            return nikkyai.nikkysim(False, (x, y))[0]
-        else:
-            return 'Sayings go from 0-0 to 4294967295-9999, champ'
-    else:
-        return "No such thing as a {}type quote yet".format(w)
-
-
 def random_number(nikkyai, context, fmt):
     from random import randint
     c = randint(0, 3)
@@ -113,12 +91,6 @@ patterns = (
 (r"(^\W*help|(what'?s|who'?s|what is|who is|what are|who are|wtf is|wtf are) (a |an |the )?(you|{0})\??$|(what'?s|what does) (you|{0}) do(\W|$))", -99,
     S("I'm a Markov-chain bot representing Nikky. https://raw.githubusercontent.com/ticalc-travis/nikkybot/master/README"),
 True),
-
-# NikkySim
-(r'\b(random (quote|saying)|nikkysim)\b', -2,
-    E(random_nikkysim)
-),
-(r'(?<![0-9])#([A-Za-z]-)?([0-9]+)(-([0-9]+))?', -2, E(nikkysim_no), True),
 
 # Random number
 (r'\brandom number\b', -2, E(random_number)),

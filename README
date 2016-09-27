@@ -19,23 +19,6 @@ not necessary to highlight it in this case.
 Commands/special features
 -------------------------
 
-nikkysim
-random quote
-random saying
-
-One of these lines will make the bot produce a sentence generated from NikkySim
-(http://www.ticalc.org/archives/files/fileinfo/450/45051.html).
-
-
-#xxxxx-yyyy
-
-Produces the given B-type NikkySim quote by its number.
-
-Example:
-#1234-56
-  - Produces “Don't failings curse?”
-
-
 personas
 personalities
 

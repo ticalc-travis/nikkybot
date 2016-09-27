@@ -135,9 +135,9 @@ class NikkyAI(object):
         return ''
 
     def remark(self, msg='', add_response=True):
-        """Choose between a context-less predefined generic remark or a
-        NikkySim remark, avoiding repeats in short succession.  Add new
-        response to self.last_replies if add_response.  Do
+        """Choose a context-less predefined generic remark, avoiding
+        repeats in short succession.  Add new response to
+        self.last_replies if add_response.  Do
         check_output_response().
         """
         for i in xrange(self.recurse_limit):
@@ -448,23 +448,6 @@ class NikkyAI(object):
             return '{}: Markov chain not found'.format(repr(chain))
         else:
             return response
-
-    def nikkysim(self, strip_number=False, saying=None):
-        """Return NikkySim saying.  saying is the saying number as a tuple
-        (e.g. (1234,5678)); None selects random saying.  Don't start output
-        with saying number if strip_number is True.  Output
-        (msg, saying_tuple).  Do NOT do check_output_response().
-        """
-        if saying is None:
-            x, y = randint(0, 4294967295), randint(0, 9999)
-        else:
-            x, y = saying
-        out = subprocess.check_output(['nikky', '{}-{}'.format(x, y)])
-        out = self.dehighlight_sentence(out)
-        if strip_number:
-            return (out.split(': ')[1].rstrip(), (x, y))
-        else:
-            return (out.rstrip(), (x, y))
 
     def _add_state_list(self, item, container, debug_msg):
         if item not in container:
