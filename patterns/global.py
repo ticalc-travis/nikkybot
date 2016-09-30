@@ -539,6 +539,9 @@ patterns = (
         Markov_forward("I'm actually"),
     )
 ),
+# TODO: There are three of these almost-identical, overly-complicated
+# regexps.  Maybe break them up into smaller pieces and then tie them
+# together with Recurse('***some flag***') or something
 (r"\b(?:what do you (?:think|thing)|what do you know|tell us about|tell me about|how (?:do|did|will) you feel|(?:what is |what'?s |what are )?your (?:thought|thoughts|opinion|opinions|idea|ideas)) (?:about |of |on )(?:a |the |an )?(.*?)\W?$", -3,
     R(
         Markov_forward('{1} is'),
@@ -552,7 +555,7 @@ patterns = (
     ),
 ),
 (r"\bis (.*?) (any good|good)", 0, Recurse('what do you think of {1}')),
-(r"^(what do you (think|thing)|what do you know|tell us about|tell me about|how (do|did|will) you feel|(what is|what'?s|what are) your (thought|thoughts|opinion|opinions|idea|ideas)) (about |of |on )me\W?$", -3,
+(r"\b(?:what do you (?:think|thing)|what do you know|tell us about|tell me about|how (?:do|did|will) you feel|(?:what is |what'?s |what are )?your (?:thought|thoughts|opinion|opinions|idea|ideas)) (?:about |of |on )me\W?$", -3,
     R(
         Markov_forward('you'),
         Recurse('what do you think of {0}')
