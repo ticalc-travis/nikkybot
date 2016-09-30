@@ -562,7 +562,7 @@ patterns = (
     Recurse('what do you think of {2}')
 ),
 (r"\btell (me|us) about (.*)", -2, Recurse('{2}')),
-(r'(what|who)(|.s|s)? (is )?(your|{0})(.s|s)? (.*?)$', -5,
+(r'(what|who)(|.s|s)? (is )?(your|{0})(.s|s)? (.*?)$', -2,
     R(
         Markov_forward('my {6} is'),
         Markov_forward('my {6} was'),
