@@ -555,7 +555,7 @@ patterns = (
     ),
 ),
 (r"\bis (.*?) (any good|good)", 0, Recurse('what do you think of {1}')),
-(r"\b(?:what do you (?:think|thing)|what do you know|tell us about|tell me about|how (?:do|did|will) you feel|(?:what is |what'?s |what are )?your (?:thought|thoughts|opinion|opinions|idea|ideas)) (?:about |of |on )me\W?$", -3,
+(r"\b(?:what do you (?:think|thing)|what do you know|tell us about|tell me about|how (?:do|did|will) you feel|(?:what is |what'?s |what are )?your (?:thought|thoughts|opinion|opinions|idea|ideas)) (?:about |of |on )me\W?$", -4,
     R(
         Markov_forward('you'),
         Recurse('what do you think of {0}')
