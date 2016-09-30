@@ -94,6 +94,10 @@ class Markov_forward(object):
             failmsg = failmsg.format(*fmt)
         chain = nikkyai.markov.str_to_chain(
             self.string.format(*fmt), wildcard='*')
+        if not chain:
+            # Can't pass empty chain to markov_forward/markov_backward,
+            # so fail instead
+            return failmsg
         mf = self.get_markov_func(nikkyai)
         return mf(chain, failmsg, src_nick=fmt[0], max_lf=self.max_lf,
                   force_completion=self.force_completion,
