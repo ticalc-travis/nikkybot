@@ -539,28 +539,42 @@ patterns = (
         Markov_forward("I'm actually"),
     )
 ),
-# TODO: There are three of these almost-identical, overly-complicated
-# regexps.  Maybe break them up into smaller pieces and then tie them
-# together with Recurse('***some flag***') or something
-(r"\b(?:what do you (?:think|thing)|what do you know|tell us about|tell me about|how (?:do|did|will) you feel|(?:what is |what'?s |what are )?your (?:thought|thoughts|opinion|opinions|idea|ideas)) (?:about |of |on )(?:a |the |an )?(.*?)\W?$", -3,
+
+(r"\b(?:what do you know|talk about|tell (?:us |me )?about) (an? |the )?(.*?)\W?$", -3,
+    Recurse('what do you think of {1}')),
+(r"\b(?:what|how) do you feel about (?:an? |the )?(.*?)\W?$", -3,
+    Recurse('what do you think of {1}')),
+(r"\b(?:what'?s |what'?re |what is |what are )?your (?:thought|thoughts|opinion|opinions|idea|ideas) (?:about |of |on )(?:an? |the )?(.*?)\W?$", -3,
+    Recurse('what do you think of {1}')),
+(r"\bwhat do you (?:think|thing) (?:about|of) (?:an? |the )?(.*?)\W?$", -3,
     R(
         Markov_forward('{1} is'),
-        Markov_forward('{1}'),
-        Markov_forward('{1} is'),
-        Markov_forward('{1}'),
-        Markov_forward('{1} is'),
+        Markov_forward('{1} are'),
         Markov_forward('{1}'),
         Markov_forward('better than'),
         Markov_forward('worse than'),
+        Markov_forward('I think {1}'),
+        Markov_forward('I bet {1}'),
+        Markov_forward('I like {1}'),
+        Markov_forward('I love {1}'),
+        Markov_forward('I hate {1}'),
+        Markov_forward('I dislike {1}'),
+        Markov_forward('I bet * {1}'),
+        Markov_forward('I think * {1}'),
+        Markov_forward('I like * {1}'),
+        Markov_forward('I love * {1}'),
+        Markov_forward('I hate * {1}'),
+        Markov_forward('I dislike * {1}'),
+        Recurse('***try_mimic {1}***'),
     ),
 ),
-(r"\bis (.*?) (any good|good)", 0, Recurse('what do you think of {1}')),
-(r"\b(?:what do you (?:think|thing)|what do you know|tell us about|tell me about|how (?:do|did|will) you feel|(?:what is |what'?s |what are )?your (?:thought|thoughts|opinion|opinions|idea|ideas)) (?:about |of |on )me\W?$", -4,
+(r"\bwhat do you (?:think|thing) (?:about |of )(me|us)\W?$", -4,
     R(
-        Markov_forward('you'),
-        Recurse('what do you think of {0}')
+        Recurse('what do you think of {0}'),
+        Recurse('what do you think of you'),
     )
 ),
+
 (r"^(how is|how'?s|do you like|you like|you liek) (.*?)\W?$", -3,
     Recurse('what do you think of {2}')
 ),

@@ -177,5 +177,5 @@ patterns = (
 (r"\b(birthday|birthdate|how old is {0}|how old are you|what'?s your age|what is your age|what'?s {0}(.s|s)? age|what is {0}(.s|s)? age|when were {0} born|when were you born)", -3,
     R('My birthday is October 30, 2012'), True,
 ),
-(r"\b(?:what do you (?:think|thing)|what do you know|tell us about|tell me about|how (?:do|did|will) you feel|(?:what is |what'?s |what are )?your (?:thought|thoughts|opinion|opinions|idea|ideas)) (?:about |of |on )(?:a |the |an )?(.*?)\W?$", -3, E(try_mimic), True),
+(r"\*\*\*try_mimic (.*?)\*\*\*", -3, E(try_mimic), True),
 )
