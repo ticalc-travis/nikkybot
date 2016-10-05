@@ -264,9 +264,12 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
     def preparse_msg(self, user, raw_msg):
         """Check message for certain IRC bridge bots; separate out correct
-        nickname and return it along with the message."""
+        nickname and return the message with non-Unicode characters
+        replaced so they won't cause later problems."""
         nick, host = user.split('!', 1)
         msg = raw_msg.strip()
+        msg = msg.decode(encoding='utf8', errors='replace').encode(
+            encoding='utf8')
 
         # Parse/convert saxjax's messages
         if hostmask_match('saxjax!*@*', user):

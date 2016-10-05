@@ -576,18 +576,12 @@ class NikkyAI(object):
     def filter_markov_input(self, sourcenick, msg):
         """Perform transformations on input before it goes to Markov
         functions:
-        Replace non-UTF characters.
         Replace occurences of own nick with 'sourcenick' (if 'sourcenick' is
         non-null).
         """
-        #!FIXME! Temporary workaround (?) for Twisted's Unicode crap.
-        #  To do:  Something slightly less insane?
-        new_msg = msg.decode(encoding='utf8', errors='replace').encode(
-            encoding='utf8', errors='replace')
         if sourcenick:
-            new_msg = re.sub(r'\b' + re.escape(self.nick) + r'\b', sourcenick,
-                             new_msg)
-        return new_msg
+            msg = re.sub(r'\b' + re.escape(self.nick) + r'\b', sourcenick, msg)
+        return msg
 
     def filter_markov_output(self, sourcenick, msg):
         """Perform transformations on output for Markov functions."""
