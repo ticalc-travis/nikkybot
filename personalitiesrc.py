@@ -16,6 +16,31 @@
 # }
 
 personality_regexes = {
+    'battlesquid':
+        ('squid',
+         'battlesquid',
+         None,
+         None),
+    'calcmeister':
+        ('cmeister',
+         'calcmeister',
+         None,
+         None),
+    'nik':
+        ('chessy|nik$',
+         'chessy',
+         None,
+         None),
+    'pt':
+        ('p_t|pt_',
+         'pt_',
+         None,
+         None),
+    'seegreatness':
+        (None,
+         'seegreatness',
+         None,
+         None),
     'avgn':
         (r'AVGN',
          None,
