@@ -3,4 +3,4 @@
 set -e
 
 chat=$(make-bot-chat.py $1 $2)
-echo "$chat" | pastebinit -a nikkybot -b http://paste2.org
+echo "$chat" | pastebinit -a nikkybot -b https://paste2.org
