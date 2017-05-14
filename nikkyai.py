@@ -661,7 +661,7 @@ class NikkyAI(object):
     def normalize_personality(self, personality):
         """Reduce personality to case/punctuation-insensitive form;
         resolve aliases to primary personality name"""
-        personality = personality.replace('·', '')
+        personality = personality.replace(self._get_munge_char(), '')
         try:
             personality = self.markov.conv_key(personality)
         except AttributeError:
@@ -754,6 +754,9 @@ class NikkyAI(object):
                 '[_check_state_table] State save table does not exist; creating it')
             self.dbconn.commit()
 
+    def _get_munge_char(self):
+        return '\xe2\x80\x8b'
+
     def munge_word(self, word):
         """Insert a symbol character into the given word (e.g., for saying
         nicks without highlighting people)
@@ -761,7 +764,7 @@ class NikkyAI(object):
         pos = randint(1, min(3, len(word)-1))
             # Make sure character is inserted within first 4 chars to properly
             # support Sax's highlighting, which only matches first 4 chars
-        word = word[0:pos] + '\xe2\x80\x8b' + word[pos:]
+        word = word[0:pos] + self._get_munge_char() + word[pos:]
         return word
 
     def dehighlight_sentence(self, sentence):
