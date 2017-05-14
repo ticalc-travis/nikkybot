@@ -16,6 +16,56 @@
 # }
 
 personality_regexes = {
+    'mateoc':
+        ('mateoc',
+         'mateoconlechuga',
+         None,
+         None),
+    'calebj':
+        ('caleb_j',
+         'caleb_j',
+         None,
+         None),
+    'thelastmillennial':
+        (None,
+         'thelastmillennial',
+         None,
+         None),
+    'theprogrammingcube':
+        (None,
+         'theprogrammingcube',
+         None,
+         None),
+    'oldmud0':
+        ('oldmud0',
+         'oldmud0',
+         None,
+         None),
+    'little':
+        ('little',
+         'little',
+         None,
+         None),
+    'jacobkuschel':
+        (None,
+         'jacob_kuschel',
+         None,
+         None),
+    'iphoenix':
+        (None,
+         '_iphoenix_',
+         None,
+         None),
+    'michael23b':
+        (None,
+         'michael2_3b',
+         None,
+         None),
+    'pieman':
+        ('pieman',
+         'pieman7373',
+         None,
+         None),
     'battlesquid':
         ('squid',
          'battlesquid',
@@ -225,6 +275,8 @@ personality_regexes = {
 
 personality_config = {
     'avgn': {'order': 3},
+    'nik': {'order': 3},
+    'iphoenix': {'order': 3},
 }
 
 personalities = {
@@ -251,7 +303,10 @@ personalities = {
     'netham': 'netham45',
     'ephraim': 'ephraimb',
     'kinginfinity': 'kinfinity',
-    'nixon': 'richardnixon'
+    'nixon': 'richardnixon',
+    'squid': 'battlesquid',
+    'chessy': 'nik',
+    'kermphd': 'kerm',
 }
 
 # Fill in primary personas...
