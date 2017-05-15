@@ -654,9 +654,18 @@ class NikkyAI(object):
         return self.personality
 
     def get_personalities(self):
-        """Return list of available personalities"""
+        """Return list of available personalities (wrapper around
+        personalitiesrc.py function)
+        """
         reload(personalitiesrc)
-        return personalitiesrc.personality_regexes.keys()
+        return personalitiesrc.get_personality_list()
+
+    def get_personalities_text(self):
+        """Return human-readable text for personalities list (wrapper around
+        personalities.py function)
+        """
+        reload(personalitiesrc)
+        return personalitiesrc.get_personality_list_text()
 
     def normalize_personality(self, personality):
         """Reduce personality to case/punctuation-insensitive form;

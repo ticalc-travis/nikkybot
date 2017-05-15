@@ -313,3 +313,12 @@ personalities = {
 for p in personality_regexes:
     personalities[p] = None
 
+def get_personality_list_text():
+    """Return a human-readable string of available personalities, or a
+    location to find them
+    """
+    return 'Personality list: https://github.com/ticalc-travis/nikkybot/wiki/Personality-list'
+
+def get_personality_list():
+    """Return a sequence of available personality names"""
+    return personality_regexes.keys()

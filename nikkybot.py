@@ -31,6 +31,7 @@ from twisted.words.protocols import irc
 from twisted.internet import reactor, threads
 
 import nikkyai
+import personalitiesrc
 
 
 def hostmask_match(testmask, knownmask):
@@ -484,8 +485,8 @@ class NikkyBot(irc.IRCClient, Sensitive):
                     not nikky.is_personality_valid(parms[1])):
                 self.call_later(2, self.msg, sender, usage_msg)
                 self.call_later(
-                    'Say "personalities" for a list of personalities')
                     4, self.msg, sender,
+                    personalitiesrc.get_personality_list_text())
             else:
                 nick1 = nikky.normalize_personality(parms[0])
                 nick2 = nikky.normalize_personality(parms[1])

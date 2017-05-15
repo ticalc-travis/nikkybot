@@ -40,7 +40,8 @@ def mimic(nikkyai, context, fmt):
     try:
         nikkyai.set_personality(persona)
     except Bad_personality_error:
-        out = "No such personality '{}'; say \"{}: personalities\" to get the list".format(persona, nikkyai.nick)
+        out = "No such personality '{}'\n{}".format(
+            persona, nikkyai.get_personalities_text())
     else:
         in_msg = '<{}> {}'.format(src_nick, msg)
         out = ('"' + nikkyai.reply(
@@ -73,12 +74,7 @@ def mimic_random(nikkyai, context, fmt):
 
 
 def list_personas(nikkyai, context, fmt):
-    personas = [nikkyai.munge_word(p) for p in nikkyai.get_personalities()]
-    return ('List of personalities: \n{}\n'
-            'Say "{}: mimic <personality> <message>" to "talk" to that '
-            'personality.\n'
-            'Talk to tev to request a new personality based on '
-            'someone.\n'.format(', '.join(sorted(personas)), nikkyai.nick))
+    return nikkyai.get_personalities_text()
 
 
 patterns = (
@@ -101,9 +97,6 @@ True),
 (r'^\W*(mimic|impersonate|act like|imitate)\s*$', -98, E(mimic_random), True),
 (r'^\W*(mimic|impersonate|act like|imitate)\W+(\S+)(?: |$)(.*)', -98, E(mimic), True),
 (r'^\W*(mimic|impersonate|act like|imitate)\W+(someone|anyone|somebody|anybody|random|rand)(?: |$)(.*)', -99, E(mimic_random), True),
-(r'\b(markovmix|markov bot)', -99,
-    R('I can impersonate people\nSay "?personalities" to me and I\'ll tell you more'),
-),
 (r'^\W*(personas|personalities)\b', -99, E(list_personas), True),
 
 # Markov
