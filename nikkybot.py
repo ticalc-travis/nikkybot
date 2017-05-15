@@ -482,21 +482,21 @@ class NikkyBot(irc.IRCClient, Sensitive):
             if (len(parms) != 2 or
                     not nikky.is_personality_valid(parms[0]) or
                     not nikky.is_personality_valid(parms[1])):
-                self.call_later(2, self.notice, src_nick, usage_msg)
+                self.call_later(2, self.msg, sender, usage_msg)
                 self.call_later(
-                    4, self.notice, src_nick,
                     'Say "personalities" for a list of personalities')
+                    4, self.msg, sender,
             else:
                 nick1 = nikky.normalize_personality(parms[0])
                 nick2 = nikky.normalize_personality(parms[1])
                 if self.user_threads >= self.opts.max_user_threads:
                     self.call_later(
-                        2, self.notice, src_nick,
+                        2, self.msg, sender,
                         "Sorry, I'm too busy at the moment. Please try again "
                         "later!")
                 else:
                     self.call_later(
-                        2, self.notice, src_nick,
+                        2, self.msg, sender,
                         "Generating the bot chat may take a while... I'll let "
                         "you know when it's done!")
                     d = threads.deferToThread(self.exec_bot_chat, src_nick,
@@ -555,7 +555,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         return nick, channel, out
 
     def bot_chat_error(self, failure, nick):
-        self.call_later(2, self.notice, nick,
+        self.call_later(2, self.msg, nick,
                           'Sorry, something went wrong. Tell tev!')
         self.user_threads -= 1
         assert(self.user_threads >= 0)
