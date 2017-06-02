@@ -16,6 +16,11 @@
 # }
 
 personality_regexes = {
+    'botboy3000':
+        (None,
+         'botboy3000',
+         None,
+         None),
     'mateoc':
         ('mateoc',
          'mateoconlechuga',
@@ -57,7 +62,7 @@ personality_regexes = {
          None,
          None),
     'michael23b':
-        (None,
+        ('michaelb',
          'michael2_3b',
          None,
          None),
