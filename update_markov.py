@@ -312,6 +312,7 @@ def update(pname, reset):
                                     nick.lower().startswith('wb') or
                                     nick.lower().startswith('i|') or
                                     nick.lower().startswith('l|') or
+                                    nick.lower().startswith('j|') or
                                     nick.lower().startswith('yukitg')):
                     m = re.match(r'^(?:\(.*?\))?<(.*?)> (.*)', msg, re.I)
                 else:
