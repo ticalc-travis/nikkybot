@@ -16,6 +16,16 @@
 # }
 
 personality_regexes = {
+    'thegeekyscientist':
+        (None,
+         'thegeekyscientist',
+         None,
+         None),
+    'hooloovoo':
+        ('hooloovoo',
+         'hooloovoo',
+         None,
+         None),
     'botboy3000':
         (None,
          'botboy3000',
