@@ -1,13 +1,2 @@
 __pycache__/
-funstuff/
-*.log
 *.pyc
-*.[oa]
-*~
-*.swp
-\#*#
-install.sh
-manual_corpus/
-misc_irc_lines.txt
-nikky
-todo
