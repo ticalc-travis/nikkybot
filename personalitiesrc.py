@@ -312,6 +312,7 @@ personalities = {
     'squid': 'battlesquid',
     'chessy': 'nik',
     'kermphd': 'kerm',
+    'mateoconlechuga': 'mateoc',
 }
 
 # Fill in primary personas...
