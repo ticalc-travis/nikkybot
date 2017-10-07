@@ -9,10 +9,8 @@ CONTEXT_HIGHLIGHT_BIAS = 100
 PROGRESS_EVERY = 5000
 
 import argparse
-import os
 import re
 from collections import deque, Counter
-from datetime import datetime
 from sys import stdin, stdout, exit
 import psycopg2
 
