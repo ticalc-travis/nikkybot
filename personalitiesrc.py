@@ -64,7 +64,7 @@ personality_regexes = {
     'ej': 'e-j|e-jl|el-j',
     'cricketb': 'cricket_b|cricketb|chirp_b|truepika',
     'glk': 'glk',
-    'kerm': 'kerm|kermmartian',
+    'kerm': 'kerm(?!ut2ks)|kermmartian',
     'nikky': '((nikky|allyn)(?!(?:bot|test))|allynfolksjr)',
 }
 
