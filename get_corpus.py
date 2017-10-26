@@ -65,6 +65,15 @@ def output_corpus(pname, reset, update_datestamp):
 
         # Parse old logs this first time only
 
+        # TODO: The individual regexes for different IRC bridges and
+        # such aren't working as expected; the lines get added if *any*
+        # of them match, regardless of their source. Either find a way
+        # to fix this (probably will have to simplify the trainer to
+        # just take simple speaker/context marker, with no nick/regex
+        # checking, and move that logic to this module), or just
+        # simplify the system so that there is only one regex per user
+        # that matches *all* their nicks everywhere.
+
         # Old Konversation logs
         for fn in [os.path.join('log_irc_konversation', x) for x in
                 ('calcgames.log', 'cemetech.log', 'tcpa.log', 'ti.log',
@@ -72,10 +81,11 @@ def output_corpus(pname, reset, update_datestamp):
             with open(os.path.join(home, fn), 'r') as f:
                 for line in f:
                     line = line.strip()
-                    m = re.match(r'^\[.*\] \[.*\] <(.*?)>\t(.*)',
-                                 line, re.I)
-                    if not m and pregex[1]:
+                    if pregex[1]:
                         m = re.match(r'^\[.*\] \[.*\] <saxjax>\t\(.\) \[?(.*?)[:\]] (.*)', line, re.I)
+                    if not m:
+                        m = re.match(r'^\[.*\] \[.*\] <(.*?)>\t(.*)',
+                                     line, re.I)
                     if m:
                         print_line(m.group(1), m.group(2))
             print_context_break()
@@ -112,7 +122,10 @@ def output_corpus(pname, reset, update_datestamp):
         with open('misc_irc_lines.txt', 'r') as f:
             for line in f:
                 line = line.strip()
-                m = re.match(r'^\[?[0-9]{2}:[0-9]{2}(:[0-9]{2})?\]? <[ @+]?(.*?)> (.*)', line, re.I)
+                if pregex[1]:
+                    m = re.match(r'^\[?[0-9]{2}:[0-9]{2}(:[0-9]{2})?\]? <[ @+]?saxjax> (.*?): (.*)', line, re.I)
+                if not m:
+                    m = re.match(r'^\[?[0-9]{2}:[0-9]{2}(:[0-9]{2})?\]? <[ @+]?(.*?)> (.*)', line, re.I)
                 if m:
                     print_line(m.group(2), m.group(3))
         print_context_break()
@@ -154,7 +167,13 @@ def output_corpus(pname, reset, update_datestamp):
                             with open(os.path.join(log_path, dn, fn), 'r') as f:
                                 for line in f:
                                     line = line.strip()
-                                    m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?(.*?)> (.*)', line, re.I)
+                                    m = None
+                                    if pregex[1]:
+                                        m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?saxjax> \(.\) \[?(.*?)[:\]] (.*)', line, re.I)
+                                    if not m and pregex[2]:
+                                        m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?omnomirc.?> (?:\(.\))?<(.*?)> (.*)', line, re.I)
+                                    if not m:
+                                        m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?(.*?)> (.*)', line, re.I)
                                     if m:
                                         nick, msg = m.groups()
 
@@ -169,17 +188,6 @@ def output_corpus(pname, reset, update_datestamp):
                                                 nick = 'nikkybot'
 
                                         print_line(nick, msg)
-
-                                    if pregex[1]:
-                                        m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?saxjax> \(.\) \[?(.*?)[:\]] (.*)', line, re.I)
-                                        if m:
-                                            print_line(m.group(1),
-                                                              m.group(2))
-                                        elif pregex[2]:
-                                            m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?omnomirc.?> (?:\(.\))?<(.*?)> (.*)', line, re.I)
-                                            if m:
-                                                print_line(m.group(1),
-                                                                  m.group(2))
 
             except OSError as e:
                 if e.errno == 20:
