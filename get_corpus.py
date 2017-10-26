@@ -216,11 +216,8 @@ def output_corpus(pname, reset, update_datestamp):
                     continue
                 if (nick.lower().startswith('saxjax') or
                         nick.lower().startswith('cemetecmc')):
-                    m = re.match(r'^\(.\) \[?(.*?)[:\]] (.*)', msg, re.I)
-                    if not m:
-                        m = re.match(r'^(?:\(.\) )?(?:[[*](.*?)[]]?) (.*)',
-                                     msg, re.I)
-                elif nick.lower().startswith('omnomnirc'):
+                    m = re.match(r'^(?:\(.\) )?\[(.*?)\] (.*)', msg, re.I)
+                elif nick.lower().startswith('omnomirc'):
                     m = re.match(r'^(?:\(.\))?<(.*?)> (.*)', msg, re.I)
                 elif (nick.lower().startswith('walriibot') or
                       nick.lower().startswith('wb') or
@@ -228,7 +225,7 @@ def output_corpus(pname, reset, update_datestamp):
                       nick.lower().startswith('l|') or
                       nick.lower().startswith('j|') or
                       nick.lower().startswith('yukitg')):
-                    m = re.match(r'^(?:\(.*?\))?<(.*?)> (.*)', msg, re.I)
+                    m = re.match(r'^(?:\(.*?\))?(?:<([ijl]\||yukitg)> )?<(.*?)> (.*)', msg, re.I)
                 else:
                     m = None
                 if m:
