@@ -203,6 +203,10 @@ def output_corpus(pname, reset, update_datestamp):
                     date = datetime.strptime(date, '%a, %d %b %Y %H:%M:%S')
                 else:
                     continue
+                # Okay, Weechat's default log format kind of stinks for parsing.
+                if not nick or nick in (
+                        '  <==  ', '  ==>  ', '  ---  ', ' * ', '[chanstat]'):
+                    continue
 
                 # Special case to handle our silly nikky/nikkybot nick-swapping
                 #   stunt
@@ -225,7 +229,7 @@ def output_corpus(pname, reset, update_datestamp):
                       nick.lower().startswith('l|') or
                       nick.lower().startswith('j|') or
                       nick.lower().startswith('yukitg')):
-                    m = re.match(r'^(?:\(.*?\))?(?:<([ijl]\||yukitg)> )?<(.*?)> (.*)', msg, re.I)
+                    m = re.match(r'^(?:\(.*?\))?(?:<(?:[ijl]\||yukitg)> )?<(.*?)> (.*)', msg, re.I)
                 else:
                     m = None
                 if m:
