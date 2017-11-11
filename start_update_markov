@@ -5,7 +5,5 @@ source /etc/profile.d/prll.sh
 personalities=$(python2 -c "import nikkyai; n = nikkyai.NikkyAI()
 for p in sorted(n.get_personalities()):
     print p")
-reset=""
-if [ "$1" == "RESET" ]; then reset="RESET"; fi
 
-prll -s 'python2 update_markov.py $1 $reset' $personalities
+prll -s "./get_corpus.py \$1 $* | ./train.py \$1 $*" $personalities
