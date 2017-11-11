@@ -1,12 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-# Number of previous spoken IRC lines to include in Markov context data
-CONTEXT_LINES = 5
-# Context-scoring relevance weight for lines highlighting personality
-CONTEXT_HIGHLIGHT_BIAS = 100
-# Frequency to update the progress indicator
-PROGRESS_EVERY = 5000
+from __future__ import division
 
 import argparse
 import re
@@ -16,6 +11,14 @@ import psycopg2
 
 import markov
 from personalitiesrc import personality_regexes
+
+
+# Number of previous spoken IRC lines to include in Markov context data
+CONTEXT_LINES = 5
+# Context-scoring relevance weight for lines highlighting personality
+CONTEXT_HIGHLIGHT_BIAS = 100
+# Frequency to update the progress indicator
+PROGRESS_EVERY = 5000
 
 
 # TODO: All the raw SQL query stuff (and likely the whole TrainingCorpus
@@ -178,10 +181,14 @@ def update(pname, reset, infile):
             corpus.new_context()
 
     if reset:
+        # Write Markov data
+
+        mk.doquery('SELECT COUNT(*) FROM "{}"'.format(mk.table_name))
+        old_row_count = mk.cursor.fetchone()[0]
+        stdout.write('Current Markov row count: %d\n' % old_row_count)
+
         mk.clear()
 
-    # Write Markov data
-    if reset:
         stdout.write('Reinitializing tables...\n')
         mk.doquery('DROP TABLE IF EXISTS ".markov.old"')
         mk.doquery('DROP TABLE IF EXISTS ".context.old"')
@@ -215,6 +222,12 @@ def update(pname, reset, infile):
     if reset:
         stdout.write('Indexing tables...\n')
         mk.index_tables()
+        mk.doquery('SELECT COUNT(*) FROM "{}"'.format(mk.table_name))
+        new_row_count = mk.cursor.fetchone()[0]
+        row_count_increase = new_row_count - old_row_count
+        stdout.write('New Markov row count: %d\n' % new_row_count)
+        stdout.write('Row count change: %+d (%d%%)\n' % (
+            row_count_increase, round(row_count_increase / old_row_count * 100)))
 
     stdout.write('Closing...\n')
     mk.commit()
