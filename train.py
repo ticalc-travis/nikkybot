@@ -157,7 +157,7 @@ class BadPersonalityError(KeyError):
     pass
 
 
-def update(pname, reset, infile):
+def update(pname, reset, infile, update_datestamp):
     try:
         pregex = personality_regexes[pname]
     except KeyError:
@@ -229,6 +229,17 @@ def update(pname, reset, infile):
         stdout.write('Row count change: %+d (%d%%)\n' % (
             row_count_increase, round(row_count_increase / old_row_count * 100)))
 
+    # Update last-updated date if enabled (will only be written to DB if
+    # entire process finishes to the commit call at the end of the
+    # function)
+    if update_datestamp:
+        mk.doquery(
+            'UPDATE ".last-updated" SET updated = NOW() WHERE name=%s', (pname,))
+        if not mk.cursor.rowcount:
+            mk.doquery('INSERT INTO ".last-updated" VALUES (%s)', (pname,))
+    else:
+        stdout.write('Skipping datestamp update.\n')
+
     stdout.write('Closing...\n')
     mk.commit()
     conn.close()
@@ -245,15 +256,20 @@ def get_arg_parser():
                         help='name of the personality to train')
     parser.add_argument('-r', '--reset', action='store_true',
                         help='delete all existing training data before training')
+    parser.add_argument('-n', '--no-update-datestamp', action='store_true',
+                        help='do not update the last-updated datestamp upon completion; leave it alone')
     return parser
 
 
 if __name__ == '__main__':
     args = get_arg_parser().parse_args()
-    pname, reset = args.personality[0], args.reset
+
+    pname = args.personality[0]
+    reset = args.reset
+    update_datestamp = not args.no_update_datestamp
 
     try:
-        update(pname, reset, stdin)
+        update(pname, reset, stdin, update_datestamp)
     except BadPersonalityError:
         print "Personality '{}' not defined in personalitiesrc.py".format(pname)
         exit(2)

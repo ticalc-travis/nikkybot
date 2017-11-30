@@ -24,7 +24,7 @@ def print_context_break():
     stdout.write('\n')
 
 
-def output_corpus(pname, reset, update_datestamp):
+def output_corpus(pname, reset):
     NEVER_UPDATED = datetime(1970, 1, 1, 0, 0)
     home = os.environ['HOME']
     try:
@@ -46,17 +46,6 @@ def output_corpus(pname, reset, update_datestamp):
         last_updated = mk.cursor.fetchone()[0]
     else:
         last_updated = NEVER_UPDATED
-
-    # Updated last updated date if enabled (will only be written to DB
-    # if entire process finishes to the commit call at the end of the
-    # function)
-    if update_datestamp:
-        mk.doquery(
-            'UPDATE ".last-updated" SET updated = NOW() WHERE name=%s', (pname,))
-        if not mk.cursor.rowcount:
-            mk.doquery('INSERT INTO ".last-updated" VALUES (%s)', (pname,))
-    else:
-        stderr.write('Skipping datestamp update.\n')
 
     if reset:
 
@@ -249,8 +238,6 @@ def get_arg_parser():
                         help='name of the personality to train')
     parser.add_argument('-r', '--reset', action='store_true',
                         help='clear last updated datestamp and output an entire corpus from the beginning')
-    parser.add_argument('-n', '--no-update-datestamp', action='store_true',
-                        help='do not update the last-updated datestamp upon completion; leave it alone')
     return parser
 
 
@@ -258,10 +245,9 @@ if __name__ == '__main__':
     args = get_arg_parser().parse_args()
     pname = args.personality[0]
     reset = args.reset
-    update_datestamp = not args.no_update_datestamp
 
     try:
-        output_corpus(pname, reset, update_datestamp)
+        output_corpus(pname, reset)
     except BadPersonalityError:
         print "Personality '{}' not defined in personalitiesrc.py".format(pname)
         exit(2)
