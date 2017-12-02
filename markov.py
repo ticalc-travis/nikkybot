@@ -107,6 +107,10 @@ class PostgresMarkov(object):
             '  freq INTEGER DEFAULT 1 CHECK (freq > 0) NOT NULL)'.format(
                 self.context_table_name)
         )
+        self.doquery(
+            'CREATE TABLE IF NOT EXISTS ".last-updated"'
+            ' (name character varying NOT NULL,'
+            '  updated timestamp without time zone DEFAULT now() NOT NULL)')
 
     def index_tables(self):
         """Create indecs for underlying Postgres tables"""
