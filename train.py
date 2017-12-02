@@ -30,9 +30,9 @@ class TrainingCorpus(object):
     database.
     """
 
-    def __init__(self, nick_regexes, markov, context_lines=CONTEXT_LINES):
-        """nick_regexes:  A sequence of regular expressions matching the
-        nickname of this corpus's Markov personality
+    def __init__(self, nick_regexp, markov, context_lines=CONTEXT_LINES):
+        """nick_regexp:  A regular expression matching the nickname of this
+        corpus's Markov personality (case-insensitive)
 
         markov:  The markov.PostgresMarkov object that the corpus will
         train
@@ -40,7 +40,7 @@ class TrainingCorpus(object):
         context_lines:  The number of lines of context, before and after
         each group of spoken lines trained, to use for context data
         """
-        self.nick_regexes = nick_regexes
+        self.nick_regexp = nick_regexp
         self.context_group = deque([], maxlen=context_lines)
         self.spoken_group = []
         self._corpus = []
@@ -49,11 +49,10 @@ class TrainingCorpus(object):
 
     def is_nick(self, search):
         """Return whether the given search string matches one of the
-        personality's nicks, as indicated by self.nick_regexes.
+        personality's nicks, as indicated by self.nick_regexp.
         """
-        for regex in self.nick_regexes:
-            if regex and re.match(regex, search, re.I):
-                return True
+        if re.match(self.nick_regexp, search, re.I):
+            return True
         return False
 
     def add_spoken(self, line):
@@ -72,7 +71,7 @@ class TrainingCorpus(object):
     def check_line(self, nick, line):
         """Check if “line”, spoken by “nick”, is a line spoken by the
         personality being trained (i.e., “nick” matches one of the
-        personality's nicks according to nick_regexes passed to
+        personality's nicks according to the nick_regexp passed to
         self.__init__). If so, train the line as a spoken line by
         calling self.add_spoken(line), else train it as a context line
         by calling self.add_context(line).

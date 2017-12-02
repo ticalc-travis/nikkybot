@@ -65,15 +65,6 @@ def output_corpus(pname, reset, update_datestamp):
 
         # Parse old logs this first time only
 
-        # TODO: The individual regexes for different IRC bridges and
-        # such aren't working as expected; the lines get added if *any*
-        # of them match, regardless of their source. Either find a way
-        # to fix this (probably will have to simplify the trainer to
-        # just take simple speaker/context marker, with no nick/regex
-        # checking, and move that logic to this module), or just
-        # simplify the system so that there is only one regex per user
-        # that matches *all* their nicks everywhere.
-
         # Old Konversation logs
         for fn in [os.path.join('log_irc_konversation', x) for x in
                 ('calcgames.log', 'cemetech.log', 'tcpa.log', 'ti.log',
@@ -81,11 +72,9 @@ def output_corpus(pname, reset, update_datestamp):
             with open(os.path.join(home, fn), 'r') as f:
                 for line in f:
                     line = line.strip()
-                    if pregex[1]:
-                        m = re.match(r'^\[.*\] \[.*\] <saxjax>\t\(.\) \[?(.*?)[:\]] (.*)', line, re.I)
+                    m = re.match(r'^\[.*\] \[.*\] <saxjax>\t\(.\) \[?(.*?)[:\]] (.*)', line, re.I)
                     if not m:
-                        m = re.match(r'^\[.*\] \[.*\] <(.*?)>\t(.*)',
-                                     line, re.I)
+                        m = re.match(r'^\[.*\] \[.*\] <(.*?)>\t(.*)', line, re.I)
                     if m:
                         print_line(m.group(1), m.group(2))
             print_context_break()
@@ -153,10 +142,10 @@ def output_corpus(pname, reset, update_datestamp):
             try:
                 last_channel = None
                 for fn in sorted(os.listdir(dn)):
-                    m = re.match(
+                    fm = re.match(
                         '#(.*)_([0-9]{4})-([0-9]{2})-([0-9]{2})\.log', fn)
-                    if m:
-                        channel, year, month, day = m.groups()
+                    if fm:
+                        channel, year, month, day = fm.groups()
                         if (channel in
                                 ('calcgames', 'cemetech', 'flood', 'hp48',
                                 'inspired', 'nspire-lua', 'prizm', 'tcpa',
@@ -167,10 +156,8 @@ def output_corpus(pname, reset, update_datestamp):
                             with open(os.path.join(log_path, dn, fn), 'r') as f:
                                 for line in f:
                                     line = line.strip()
-                                    m = None
-                                    if pregex[1]:
-                                        m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?saxjax> \(.\) \[?(.*?)[:\]] (.*)', line, re.I)
-                                    if not m and pregex[2]:
+                                    m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?saxjax> \(.\) \[?(.*?)[:\]] (.*)', line, re.I)
+                                    if not m:
                                         m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?omnomirc.?> (?:\(.\))?<(.*?)> (.*)', line, re.I)
                                     if not m:
                                         m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?(.*?)> (.*)', line, re.I)
@@ -227,20 +214,20 @@ def output_corpus(pname, reset, update_datestamp):
 
                 if date < last_updated or date > target_date:
                     continue
-                if pregex[1] and (nick.lower().startswith('saxjax') or
-                                  nick.lower().startswith('cemetecmc')):
+                if (nick.lower().startswith('saxjax') or
+                        nick.lower().startswith('cemetecmc')):
                     m = re.match(r'^\(.\) \[?(.*?)[:\]] (.*)', msg, re.I)
                     if not m:
                         m = re.match(r'^(?:\(.\) )?(?:[[*](.*?)[]]?) (.*)',
                                      msg, re.I)
-                elif pregex[2] and nick.lower().startswith('omnomnirc'):
+                elif nick.lower().startswith('omnomnirc'):
                     m = re.match(r'^(?:\(.\))?<(.*?)> (.*)', msg, re.I)
-                elif pregex[3] and (nick.lower().startswith('walriibot') or
-                                    nick.lower().startswith('wb') or
-                                    nick.lower().startswith('i|') or
-                                    nick.lower().startswith('l|') or
-                                    nick.lower().startswith('j|') or
-                                    nick.lower().startswith('yukitg')):
+                elif (nick.lower().startswith('walriibot') or
+                      nick.lower().startswith('wb') or
+                      nick.lower().startswith('i|') or
+                      nick.lower().startswith('l|') or
+                      nick.lower().startswith('j|') or
+                      nick.lower().startswith('yukitg')):
                     m = re.match(r'^(?:\(.*?\))?<(.*?)> (.*)', msg, re.I)
                 else:
                     m = None

@@ -7,285 +7,65 @@
 # }
 #
 # personality_regexes = {
-# 'Personality name':
-#       ('IRC nick regex',
-#        'Cemetech forum username regex' or None,
-#        'Omnimaga forum username regex' or None,
-#        'CodeWalrus forum username regex' or None),
-# ...etc....
+#     'Personality name': 'Nick regexp'
+#     ...
 # }
 
 personality_regexes = {
-    'thegeekyscientist':
-        (None,
-         'thegeekyscientist',
-         None,
-         None),
-    'hooloovoo':
-        ('hooloovoo',
-         'hooloovoo',
-         None,
-         None),
-    'botboy3000':
-        (None,
-         'botboy3000',
-         None,
-         None),
-    'mateoc':
-        ('mateoc',
-         'mateoconlechuga',
-         None,
-         None),
-    'calebj':
-        ('caleb_j',
-         'caleb_j',
-         None,
-         None),
-    'thelastmillennial':
-        (None,
-         'thelastmillennial',
-         None,
-         None),
-    'theprogrammingcube':
-        (None,
-         'theprogrammingcube',
-         None,
-         None),
-    'oldmud0':
-        ('oldmud0',
-         'oldmud0',
-         None,
-         None),
-    'little':
-        ('little',
-         'little',
-         None,
-         None),
-    'jacobkuschel':
-        (None,
-         'jacob_kuschel',
-         None,
-         None),
-    'iphoenix':
-        (None,
-         '_iphoenix_',
-         None,
-         None),
-    'michael23b':
-        ('michaelb',
-         'michael2_3b',
-         None,
-         None),
-    'pieman':
-        ('pieman',
-         'pieman7373',
-         None,
-         None),
-    'battlesquid':
-        ('squid',
-         'battlesquid',
-         None,
-         None),
-    'calcmeister':
-        ('cmeister',
-         'calcmeister',
-         None,
-         None),
-    'nik':
-        ('chessy|nik$',
-         'chessy',
-         None,
-         None),
-    'pt':
-        ('p_t|pt_',
-         'pt_',
-         None,
-         None),
-    'seegreatness':
-        (None,
-         'seegreatness',
-         None,
-         None),
-    'avgn':
-        (r'AVGN',
-         None,
-         None,
-         None),
-    'eightx84':
-        (r'eightx84|someone26',
-         'eightx84',
-         'eightx84',
-         'eightx84'),
-    'solarsoftware':
-        (None,
-         'solarsoftware',
-         None,
-         None),
-    'richardnixon':
-        (r'RichardNixon',
-         None,
-         None,
-         None),
-    'jonbush':
-        (r'jonbush',
-         None,
-         None,
-         None),
-    'ivoah':
-        (r'ivoah',
-         r'ivoah',
-         r'ivoah',
-         r'ivoah'),
-    'kinfinity':
-        (r'kinfinity',
-         r'kinginfinity',
-         None,
-         None),
-    'eeems':
-        (r'eeems',
-         r'eeems',
-         r'eeems',
-         r'eeems'),
-    'tari':
-        (r'tari',
-         r'tari',
-         r'tari',
-         r'tari'),
-    'geekboy':
-        (r'geek',
-         r'geekboy',
-         r'geekboy',
-         r'geekboy'),
-    'ephraimb':
-        (r'ephraim|harryp|lazygeek',
-         r'ephraim b',
-         r'ephraim',
-         r'ephraim'),
-    'redstone':
-        (r'redstone|asian|imbanned',
-         r'redstonepizza',
-         None,
-         None),
-    'sircmpwn':
-        (r'sircmpwn',
-         r'sircmpwn',
-         r'sircmpwn',
-         r'sircmpwn'),
-    'ashbad':
-        (r'ashbad|obongo|aalewis',
-         r'ashbad',
-         r'ashbad',
-         None),
-    'jonimus':
-        (r'jonimus|thestorm',
-         r'TheStorm',
-         r'TheStorm|JonimusPrime',
-         None),
-    'joeyoung':
-        (r'jy|joeyoung|mtgrss111',
-         r'JoeYoung',
-         None,
-         None),
-    'comic':
-        (r'comic',
-         r'comicIDIOT',
-         None,
-         None),
-    'juju':
-        (r'juju',
-         r'juju',
-         r'juju',
-         r'juju'),
-    'debrouxl':
-        (r'debrouxl|ldebrouxl',
-         r'Lionel Debroux',
-         r'Lionel Debroux',
-         r'Lionel Debroux'),
-    'bb010g':
-        (r'bb010g',
-         r'bb010g',
-         r'bb010g',
-         r'bb010g'),
-    'cvsoft':
-        (r'cv|notipa',
-         r'CVSoft',
-         None,
-         None),
-    'calebh':
-        (r'calebh|parse34|cheleron',
-         r'CalebHansberry',
-         None,
-         None),
-    'netham45':
-        (r'netham45|netbot45|ham\\',
-         r'netham45',
-         r'netham45',
-         r'netham45'),
-    'kevino':
-        (r'.*?kevin_o|dj_omni|dj_o|djowalrii|`-`$|celtic3|xlibman|nom$|ragol666',
-         r'dj.?omni|dj.o',
-         r'dj.?omni|dj.o',
-         r'dj.?omni|dj.o'),
-    'brandonw':
-        (r'brandonw',
-         r'brandonw',
-         r'brandonw',
-         r'brandonw'),
-    'tev':
-        (r'tev',
-         r'travis',
-         r'travise|travis e|travis e\.',
-         r'travis'),
-    'merth':
-        (r'merth|merthsoft|shaun',
-         r'merth|merthsoft|shaun',
-         r'merth|merthsoft|shaun',
-         r'merth|merthsoft|shaun'),
-    'randomist':
-        (r'randomist|korinidos|.*arch|metalrand|randeimos|dama|dam\\|damvista|devoidofw|psychodro',
-         None,
-         None,
-         None),
-    'sirlewk':
-        (r'sir_lewk|sirlewk',
-         None,
-         None,
-         None),
-    'chronomex':
-        (r'chronomex|chronome1|.*?slythe|xmc|cmx|exmic',
-         r'chronomex',
-         r'chronomex',
-         None),
-    'michaelv':
-        (r'michael_v|michaelv',
-         None,
-         None,
-         None),
-    'ej':
-        (r'e-j|e-jl|el-j',
-         None,
-         None,
-         None),
-    'cricketb':
-        (r'cricket_b|cricketb|chirp_b|truepika',
-         None,
-         None,
-         None),
-    'glk':
-        (r'glk',
-         None,
-         None,
-         None),
-    'kerm':
-        (r'kerm',
-         r'KermMartian',
-         r'KermMartian',
-         None),
-    'nikky':
-        (r'(nikky|allyn)(?!(?:bot|test))',
-         r'allynfolksjr',
-         None,
-         None),
+    'thegeekyscientist': 'thegeekyscientist',
+    'hooloovoo': 'hooloovoo',
+    'botboy3000': 'botboy3000',
+    'mateoc': 'mateoc',
+    'calebj': 'caleb_j',
+    'thelastmillennial': 'thelastmillennial',
+    'theprogrammingcube': 'theprogrammingcube',
+    'oldmud0': 'oldmud0',
+    'little': 'little',
+    'jacobkuschel': 'jacob_kuschel',
+    'iphoenix': '_iphoenix_',
+    'michael23b': 'michaelb|michael2_3b',
+    'pieman': 'pieman',
+    'battlesquid': 'squid|battlesquid',
+    'calcmeister': 'cmeister|calcmeister',
+    'nik': 'chessy|nik$',
+    'pt': 'p_t|pt_',
+    'seegreatness': 'seegreatness',
+    'avgn': 'avgn',
+    'eightx84': 'eightx84|someone26',
+    'solarsoftware': 'solarsoftware',
+    'richardnixon': 'richardnixon',
+    'jonbush': 'jonbush',
+    'ivoah': 'ivoah',
+    'kinfinity': 'kinfinity|kinginfinity',
+    'eeems': 'eeems',
+    'tari': 'tari',
+    'geekboy': 'geekboy|geek$',
+    'ephraimb': 'ephraim|ephraim b|harryp|lazygeek',
+    'redstone': 'redstone|asian|imbanned|redstonepizza',
+    'sircmpwn': 'sircmpwn',
+    'ashbad': 'ashbad|obongo|aalewis',
+    'jonimus': 'jonimus|thestorm|thestorm|jonimusprime',
+    'joeyoung': 'jy$|joeyoung|mtgrss111|joeyoung',
+    'comic': 'comic|comicidiot',
+    'juju': 'juju',
+    'debrouxl': 'debrouxl|ldebrouxl|lionel debroux',
+    'bb010g': 'bb010g',
+    'cvsoft': 'cv|notipa|cvsoft',
+    'calebh': 'calebh|parse34|cheleron|calebhansberry',
+    'netham45': 'netham45|netbot45|ham\\',
+    'kevino': '.*?kevin_o|dj.?omni|dj.o|djowalrii|`-`$|celtic3|xlibman|nom$|ragol666',
+    'brandonw': 'brandonw',
+    'tev': 'tev|travis|travis e',
+    'merth': 'merth|merthsoft|shaun',
+    'randomist': 'randomist|korinidos|.*arch|metalrand|randeimos|dama|dam\\|damvista|devoidofw|psychodro',
+    'sirlewk': 'sir_lewk|sirlewk',
+    'chronomex': 'chronomex|chronome1|.*?slythe|xmc|cmx|exmic',
+    'michaelv': 'michael_v|michaelv',
+    'ej': 'e-j|e-jl|el-j',
+    'cricketb': 'cricket_b|cricketb|chirp_b|truepika',
+    'glk': 'glk',
+    'kerm': 'kerm|kermmartian',
+    'nikky': '((nikky|allyn)(?!(?:bot|test))|allynfolksjr)',
 }
 
 personality_config = {
