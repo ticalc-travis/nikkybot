@@ -281,7 +281,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
                 msg = '{}'.format(m.group(3))
                 if nick == 'Cemetech':
                     # ...or log ins/log outs/file uploads
-                    m = re.match(r'(.*?) ((?:entered|logged|uploaded|deleted|added).*)', msg)
+                    m = re.match(r'(.*?) ((?:entered|logged|uploaded|deleted|added|edited).*)', msg)
                     if m:
                         nick = m.group(1)
                         msg = m.group(2)
