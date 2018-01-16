@@ -650,7 +650,8 @@ class NikkyBot(irc.IRCClient, Sensitive):
         commands."""
         if (msg[0] in '!?@#$%^&*-.,;:' and
                 not msg.startswith('!qfind') and
-                not msg.startswith('!qadd')):
+                not msg.startswith('!qadd') and
+                not msg.startswith('!karma')):
             return '\x0F' + msg
         else:
             return msg
