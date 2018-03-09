@@ -226,8 +226,9 @@ def update(pname, reset, infile, update_datestamp):
         new_row_count = mk.cursor.fetchone()[0]
         row_count_increase = new_row_count - old_row_count
         stdout.write('New Markov row count: %d\n' % new_row_count)
-        stdout.write('Row count change: %+d (%d%%)\n' % (
-            row_count_increase, round(row_count_increase / old_row_count * 100)))
+        if old_row_count:
+            stdout.write('Row count change: %+d (%d%%)\n' % (
+                row_count_increase, round(row_count_increase / old_row_count * 100)))
 
     # Update last-updated date if enabled (will only be written to DB if
     # entire process finishes to the commit call at the end of the
