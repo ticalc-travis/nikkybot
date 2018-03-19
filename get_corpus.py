@@ -177,7 +177,7 @@ def output_corpus(pname, reset):
             ('calcgames', 'cemetech', 'tcpa', 'ti', 'omnimaga', 'flood',
              'caleb', 'caleb-spam', 'hp48', 'markov', 'nspired', 'nspire-lua',
              'prizm', 'wikiti', 'cemetech-mc', 'codewalrus', 'gbadev',
-             'kinginfinity')]:
+             'kinginfinity', 'thebutton', 'thebuttondev')]:
         with open(os.path.join(home, fn), 'r') as f:
             for line in f:
                 line = line.strip()
