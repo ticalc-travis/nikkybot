@@ -145,7 +145,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
     def joined(self, channel):
         print('Joined channel {}'.format(channel))
-        self.joined_channels.add(channel)
+        self.joined_channels.add(irc_lower(channel))
 
     def privmsg(self, user, target, msg):
         nick, msg = self.preparse_msg(user, msg)
@@ -668,7 +668,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         """Retry any channels that we apparently didn't successfully join for
         some reason."""
         for c in self.opts.channels:
-            if c not in self.joined_channels:
+            if irc_lower(c) not in self.joined_channels:
                 self.join(c)
         self.call_later(self.opts.channel_check_interval, self.channel_check)
 
