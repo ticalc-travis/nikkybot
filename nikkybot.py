@@ -78,7 +78,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
     def join(self, channel):
         """Log bot's channel joins"""
-        print('Joining {}'.format(channel))
+        print('Attempting to join {}'.format(channel))
         irc.IRCClient.join(self, channel)
 
     def leave(self, channel, reason):
@@ -144,6 +144,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
             self.join(channel)
 
     def joined(self, channel):
+        print('Joined channel {}'.format(channel))
         self.joined_channels.add(channel)
 
     def privmsg(self, user, target, msg):
