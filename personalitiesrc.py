@@ -12,6 +12,7 @@
 # }
 
 personality_regexes = {
+    'adriweb': r'adriweb',
     'jcgter777': r'jcgter',
     'thegeekyscientist': r'thegeekyscientist',
     'hooloovoo': r'hooloovoo',
