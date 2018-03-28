@@ -503,7 +503,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
                         "you know when it's done!")
                     d = threads.deferToThread(self.exec_bot_chat, src_nick,
                                               sender, nick1, nick2)
-                    d.addErrback(self.bot_chat_error, src_nick)
+                    d.addErrback(self.bot_chat_error, sender)
                     d.addCallback(self.return_bot_chat)
 
         elif re.match((r"\b(quit|stop|don.?t|do not)\b.*\b(hilite|hilight|highlite|highlight).*\bme"), msg, re.I):
