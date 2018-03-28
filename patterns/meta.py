@@ -21,9 +21,9 @@ from nikkyai import Bad_personality_error
 
 def age(nikkyai, context, fmt):
     from datetime import datetime
-    return ('About ' +
+    return ("I'm about " +
             str((datetime.now() - datetime(2012, 10, 30)).days) +
-            " days' worth ongoing so far, give or take")
+            " days old, give or take")
 
 def try_mimic(nikkyai, context, fmt):
     pers = fmt[1]
@@ -58,7 +58,6 @@ patterns = (
 ),
 (r'\b((how much|how many lines (of)?|how much) (code|coding|programming)|how long .* to (make|program|code|design|write) you)', -10,
     R(
-        E(age),
         'About a billion lines of Perl',
         'I started out as lines of Perl\nbut then tev had to be a tard and convert it all to Python'
     )
@@ -175,7 +174,10 @@ patterns = (
     R("I wasn't programmed to post in forums, silly")
 ),
 (r"\b(birthday|birthdate|how old is {0}|how old are you|what'?s your age|what is your age|what'?s {0}(.s|s)? age|what is {0}(.s|s)? age|when were {0} born|when were you born)", -3,
-    R('My birthday is October 30, 2012'), True,
+    R(
+        'My birthday is October 30, 2012',
+        E(age),
+    ), True
 ),
 (r"\*\*\*try_mimic (.*?)\*\*\*", -3, E(try_mimic), True),
 )
