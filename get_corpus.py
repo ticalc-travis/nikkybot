@@ -36,7 +36,8 @@ def output_corpus(pname, reset):
 
     # Get last updated date
     conn = psycopg2.connect('dbname=markovmix user=markovmix')
-    mk = markov.PostgresMarkov(conn, pname, case_sensitive=False)
+    mk = markov.PostgresMarkov(conn, pname, case_sensitive=False,
+                               create_tables=False)
     mk.begin()
     mk.doquery('CREATE TABLE IF NOT EXISTS ".last-updated" '
         '(name VARCHAR PRIMARY KEY, updated TIMESTAMP NOT NULL DEFAULT NOW())')

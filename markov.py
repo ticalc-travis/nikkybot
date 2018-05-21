@@ -57,6 +57,7 @@ class PostgresMarkov(object):
     the data"""
 
     def __init__(self, connect, table_name, case_sensitive=True,
+                 create_tables=True,
                  ignore_chars=DEFAULT_IGNORE_CHARS,
                  ignore_words=DEFAULT_CONTEXT_IGNORE_WORDS,
                  ignore_prefixes=DEFAULT_CONTEXT_IGNORE_PREFIXES,
@@ -79,7 +80,8 @@ class PostgresMarkov(object):
         self.cursor = self.connection.cursor()
 
         # Set up tables if needed
-        self.create_tables()
+        if create_tables:
+            self.create_tables()
         self.commit()
 
     def create_tables(self):
