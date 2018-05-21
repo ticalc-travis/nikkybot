@@ -12,6 +12,9 @@
 # }
 
 personality_regexes = {
+    'barf': r'barf',
+    'lax18': r'lax18',
+    'sm84ce': r'sm84ce',
     'adriweb': r'adriweb',
     'jcgter777': r'jcgter',
     'thegeekyscientist': r'thegeekyscientist',
@@ -105,6 +108,7 @@ personalities = {
     'chessy': 'nik',
     'kermphd': 'kerm',
     'mateoconlechuga': 'mateoc',
+    'jcgter': 'jcgter777',
 }
 
 # Fill in primary personas...
