@@ -19,6 +19,7 @@
 
 from __future__ import print_function
 
+import datetime
 import random
 import re
 import subprocess
@@ -115,6 +116,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         self.nickname = self.opts.nicks[0]
         self.nikkies = self.factory.nikkies
         self.pending_responses = []
+        self.user_message_rate = {}
         self.responses_scheduled = False
         self.joined_channels = set()
         self.user_threads = 0
@@ -178,6 +180,12 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
         # Determine what to do (reply, maybe reply, run command)
         if is_private or is_highlight:
+
+            # Apply flood protection for direct responses
+            if self.is_flooding(nick):
+                print('Too many messages from {}; ignoring'.format(nick))
+                return
+
             if is_private or has_leading_highlight:
                 try:
                     self.do_command(msg, nick, target, is_admin)
@@ -190,6 +198,28 @@ class NikkyBot(irc.IRCClient, Sensitive):
                                  log_response=is_private)
         else:
             self.do_AI_maybe_reply(msg_with_nick, sender, log_response=False)
+
+    def is_flooding(self, sender):
+        if self.opts.flood_protect is None:
+            return False
+
+        interval, max_msgs = self.opts.flood_protect
+        now = datetime.datetime.now()
+        try:
+            rate = self.user_message_rate[sender]
+        except KeyError:
+            rate = self.user_message_rate[sender] = {
+                'last_msg_time': datetime.datetime.now(),
+                'msg_count': 0
+            }
+        if now - rate['last_msg_time'] < datetime.timedelta(seconds=interval):
+            rate['msg_count'] += 1
+        else:
+            rate['last_msg_time'] = now
+            rate['msg_count'] = 1
+
+        print('Flood protect: {}: {}'.format(sender, rate))
+        return self.user_message_rate[sender]['msg_count'] > max_msgs
 
     def action(self, user, channel, msg):
         """Pass actions to AI like normal lines"""
