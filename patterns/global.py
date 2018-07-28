@@ -31,7 +31,7 @@ def rule(nikky, context, fmt):
     # in nikkyai, which will always reject it as a duplicate before ever being
     # output).
     saved_search_time = nikky.search_time
-    for i in xrange(0, nikky.recurse_limit):
+    for i in xrange(0, nikky.search_time):
         seed = choice(("Don't be", "Don't use", "Don't talk", "Don't bring",
                        "Don't mention", "Don't do", "Don't act", "Just kick",
                        "Just ban", "Don't forget to", "Just stop", "Stop",
@@ -617,8 +617,8 @@ patterns = (
         '\n1. ', E(rule),
         '\n2. ', E(rule),
         '\n3. ', E(rule),
-    )
-),
+    ),
+True),
 (r'\b(war|wars)[0-9]*\b', 0, E(war)),
 
 ## Markov search/debug ##
