@@ -209,9 +209,10 @@ class NikkyBot(irc.IRCClient, Sensitive):
             rate = self.user_message_rate[sender]
         except KeyError:
             rate = self.user_message_rate[sender] = {
-                'last_msg_time': datetime.datetime.now(),
-                'msg_count': 0
+                'last_msg_time': now,
+                'msg_count': 0,
             }
+        print('Flood protect: Now: %s    Last time: %s    Interval: %s' % (now, rate['last_msg_time'], interval))
         if now - rate['last_msg_time'] < datetime.timedelta(seconds=interval):
             rate['msg_count'] += 1
         else:
