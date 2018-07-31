@@ -305,7 +305,10 @@ class NikkyBot(irc.IRCClient, Sensitive):
             encoding='utf8')
 
         # Parse/convert saxjax's messages
-        if hostmask_match('saxjax*!*@*', user) or hostmask_match('gCnIRCHub*@*.*', user):
+        if (hostmask_match('saxjax*!*@*', user) or
+                hostmask_match('gCnIRCHub*@*.*', user) or
+                hostmask_match('disjax*!*@*', user)
+        ):
             m = re.match(r'(?:\(.\) )?(?:\[(.*)\]|\*(.*?)) (.*)', msg)
             if m:
                 # Normal chat speaking

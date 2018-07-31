@@ -209,6 +209,7 @@ def output_corpus(pname, reset):
                 if date < last_updated or date > target_date:
                     continue
                 if (nick.lower().startswith('saxjax') or
+                        nick.lower().startswith('disjax') or
                         nick.lower().startswith('cemetecmc')):
                     m = re.match(r'^(?:\(.\) )?\[(.*?)\] (.*)', msg, re.I)
                 elif nick.lower().startswith('omnomirc'):
