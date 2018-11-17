@@ -12,6 +12,7 @@
 # }
 
 personality_regexes = {
+    'jwinslow23': r'jwinslow',
     'barf': r'barf',
     'lax18': r'lax18',
     'sm84ce': r'sm84ce',
