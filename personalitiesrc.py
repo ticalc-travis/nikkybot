@@ -111,6 +111,8 @@ personalities = {
     'kermphd': 'kerm',
     'mateoconlechuga': 'mateoc',
     'jcgter': 'jcgter777',
+    'jwinslow': 'jwinslow23',
+    'jwin': 'jwinslow23',
 }
 
 # Fill in primary personas...
