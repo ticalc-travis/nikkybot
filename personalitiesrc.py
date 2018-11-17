@@ -65,7 +65,7 @@ personality_regexes = {
     'merth': r'merth|merthsoft|shaun',
     'randomist': r'randomist|korinidos|.*arch|metalrand|randeimos|dama|dam\\|damvista|devoidofw|psychodro',
     'sirlewk': r'sir_lewk|sirlewk',
-    'chronomex': r'chronomex|chronome1|.*?slythe|xmc|cmx|exmic',
+    'chronomex': r'chronomex|chronome1|.*?slythe|xmc|cmx|exmic|astrid',
     'michaelv': r'michael_v|michaelv',
     'ej': r'e-j|e-jl|el-j',
     'cricketb': r'cricket_b|cricketb|chirp_b|truepika',
@@ -83,6 +83,7 @@ personality_config = {
 personalities = {
     # Aliases...:
     'nikkybot': 'nikky',
+    'astrid': 'chronomex',
     'exmic': 'chronomex',
     'cmx': 'chronomex',
     'xmc': 'chronomex',
