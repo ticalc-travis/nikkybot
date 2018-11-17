@@ -12,6 +12,7 @@
 # }
 
 personality_regexes = {
+    'commandblockguy': r'commandblockguy|commandz|cmdtwo',
     'jwinslow23': r'jwinslow',
     'barf': r'barf',
     'lax18': r'lax18',
