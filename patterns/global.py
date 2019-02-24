@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from math import ceil
+
 from _table import *
 import nikkyai
 
@@ -31,7 +33,9 @@ def rule(nikky, context, fmt):
     # in nikkyai, which will always reject it as a duplicate before ever being
     # output).
     saved_search_time = nikky.search_time
-    for i in xrange(0, nikky.search_time):
+    for i in xrange(0, int(ceil(nikky.search_time))):
+        # Approximate search time to nearest second, rounding up
+        # (approx. 1 second per iteration)
         seed = choice(("Don't be", "Don't use", "Don't talk", "Don't bring",
                        "Don't mention", "Don't do", "Don't act", "Just kick",
                        "Just ban", "Don't forget to", "Just stop", "Stop",
