@@ -76,9 +76,10 @@ personality_regexes = {
 }
 
 personality_config = {
-    'avgn': {'order': 3},
+    'avgn': {'order': 2},
     'nik': {'order': 3},
     'iphoenix': {'order': 3},
+    'jwinslow23': {'order': 2},
 }
 
 personalities = {
