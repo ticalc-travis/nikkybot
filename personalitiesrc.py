@@ -81,6 +81,7 @@ personality_config = {
     'nik': {'order': 3},
     'iphoenix': {'order': 3},
     'jwinslow23': {'order': 2},
+    'logicaljoe': {'order': 3},
 }
 
 personalities = {
