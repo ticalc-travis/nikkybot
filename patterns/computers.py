@@ -58,9 +58,12 @@ patterns = (
         Markov_forward('big monitors'),
     )
 ),
+(r'\b(which|what) site\b', 1,
+    R('nvm2u.com', '{0}sucks.org', 'omnimaga.org', 'yourmom.org')
+),
 
 # Programming
-(r'\b(BASIC\b|C\+\+|C#|C\s\b|Java\b|Javascript\b|Lua\b|\s\.NET\s\b|Ruby\b|TCL\b|TI\-BASIC\b|TI BASIC\b|Python\b|PHP\b|Scheme\b)', 2,
+(r'\b(BASIC\b|C\+\+|C#|C\s\b|COBOL\b|Java\b|Javascript\b|Lua\b|\s\.NET\s\b|Ruby\b|TCL\b|TI\-BASIC\b|TI BASIC\b|Python\b|PHP\b|Scheme\b)', 2,
     R(
         Markov_forward('{1}'),
         Markov_forward('{1} sucks'),
@@ -69,13 +72,30 @@ patterns = (
         'Should have used Perl',
         'Perl was my first language',
         'Hahahaha\n{1}tard',
-        'Hahahaha\nWhat a tard'
+        'Hahahaha\nWhat a tard',
+        Recurse('programming language'),
     )
 ),
-(r'\b(which|what) language\b', 1, R('Perl\nDuh')),
-(r'\b(which|what) site\b', 1,
-    R('nvm2u.com', '{0}sucks.org', 'omnimaga.org', 'yourmom.org')
+(r'\bprogramming language\b', -5,
+    R(
+        Markov('basic'),
+        Markov('c'),
+        Markov('c++'),
+        Markov('c#'),
+        Markov('cobol'),
+        Markov('java'),
+        Markov('javascript'),
+        Markov('lua'),
+        Markov('.net'),
+        Markov('ruby'),
+        Markov('tcl'),
+        Markov('ti-basic'),
+        Markov('ti basic'),
+        Markov('python'),
+        Markov('php'),
+    ),
 ),
+(r'\b(which|what) language\b', 1, R('Perl\nDuh')),
 (r'\bi\b.*\buse(|d|ing)\b.*\bperl\b', 1,
     R('Good for you', '{0} is such a champ', Markov_forward('perl'))
 ),
