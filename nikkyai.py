@@ -308,7 +308,7 @@ class NikkyAI(object):
                             self.printdebug(
                                 '[markov_reply] Score: {}, Weighted: {}, Candidate: {}'.format(
                                     score, weighted_score, repr(candidate)))
-                            if score >= best_score:
+                            if weighted_score >= best_score:
                                 best_score, best_resp = weighted_score, candidate
         except ResponseTimeUp:
             pass
