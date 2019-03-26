@@ -56,7 +56,7 @@ def output_corpus(pname, reset):
         # Parse old logs this first time only
 
         # Old Konversation logs
-        for fn in [os.path.join('log_irc_konversation', x) for x in
+        for fn in [os.path.join('log', 'irc', 'konversation', x) for x in
                 ('calcgames.log', 'cemetech.log', 'tcpa.log', 'ti.log',
                 'efnet_#tiasm.log', 'omnimaga.log')]:
             with open(os.path.join(home, fn), 'r') as f:
@@ -70,8 +70,7 @@ def output_corpus(pname, reset):
             print_context_break()
 
         # Old #tcpa logs from elsewhere
-        log_path = os.path.join('/home/tcparetro',
-                                os.path.join('log_irc_retro'))
+        log_path = '/home/tcparetro/log_irc_retro'
         for dn in [os.path.join(log_path, x) for x in sorted(
                 os.listdir(log_path))]:
             for fn in sorted(os.listdir(dn)):
@@ -85,8 +84,7 @@ def output_corpus(pname, reset):
         print_context_break()
 
         # Old #calcgames logs from elsewhere
-        log_path = os.path.join('/home/tcparetro',
-                                os.path.join('log_calcgames'))
+        log_path = '/home/tcparetro/log_calcgames'
         for fn in sorted(os.listdir(log_path)):
             with open(os.path.join(log_path, fn), 'r') as f:
                 for line in f:
@@ -127,7 +125,7 @@ def output_corpus(pname, reset):
             print_context_break()
 
         # irssi logs
-        log_path = os.path.join(home, os.path.join('log_irc_irssi'))
+        log_path = os.path.join(home, os.path.join('log', 'irc', 'irssi'))
         for dn in [os.path.join(log_path, x) for x in os.listdir(log_path)]:
             try:
                 last_channel = None
@@ -173,7 +171,7 @@ def output_corpus(pname, reset):
 
     # Parse current weechat logs
     stderr.write('Parsing current logs...\n')
-    for fn in [os.path.join('log_irc_weechat', 'irc.efnet.#'+x+'.weechatlog')
+    for fn in [os.path.join('log', 'irc', 'weechat', 'irc.efnet.#'+x+'.weechatlog')
                for x in
             ('calcgames', 'cemetech', 'tcpa', 'ti', 'omnimaga', 'flood',
              'caleb', 'caleb-spam', 'hp48', 'markov', 'nspired', 'nspire-lua',
