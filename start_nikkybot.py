@@ -93,7 +93,7 @@ if __name__ == '__main__':
                     default=['irc.choopa.net:6667',
                              'efnet.port80.se:6667',
                              'irc.shoutcast.com:6667',
-                             'irc.teksavvy.ca:6667', 'irc.paraphysics.net:6667'],
+                    ],
                     help='List of servers to connect to (host:port)')
     ap.add_argument('--real-name', default='NikkyBot',
                     help='"Real name" to provide to IRC server')
