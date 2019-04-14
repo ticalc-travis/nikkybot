@@ -623,7 +623,7 @@ patterns = (
         '\n3. ', E(rule),
     ),
 True),
-(r'\b(war|wars)[0-9]*\b', 0, E(war)),
+(r'\b(war|wars|randwar)[0-9]*\b', 0, E(war)),
 
 ## Markov search/debug ##
 
