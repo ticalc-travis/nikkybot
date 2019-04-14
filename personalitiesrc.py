@@ -39,7 +39,6 @@ personality_regexes = {
     'nik': r'chessy|nik$',
     'pt': r'p_t|pt_',
     'seegreatness': r'seegreatness',
-    'avgn': r'avgn',
     'eightx84': r'eightx84|someone26',
     'solarsoftware': r'solarsoftware',
     'richardnixon': r'richardnixon',
@@ -78,7 +77,6 @@ personality_regexes = {
 }
 
 personality_config = {
-    'avgn': {'order': 2},
     'nik': {'order': 3},
     'iphoenix': {'order': 3},
     'jwinslow23': {'order': 2},
