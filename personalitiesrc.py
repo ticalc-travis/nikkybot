@@ -12,6 +12,9 @@
 # }
 
 personality_regexes = {
+    'rogerwilco': r'rogerwilc',
+    'jeffitus': r'jeffitus',
+    'kryptonic': r'kryptonic',
     'iambian': r'iambian',
     'logicaljoe': r'logicaljoe',
     'commandblockguy': r'commandblockguy|commandz|cmdtwo',
@@ -117,6 +120,7 @@ personalities = {
     'jwinslow': 'jwinslow23',
     'jwin': 'jwinslow23',
     'tlm': 'thelastmillennial',
+    'rogerwilc': 'rogerwilco',
 }
 
 # Fill in primary personas...
