@@ -121,6 +121,7 @@ personalities = {
     'jwin': 'jwinslow23',
     'tlm': 'thelastmillennial',
     'rogerwilc': 'rogerwilco',
+    'commandz': 'commandblockguy',
 }
 
 # Fill in primary personas...
