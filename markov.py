@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import Counter
 from random import choice
 import re
 import psycopg2
@@ -51,6 +52,7 @@ DEFAULT_CONTEXT_IGNORE_SUFFIXES = (
 's', 'est', 'es', 'ies', 'ion', 'er', 'en', 'ed', 'ly', 'y', 'ing', 'ings',
 't', 've', 're', 'd', 'm',
 )
+DEFAULT_MAX_REPEATED_PHRASES = 8
 
 class PostgresMarkov(object):
     """tev's Markov chain implementation using a PostgreSQL backend to store
@@ -422,7 +424,8 @@ class PostgresMarkov(object):
         return choices
 
     def sentence_forward(self, start, length=4, allow_empty_completion=True,
-                         max_lf=None):
+                         max_lf=None,
+                         max_repeated_phrases=DEFAULT_MAX_REPEATED_PHRASES):
         """Generate a sentence forward from the start chain.
         length:  Size of the chain used to extend the sentence in words
         allow_empty_completion:  If False, do not return a chain identical
@@ -430,8 +433,11 @@ class PostgresMarkov(object):
           KeyError if this is not possible).
         max_lf:  Limit number of line breaks in output sentence to this value
           (None = unlimited)
+        max_repeated_phrases:  Limit number of repeated chain fragments in
+          output sentence to this value to avoid infinite looping
         """
         sentence = start = choice(self.forward(start))[0]
+        phrase_count = Counter()
         while True:
             try:
                 choices = [t[1] for t in self.forward(sentence[-length:])]
@@ -446,7 +452,13 @@ class PostgresMarkov(object):
                     raise KeyError(
                         'No non-empty forward chain completion for: ' +
                         repr(start))
-                sentence = sentence + choice(choices)[:length]
+                phrase = choice(choices)[:length]
+                phrase_count[phrase] += 1
+                if phrase_count and (max(phrase_count.values()) >
+                                     max_repeated_phrases):
+                    sentence = sentence + ('[…]',)
+                    break
+                sentence = sentence + phrase
             except KeyError:
                 # End of chain--if anything was added to 'start', quit and
                 # return result; otherwise re-raise the exception
@@ -457,7 +469,8 @@ class PostgresMarkov(object):
         return self.chain_to_str(sentence)
 
     def sentence_backward(self, start, length=4, allow_empty_completion=True,
-                          max_lf=None):
+                          max_lf=None,
+                          max_repeated_phrases=DEFAULT_MAX_REPEATED_PHRASES):
         """Generate a sentence backward from the start chain.
         length:  Size of the chain used to extend the sentence in words
         allow_empty_completion:  If False, do not return a chain identical
@@ -465,8 +478,11 @@ class PostgresMarkov(object):
           KeyError if this is not possible).
         max_lf:  Limit number of line breaks in output sentence to this value
           (None = unlimited)
+        max_repeated_phrases:  Limit number of repeated chain fragments in
+          output sentence to this value to avoid infinite looping
         """
         sentence = start = choice(self.backward(start))[0]
+        phrase_count = Counter()
         while True:
             try:
                 choices = [t[1] for t in self.backward(sentence[:length])]
@@ -485,6 +501,12 @@ class PostgresMarkov(object):
                     raise KeyError(
                         'No non-empty backward chain completion for: ' +
                         repr(start))
+                phrase = choice(choices)[:length]
+                phrase_count[phrase] += 1
+                if phrase_count and (max(phrase_count.values()) >
+                                     max_repeated_phrases):
+                    sentence = ('[…]',) + sentence
+                    break
                 sentence = choice(choices)[-length:] + sentence
             except KeyError:
                 # End of chain--if anything was added to 'start', quit and
