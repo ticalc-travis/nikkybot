@@ -435,8 +435,10 @@ class PostgresMarkov(object):
         while True:
             try:
                 choices = [t[1] for t in self.forward(sentence[-length:])]
+                empty_allowed_now = (
+                    allow_empty_completion if sentence == start else True)
                 choices = self._filter_completions(
-                    sentence, choices, allow_empty_completion, max_lf)
+                    sentence, choices, empty_allowed_now, max_lf)
                         # Handle line length limits and empty completions
                 # If nothing to choose, raise end-of-chain KeyError; handle it
                 # in the exception handler below
@@ -468,8 +470,10 @@ class PostgresMarkov(object):
         while True:
             try:
                 choices = [t[1] for t in self.backward(sentence[:length])]
+                empty_allowed_now = (
+                    allow_empty_completion if sentence == start else True)
                 choices = self._filter_completions(
-                    sentence, choices, allow_empty_completion, max_lf,
+                    sentence, choices, empty_allowed_now, max_lf,
                     backwards=True)
                         # Handle line length limits and empty completions
                 # If nothing to choose, raise end-of-chain KeyError; handle it
