@@ -34,7 +34,7 @@ personality_regexes = {
     'oldmud0': r'oldmud0',
     'little': r'little',
     'jacobkuschel': r'jacob_kuschel',
-    'iphoenix': r'_iphoenix_',
+    'iphoenix': r'_iphoenix_|iphoenix',
     'michael23b': r'michaelb|michael2_3b',
     'pieman': r'pieman',
     'battlesquid': r'squid|battlesquid',
