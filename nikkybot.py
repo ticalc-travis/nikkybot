@@ -61,6 +61,13 @@ def irc_lower(string):
     return string
 
 
+def sanitize(s):
+    """Remove control characters from string 's'"""
+    for cn in xrange(0, 32):
+        s = s.replace(chr(cn), '')
+    return s
+
+
 class BotError(Exception):
     pass
 
@@ -300,7 +307,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         nickname and return the message with non-Unicode characters
         replaced so they won't cause later problems."""
         nick, host = user.split('!', 1)
-        msg = raw_msg.strip()
+        msg = sanitize(raw_msg).strip()
         msg = msg.decode(encoding='utf8', errors='replace').encode(
             encoding='utf8')
 
@@ -320,6 +327,10 @@ class NikkyBot(irc.IRCClient, Sensitive):
                     if m:
                         nick = m.group(1)
                         msg = m.group(2)
+        elif hostmask_match('BN-Relay*!*@*', user):
+            m = re.match(r'<(.*?)> (.*)', msg)
+            if m:
+                nick, msg = m.group(1), m.group(2)
         return nick, msg
 
     def report_error(self, source, silent=False):

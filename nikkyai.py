@@ -239,7 +239,7 @@ class NikkyAI(object):
             raise Dont_know_how_to_respond_error
         else:
             self.printdebug("[_pattern_reply] sourcenick {}, msg {}: Chose match {}".format(repr(sourcenick), repr(msg), repr(match.re.pattern)))
-        fmt_list = [sourcenick,] + [self.sanitize(s) for s in match.groups()]
+        fmt_list = [sourcenick,] + list(match.groups())
         try:
             return (reply.get(self, context, fmt_list), allow_repeat)
         except AttributeError as e:
@@ -613,15 +613,6 @@ class NikkyAI(object):
         msg = self.replace_nicks(msg, sourcenick)
         msg = self.dehighlight_sentence(msg)
         return msg
-
-    def sanitize(self, s):
-        """Remove control characters from 's' if it's a string; return it as is
-        if it's None
-        """
-        if s is not None:
-            for cn in xrange(0, 32):
-                s = s.replace(chr(cn), '')
-        return s
 
     def get_max_lf(self, max_lf_l=None, max_lf_r=None):
         """Obtain maximum number of output lines settings.  Return
