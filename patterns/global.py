@@ -644,4 +644,6 @@ True),
 (r'^\??markov3fnr (.*)', -99, Manual_markov_forward(3, '{1}'), False),
 (r'^\??markov2fnr (.*)', -99, Manual_markov_forward(2, '{1}'), False),
 
+(r'^whoami', -99, "You're {0}!", True),
+
 )
