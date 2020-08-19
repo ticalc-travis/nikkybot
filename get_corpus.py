@@ -70,7 +70,7 @@ def output_corpus(pname, reset):
             print_context_break()
 
         # Old #tcpa logs from elsewhere
-        log_path = '/home/tcparetro/log_irc_retro'
+        log_path = os.path.join(home, 'log', 'irc', 'e-j')
         for dn in [os.path.join(log_path, x) for x in sorted(
                 os.listdir(log_path))]:
             for fn in sorted(os.listdir(dn)):
@@ -84,7 +84,7 @@ def output_corpus(pname, reset):
         print_context_break()
 
         # Old #calcgames logs from elsewhere
-        log_path = '/home/tcparetro/log_calcgames'
+        log_path = os.path.join(home, 'log', 'irc', 'calcgames')
         for fn in sorted(os.listdir(log_path)):
             with open(os.path.join(log_path, fn), 'r') as f:
                 for line in f:
