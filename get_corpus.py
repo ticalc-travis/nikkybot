@@ -171,17 +171,47 @@ def output_corpus(pname, reset):
 
     # Parse current weechat logs
     stderr.write('Parsing current logs...\n')
-    for fn in [os.path.join('log', 'irc', 'weechat', 'irc.efnet.#'+x+'.weechatlog')
-               for x in
-            ('calcgames', 'cemetech', 'tcpa', 'ti', 'omnimaga', 'flood',
+    log_root = os.path.join(home, 'log', 'irc', 'weechat')
+    logs_to_open = []
+    for channel_name in [
+            'calcgames', 'cemetech', 'tcpa', 'ti', 'omnimaga', 'flood',
              'caleb', 'caleb-spam', 'hp48', 'markov', 'nspired', 'nspire-lua',
              'prizm', 'wikiti', 'cemetech-mc', 'codewalrus', 'gbadev',
-             'kinginfinity', 'thebutton', 'thebuttondev')]:
-        with open(os.path.join(home, fn), 'r') as f:
+             'kinginfinity', 'thebutton', 'thebuttondev'
+            ]:
+        log_prefix = 'irc.efnet.#' + channel_name + '.'
+        old_log_fn =  log_prefix + 'weechatlog'
+        logs_to_open.append(
+            {'path': os.path.join(log_root, old_log_fn),
+             'start_date': datetime(2020, 7, 1),
+                           # One month before earliest available YYYY-MM log
+            }
+        )
+        for fn in sorted(os.listdir(log_root)):
+            m = re.match(
+                '^' + re.escape(log_prefix) +
+                '([0-9]{4})-([0-9]{2})\.weechatlog$',
+                fn)
+            if m:
+                logs_to_open.append(
+                    {'path': os.path.join(log_root, fn),
+                     'start_date': datetime(
+                         year=int(m.group(1)), month=int(m.group(2)), day=1)
+                    }
+                )
+    for log in logs_to_open:
+        if (last_updated.replace(
+                day=1, hour=0, minute=0, second=0, microsecond=0) >
+            log['start_date']
+        ):
+            stderr.write('Skipping ' + log['path'] + '\n')
+            continue
+        stderr.write('Opening ' + log['path'] + '\n')
+        with open(os.path.join(home, log['path']), 'r') as f:
             for line in f:
                 line = line.strip()
 
-                m1 = re.match(r'^([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2})\t[+@]?(.*?)\t(.*)', line)
+                m1 = re.match(r'^([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2})(?: -[0-9]{4})?\t[+@]?(.*?)\t(.*)', line)
                 m2 = re.match(r'^(..., [0-9]{2} ... [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}) [-+][0-9]{4}\t[+@]?(.*?)\t(.*)', line)
                 if m1:
                     date, nick, msg = m1.groups()
