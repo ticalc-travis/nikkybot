@@ -315,15 +315,12 @@ class NikkyBot(irc.IRCClient, Sensitive):
             encoding='utf8')
 
         # Parse/convert saxjax's messages
-        if (hostmask_match('saxjax*!*@*', user) or
-                hostmask_match('gCnIRCHub*@*.*', user) or
-                hostmask_match('disjax*!*@*', user)
-        ):
-            m = re.match(r'(?:\(.\) )?(?:\[(.*)\]|\*(.*?)) (.*)', msg)
+        if hostmask_match('saxjax*!*@*', user):
+            m = re.match(r'(?:\[.\] <(.*?)> (.*))', msg)
             if m:
                 # Normal chat speaking
-                nick = m.group(1) if m.group(1) else m.group(2)
-                msg = '{}'.format(m.group(3))
+                nick = m.group(1)
+                msg = m.group(2)
                 if nick == 'Cemetech':
                     # ...or log ins/log outs/file uploads
                     m = re.match(r'(.*?) ((?:entered|logged|uploaded|deleted|added|edited).*)', msg)
