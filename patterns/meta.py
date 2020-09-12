@@ -56,10 +56,11 @@ patterns = (
         ),
     ), True
 ),
-(r'\b((how much|how many lines (of)?|how much) (code|coding|programming)|how long .* to (make|program|code|design|write) you)', -10,
+(r'\b((how much|how many lines (of)?|how much) (code|coding|programming)|how long .* to (make|program|code|design|write) you|you (coded|programmed|written) in)', -10,
     R(
         'About a billion lines of Perl',
-        'I started out as lines of Perl\nbut then tev had to be a tard and convert it all to Python'
+        'I started out as lines of Perl\nbut then tev had to be a tard and convert it all to Python',
+        'snake\ner, cobra? what was that language called again?',
     )
 ),
 (r'(Do )?you (like|liek) (.*)(.*?)\W?$', -1,
