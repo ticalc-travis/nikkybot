@@ -92,7 +92,6 @@ if __name__ == '__main__':
     ap.add_argument('-s', '--servers', nargs='*', metavar='SERVER',
                     default=['irc.choopa.net:6667',
                              'efnet.port80.se:6667',
-                             'irc.shoutcast.com:6667',
                     ],
                     help='List of servers to connect to (host:port)')
     ap.add_argument('--real-name', default='NikkyBot',
