@@ -12,6 +12,12 @@
 # }
 
 personality_regexes = {
+    'caesar': r'caesar',
+    'fghsgh': r'fghsgh',
+    'womp': r'mr womp womp',
+    'beck': r'beck$|beckadam',
+    'roccolox': r'roccolox',
+    'nomkid': r'nomkid',
     'rogerwilco': r'rogerwilc',
     'jeffitus': r'jeffitus',
     'kryptonic': r'kryptonic',
@@ -39,7 +45,7 @@ personality_regexes = {
     'pieman': r'pieman',
     'battlesquid': r'squid|battlesquid',
     'calcmeister': r'cmeister|calcmeister',
-    'nik': r'chessy|nik$',
+    'nik': r'chessy|nik$|thenik$',
     'pt': r'p_t|pt_',
     'seegreatness': r'seegreatness',
     'eightx84': r'eightx84|someone26',
@@ -123,6 +129,8 @@ personalities = {
     'rogerwilc': 'rogerwilco',
     'commandz': 'commandblockguy',
     'mateo': 'mateoc',
+    'beckadam': 'beck',
+    'thenik': 'nik',
 }
 
 # Fill in primary personas...
