@@ -134,7 +134,7 @@ def get_personality_list_text():
     location to find them
     """
     return '''Personality list: https://github.com/ticalc-travis/nikkybot/wiki/Personality-list\n
-Talk to tev to request a new personality.'''
+Talk to tev on EFNet (or PM Travis on Cemetech forum) to request a new personality.'''
 
 
 def get_personality_list():
