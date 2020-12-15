@@ -22,7 +22,7 @@ personality_regexes = {
     'jeffitus': r'jeffitus',
     'kryptonic': r'kryptonic',
     'iambian': r'iambian',
-    'logicaljoe': r'logicaljoe',
+    'logical': r'logical$|logicaljoe',
     'commandblockguy': r'commandblockguy|commandz|cmdtwo',
     'jwinslow23': r'jwinslow',
     'barf': r'barf',
@@ -89,7 +89,7 @@ personality_config = {
     'nik': {'order': 3},
     'iphoenix': {'order': 3},
     'jwinslow23': {'order': 2},
-    'logicaljoe': {'order': 3},
+    'logical': {'order': 3},
 }
 
 personalities = {
@@ -131,6 +131,7 @@ personalities = {
     'mateo': 'mateoc',
     'beckadam': 'beck',
     'thenik': 'nik',
+    'logicaljoe': 'logical',
 }
 
 # Fill in primary personas...
