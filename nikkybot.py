@@ -331,6 +331,10 @@ class NikkyBot(irc.IRCClient, Sensitive):
             m = re.match(r'<(.*?)> (.*)', msg)
             if m:
                 nick, msg = m.group(1), m.group(2)
+        elif hostmask_match('drgnlink*!*@*', user):
+            m = re.match(r'\[(.*?)\] (.*)', msg)
+            if m:
+                nick, msg = m.group(1), m.group(2)
         return nick, msg
 
     def report_error(self, source, silent=False):
