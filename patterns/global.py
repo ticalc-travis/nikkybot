@@ -36,11 +36,10 @@ def rule(nikky, context, fmt):
     for i in xrange(0, int(ceil(nikky.search_time))):
         # Approximate search time to nearest second, rounding up
         # (approx. 1 second per iteration)
-        seed = choice(("Don't be", "Don't use", "Don't talk", "Don't bring",
-                       "Don't mention", "Don't do", "Don't act", "Just kick",
-                       "Just ban", "Don't forget to", "Just stop", "Stop",
+        seed = choice(("Don't", "Just kick", "Just ban", "Just stop", "Stop",
                        "Go", "Get", "No more", "No * allowed", "Kick * in the",
-                       "Use only", "Only use"))
+                       "Use only", "Only use", "Always", "Never", "Make sure",
+                       "Thou shalt", "Take", "Remember to"))
         chain = nikky.markov.str_to_chain(seed, wildcard="*")
         nikky.search_time = 1
         out = nikky.markov_forward(chain, src_nick=fmt[0], context=context,
