@@ -162,7 +162,13 @@ class NikkyBot(irc.IRCClient, Sensitive):
     def privmsg(self, user, target, msg):
         nick, msg = self.preparse_msg(user, msg)
         is_private = target == self.nickname
-        sender = nick if is_private else target
+
+        # For PMs, sender should always be set to the actual IRC client
+        # that sent the message, even if we parse a differnet "virtual"
+        # nickname from a bridge bot's output; this is where responses
+        # will be sent back
+        sender = user.split('!')[0] if is_private else target
+
         is_admin = any_hostmask_match(self.opts.admin_hostmasks, user)
         is_highlight = self.is_highlight(msg)
 
