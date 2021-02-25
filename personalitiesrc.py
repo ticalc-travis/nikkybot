@@ -12,6 +12,8 @@
 # }
 
 personality_regexes = {
+    'tinyhacker': r'tiny_hacker',
+    'timmy': r'timmyturner',
     'caesar': r'caesar',
     'fghsgh': r'fghsgh',
     'womp': r'mr womp womp',
@@ -132,6 +134,8 @@ personalities = {
     'beckadam': 'beck',
     'thenik': 'nik',
     'logicaljoe': 'logical',
+    'timmyturner': 'timmy',
+    'timmyturner62': 'timmy',
 }
 
 # Fill in primary personas...
