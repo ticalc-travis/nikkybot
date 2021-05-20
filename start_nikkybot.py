@@ -139,10 +139,12 @@ if __name__ == '__main__':
     ap.add_argument('--max-user-threads', default=4, type=int,
                     help='Maximum threads invoked from untrusted commands to '
                          'run simultaneously')
-    ap.add_argument('--flood-protect', nargs=2, default=None,
-                    metavar=('INTERVAL', 'MAX-MSGS'), type=int,
+    ap.add_argument('--flood-protect', nargs=3, default=None,
+                    metavar=('INTERVAL', 'MAX-MSGS', 'COOLDOWN'), type=int,
                     help='Enable flood protection, accepting no more than MAX-MSGS '
-                         'messages at a time per user during INTERVAL seconds')
+                         'messages at a time per user during INTERVAL seconds.  If '
+                         'this is exceeded, ignore that user until they cease '
+                         'sending messages for COOLDOWN seconds.')
     OPTS = ap.parse_args()
 
     log.startLogging(sys.stdout)

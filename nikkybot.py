@@ -219,24 +219,40 @@ class NikkyBot(irc.IRCClient, Sensitive):
         if self.opts.flood_protect is None:
             return False
 
-        interval, max_msgs = self.opts.flood_protect
+        interval, max_msgs, cooldown_interval = self.opts.flood_protect
+        interval = datetime.timedelta(seconds=interval)
+        cooldown_interval = datetime.timedelta(seconds=cooldown_interval)
+
         now = datetime.datetime.now()
         try:
             rate = self.user_message_rate[sender]
         except KeyError:
             rate = self.user_message_rate[sender] = {
                 'first_msg_time': now,
+                'last_msg_time': now,
                 'msg_count': 0,
             }
-        print('Flood protect: Now: %s    First time: %s    Interval: %s' % (now, rate['first_msg_time'], interval))
-        if now - rate['first_msg_time'] < datetime.timedelta(seconds=interval):
-            rate['msg_count'] += 1
-        else:
+
+        is_flooding = rate['msg_count'] > max_msgs
+        interval_expired = False
+        if is_flooding and now - rate['last_msg_time'] >= cooldown_interval:
+            interval_expired = True
+        elif not is_flooding and now - rate['first_msg_time'] >= interval:
+            interval_expired = True
+        if interval_expired:
             rate['first_msg_time'] = now
             rate['msg_count'] = 0
+        rate['msg_count'] += 1
 
-        print('Flood protect: {}: {}'.format(sender, rate))
-        return self.user_message_rate[sender]['msg_count'] > max_msgs
+        is_flooding = rate['msg_count'] > max_msgs
+        print('Flood protect: Now: {}    First msg: {}    Last msg: {}'.format(
+            now, rate['first_msg_time'], rate['last_msg_time']))
+        print('Flood protect: {}: Messages: {}    Is flooding: {}'.format(
+            sender, rate['msg_count'], is_flooding))
+        print('Flood protect: Interval: {}    Cooldown: {}'.format(
+            interval.seconds, cooldown_interval.seconds))
+        rate['last_msg_time'] = now
+        return is_flooding
 
     def action(self, user, channel, msg):
         """Pass actions to AI like normal lines"""
