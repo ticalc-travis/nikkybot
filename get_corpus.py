@@ -231,9 +231,7 @@ def output_corpus(pname, reset):
                 if (nick.lower().startswith('saxjax') or
                         nick.lower().startswith('disjax') or
                         nick.lower().startswith('cemetecmc')):
-                    m = re.match(r'^(?:\(.\) )?\[(.*?)\] (.*)', msg)
-                    if not m:
-                        m = re.match(r'^(?:\[.\] <(.*?)> (.*))', msg)
+                    m = re.match(r'(?:[[(].[])] )?[[<](.*?)[]>] (.*)', msg)
                 elif nick.lower().startswith('omnomirc'):
                     m = re.match(r'^(?:\(.\))?<(.*?)> (.*)', msg, re.I)
                 elif (nick.lower().startswith('walriibot') or
