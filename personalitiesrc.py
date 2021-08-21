@@ -14,7 +14,7 @@
 personality_regexes = {
     'tinyhacker': r'tiny_hacker',
     'timmy': r'timmyturner',
-    'caesar': r'caesar',
+    'caesar': r'caesar(?![0-9][0-9])',
     'fghsgh': r'fghsgh',
     'womp': r'mr womp womp',
     'beck': r'beck$|beckadam',
