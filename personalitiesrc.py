@@ -78,7 +78,7 @@ personality_regexes = {
     'merth': r'merth|merthsoft|shaun',
     'randomist': r'randomist|korinidos|.*arch|metalrand|randeimos|dama|dam\\|damvista|devoidofw|psychodro',
     'sirlewk': r'sir_lewk|sirlewk',
-    'chronomex': r'chronomex|chronome1|.*?slythe|xmc|cmx|exmic|astrid',
+    'chronomex': r'chronomex|chronome1|.*?slythe|xmc|cmx|exmic|astrid|astrinaut',
     'michaelv': r'michael_v|michaelv',
     'ej': r'e-j|e-jl|el-j',
     'cricketb': r'cricket_b|cricketb|chirp_b|truepika',
