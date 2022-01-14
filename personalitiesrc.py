@@ -97,6 +97,7 @@ personality_config = {
 personalities = {
     # Aliases...:
     'nikkybot': 'nikky',
+    'astrinaut': 'chronomex',
     'astrid': 'chronomex',
     'exmic': 'chronomex',
     'cmx': 'chronomex',
