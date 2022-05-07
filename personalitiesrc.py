@@ -12,6 +12,9 @@
 # }
 
 personality_regexes = {
+    'epsilon5': r'epsilon5',
+    'wavejumper3': r'wavejumper3',
+    'clevor': r'clevor',
     'tinyhacker': r'tiny_hacker',
     'timmy': r'timmyturner',
     'caesar': r'caesar(?![0-9][0-9])',
