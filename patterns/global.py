@@ -476,6 +476,32 @@ patterns = (
         Markov_forward('guess what', order=3),
     )
 ),
+(r"\bwhat should (\w+) (do|make)\b", -20,
+    R(
+        Recurse('***make/do***'),
+        Recurse('mimic anybody ***make/do***'),
+    ),
+),
+(r"\bwhat should (\w+) (\w+)\b", -20,
+    R(
+        Markov_forward('{2} a'),
+        Markov_forward('{2} an'),
+        Markov_forward('{2} the'),
+        Markov_forward('{2} all'),
+    ),
+),
+(r"\*\*\*make/do\*\*\*", -20,
+    R(
+        Markov_forward('create a'),
+        Markov_forward('create an'),
+        Markov_forward('make a'),
+        Markov_forward('make an'),
+        Markov_forward('invent a'),
+        Markov_forward('invent an'),
+        Markov_forward('do a'),
+        Markov_forward('do an'),
+    )
+),
 
 ## Misc ##
 
