@@ -73,6 +73,12 @@ def mimic_random(nikkyai, context, fmt):
     return out
 
 
+def mimic_speaker(nikkyai, context, fmt):
+    src_nick = fmt[0]
+    new_fmt = (src_nick, None, src_nick, fmt[3])
+    return mimic(nikkyai, context, new_fmt)
+
+
 def list_personas(nikkyai, context, fmt):
     return nikkyai.get_personalities_text()
 
@@ -97,6 +103,7 @@ True),
 (r'^\W*(mimic|impersonate|act like|imitate)\s*$', -98, E(mimic_random), True),
 (r'^\W*(mimic|impersonate|act like|imitate)\W+(\S+)(?: |$)(.*)', -98, E(mimic), True),
 (r'^\W*(mimic|impersonate|act like|imitate)\W+(someone|anyone|somebody|anybody|random|rand)(?: |$)(.*)', -99, E(mimic_random), True),
+(r'^\W*(mimic|impersonate|act like|imitate)\W+(me|myself)(?: |$)(.*)', -99, E(mimic_speaker), True),
 (r'^\W*(personas|personalities)\b', -99, E(list_personas), True),
 
 # Markov
