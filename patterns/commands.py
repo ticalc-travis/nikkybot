@@ -40,7 +40,7 @@ def mimic(nikkyai, context, fmt):
     try:
         nikkyai.set_personality(persona)
     except Bad_personality_error:
-        out = "No such personality '{}'\n{}".format(
+        out = "Sorry, no personality named '{}' yet. {}".format(
             persona, nikkyai.get_personalities_text())
     else:
         in_msg = '<{}> {}'.format(src_nick, msg)

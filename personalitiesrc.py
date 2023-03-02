@@ -150,8 +150,7 @@ def get_personality_list_text():
     """Return a human-readable string of available personalities, or a
     location to find them
     """
-    return '''Personality list: https://github.com/ticalc-travis/nikkybot/wiki/Personality-list\n
-Talk to tev on EFNet (or PM Travis on Cemetech forum) to request a new personality.'''
+    return 'Personality list: https://github.com/ticalc-travis/nikkybot/wiki/Personality-list  Talk to tev on EFNet (or PM Travis on Cemetech forum) to request a new personality.'
 
 
 def get_personality_list():
