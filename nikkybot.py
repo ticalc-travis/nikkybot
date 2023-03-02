@@ -353,7 +353,8 @@ class NikkyBot(irc.IRCClient, Sensitive):
             m = re.match(r'<(.*?)> (.*)', msg)
             if m:
                 nick, msg = m.group(1), m.group(2)
-        elif hostmask_match('*!~dragonlin@*', user):
+        elif (hostmask_match('*!~dragonlin@*', user) or
+              hostmask_match('*!~RoccoLink@*', user)):
             m = re.match(r'\[(.*?)\] (.*)', msg)
             if m:
                 nick, msg = m.group(1), m.group(2)
