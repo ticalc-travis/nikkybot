@@ -12,6 +12,9 @@
 # }
 
 personality_regexes = {
+    'kg583': r'kg583',
+    'lifeemu': r'lifeemu',
+    'nato': r'nato',
     'epsilon5': r'epsilon5',
     'wavejumper3': r'wavejumper3',
     'clevor': r'clevor',
