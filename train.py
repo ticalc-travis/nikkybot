@@ -142,7 +142,7 @@ class TrainingCorpus(object):
         self._update()
         rows = []
         i, n = 0, len(self._context)
-        for word_pair, freq in list(self._context.items()):
+        for word_pair, freq in self._context.items():
             rows.append((word_pair[0], word_pair[1], freq))
             i += 1
             if len(rows) == limit:
