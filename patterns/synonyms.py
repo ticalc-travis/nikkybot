@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # “NikkyBot”
 # Copyright ©2012-2016 Travis Evans
 #

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Simple Markov chain implementation
 # Copyright ©2012-2016 Travis Evans
 #
