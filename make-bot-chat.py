@@ -16,10 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-
-NUMBER_OF_ROUNDS = 50
-
+import functools
 import textwrap
 from sys import argv, exit
 from time import sleep
@@ -27,12 +24,18 @@ from time import sleep
 import nikkyai
 import personalitiesrc
 
-# Work around Python2's stupid encoding nonsense
-import sys
-import codecs
-sys.stdout = codecs.getwriter('utf-8')(sys.stdout, 'replace')
-def just_PRINT_DAMNIT(s):
-    print(s.decode(encoding='utf-8', errors='replace'))
+NUMBER_OF_ROUNDS = 50
+
+
+real_print = print
+
+@functools.wraps(real_print)
+def print(s, *args, **kwargs):
+    """Print arbitrary strings which may contain bad encoding without
+    raising a UnicodeDecodeError; just do the best we can and move on.
+    """
+    s = str(s).encode('utf-8', errors='backslashreplace').decode()
+    real_print(s, *args, **kwargs)
 
 def usage_exit():
     print('Usage: {} personality1 personality2'.format(argv[0]))
@@ -92,6 +95,6 @@ def format_response(nick, msg, tag=None):
 response = ''
 for i in range(NUMBER_OF_ROUNDS):
     response = get_response(bot1, nick1, nick2, response)
-    just_PRINT_DAMNIT(format_response(nick1, response, tag1) + '\n')
+    print(format_response(nick1, response, tag1) + '\n')
     response = get_response(bot2, nick2, nick1, response)
-    just_PRINT_DAMNIT(format_response(nick2, response, tag2) + '\n')
+    print(format_response(nick2, response, tag2) + '\n')
