@@ -17,13 +17,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function
+
 
 from collections import defaultdict
 from collections import deque
 
 import argparse
-import cPickle
+import pickle
 import random
 import time
 import sys

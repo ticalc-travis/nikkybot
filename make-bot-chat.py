@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function
+
 
 NUMBER_OF_ROUNDS = 50
 
@@ -91,7 +91,7 @@ def format_response(nick, msg, tag=None):
     return formatted_msg
 
 response = ''
-for i in xrange(NUMBER_OF_ROUNDS):
+for i in range(NUMBER_OF_ROUNDS):
     response = get_response(bot1, nick1, nick2, response)
     just_PRINT_DAMNIT(format_response(nick1, response, tag1) + '\n')
     response = get_response(bot2, nick2, nick1, response)

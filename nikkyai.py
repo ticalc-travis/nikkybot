@@ -19,7 +19,7 @@
 from collections import deque
 from datetime import datetime, timedelta
 from random import randint, choice
-import cPickle
+import pickle
 from os import fstat, stat, getpid
 import re
 import subprocess
@@ -140,7 +140,7 @@ class NikkyAI(object):
         self.last_replies if add_response.  Do
         check_output_response().
         """
-        for i in xrange(self.recurse_limit):
+        for i in range(self.recurse_limit):
             try:
                 return self.check_output_response(
                     self.generic_remark(msg), add_response=add_response)
@@ -173,7 +173,7 @@ class NikkyAI(object):
         Do check_output_response().
         """
         search_time_save = self.search_time
-        for i in xrange(self.recurse_limit):
+        for i in range(self.recurse_limit):
             response, allow_repeat = self._pattern_reply(msg, context)
             response = self.dehighlight_sentence(response)
             try:
@@ -274,7 +274,7 @@ class NikkyAI(object):
         try:
             while msg.strip():
                 for o in (5, 4, 3, 2, 1):
-                    for i in xrange(len(words) - (o-1)):
+                    for i in range(len(words) - (o-1)):
                         if time() > start_time + self.search_time:
                             raise ResponseTimeUp
 
@@ -343,7 +343,7 @@ class NikkyAI(object):
             'also', 'back', 'after', 'use', 'two', 'how', 'our',
             'work', 'first', 'well', 'way', 'even', 'new', 'want',
             'because', 'any', 'these', 'give', 'day', 'most', 'us')
-        for i in xrange(self.recurse_limit):
+        for i in range(self.recurse_limit):
             chain = self.markov.str_to_chain(choice(generic_words))
             try:
                 msg = self.markov.sentence(
@@ -532,7 +532,7 @@ class NikkyAI(object):
         """
         num_removed = 0
         orig_size = len(self.last_replies)
-        for k, d in self.last_replies.items():
+        for k, d in list(self.last_replies.items()):
             if (datetime.now() - d > self.pattern_response_expiry):
                 self.printdebug(
                     "[clean_up_last_replies] "
@@ -716,7 +716,7 @@ class NikkyAI(object):
         if t is None:
             self.printdebug('[load_state] No state found for id "{}"'.format(self.id))
         else:
-            self.set_state(cPickle.loads(str(t[0])))
+            self.set_state(pickle.loads(str(t[0])))
             self.printdebug(
                 '[load_state] Loaded state for id "{}"'.format(self.id))
         self.dbconn.rollback()
@@ -727,7 +727,7 @@ class NikkyAI(object):
             return
         cur = self.dbconn.cursor()
         self._check_state_table()
-        state = cPickle.dumps(self.get_state())
+        state = pickle.dumps(self.get_state())
         try:
             cur.execute(
                 'INSERT INTO ".nikkyai-state" (id, state) VALUES (%s, %s)',

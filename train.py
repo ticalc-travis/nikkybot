@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-from __future__ import division
+
 
 import argparse
 import re
@@ -79,8 +79,8 @@ class TrainingCorpus(object):
         calling self.add_spoken(line), else train it as a context line
         by calling self.add_context(line).
         """
-        nick = unicode(nick, encoding='utf8', errors='replace')
-        line = unicode(line, encoding='utf8', errors='replace')
+        nick = str(nick, encoding='utf8', errors='replace')
+        line = str(line, encoding='utf8', errors='replace')
         if self.is_nick(nick):
             self.add_spoken(line)
         else:
@@ -142,7 +142,7 @@ class TrainingCorpus(object):
         self._update()
         rows = []
         i, n = 0, len(self._context)
-        for word_pair, freq in self._context.items():
+        for word_pair, freq in list(self._context.items()):
             rows.append((word_pair[0], word_pair[1], freq))
             i += 1
             if len(rows) == limit:
@@ -272,5 +272,5 @@ if __name__ == '__main__':
     try:
         update(pname, reset, stdin, update_datestamp)
     except BadPersonalityError:
-        print "Personality '{}' not defined in personalitiesrc.py".format(pname)
+        print("Personality '{}' not defined in personalitiesrc.py".format(pname))
         exit(2)

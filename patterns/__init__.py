@@ -18,7 +18,7 @@
 
 import importlib
 
-import _table
+from . import _table
 reload(_table)
 
 _GLOBAL_PATTERN_FILES = ('global', 'synonyms')

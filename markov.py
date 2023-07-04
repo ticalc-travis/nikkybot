@@ -140,7 +140,7 @@ class PostgresMarkov(object):
             new_args = []
             for a in args:
                 try:
-                    new_args.append(unicode(a, encoding='utf8',
+                    new_args.append(str(a, encoding='utf8',
                                             errors='replace'))
                 except TypeError:
                     new_args.append(a)

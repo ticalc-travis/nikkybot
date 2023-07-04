@@ -271,5 +271,5 @@ if __name__ == '__main__':
     try:
         output_corpus(pname, reset)
     except BadPersonalityError:
-        print "Personality '{}' not defined in personalitiesrc.py".format(pname)
+        print("Personality '{}' not defined in personalitiesrc.py".format(pname))
         exit(2)

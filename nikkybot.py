@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function
+
 
 import datetime
 import random
@@ -56,7 +56,7 @@ def irc_lower(string):
     """Convert string to IRC's idea of lowercase"""
     string = string.lower()
     symb_lower = {'[': '{', ']': '}', '\\': '|', '~': '^'}
-    for up, low in symb_lower.items():
+    for up, low in list(symb_lower.items()):
         string = string.replace(up, low)
     return string
 
@@ -442,7 +442,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
             ml = set()
             rnl = set()
             self.nikkies[chankey]   # Summon new channel NikkyAI into existence
-            for nikky in self.nikkies.values():
+            for nikky in list(self.nikkies.values()):
                 pk = pk.union(nikky.preferred_keywords)
                 ml = ml.union(nikky.munge_list)
                 rnl = rnl.union(nikky.replace_nicks_list)
@@ -464,7 +464,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         elif cmd == '?addword':
             if not is_admin:
                 raise UnauthorizedCommandError
-            for nikky in self.nikkies.values():
+            for nikky in list(self.nikkies.values()):
                 nikky.add_preferred_keyword(args)
                 self.notice(sender, '{}: Keyword added; {} total'.format(
                     nikky.id, len(nikky.preferred_keywords)))
@@ -472,7 +472,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         elif cmd == '?delword':
             if not is_admin:
                 raise UnauthorizedCommandError
-            for nikky in self.nikkies.values():
+            for nikky in list(self.nikkies.values()):
                 try:
                     nikky.delete_preferred_keyword(args)
                 except KeyError:
@@ -498,7 +498,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         elif cmd == '?addreplace':
             if not is_admin:
                 raise UnauthorizedCommandError
-            for nikky in self.nikkies.values():
+            for nikky in list(self.nikkies.values()):
                 nikky.add_replace_nick(args)
                 self.notice(sender, '{}: Replace nick added: {} total'.format(
                     nikky.id, len(nikky.replace_nicks_list)))
@@ -506,7 +506,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         elif cmd == '?delreplace':
             if not is_admin:
                 raise UnauthorizedCommandError
-            for nikky in self.nikkies.values():
+            for nikky in list(self.nikkies.values()):
                 try:
                     nikky.delete_replace_nick(args)
                 except KeyError:
@@ -594,7 +594,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
     def _cmd_add_munge(self, nick):
         nothing_done = True
-        for n in self.nikkies.values():
+        for n in list(self.nikkies.values()):
             if not nick in n.munge_list:
                 n.add_munged_word(nick)
                 nothing_done = False
@@ -603,7 +603,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
     def _cmd_delete_munge(self, nick):
         nothing_done = True
-        for n in self.nikkies.values():
+        for n in list(self.nikkies.values()):
             if nick in n.munge_list:
                 n.delete_munged_word(nick)
                 nothing_done = False
@@ -682,7 +682,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
             delay = self.opts.initial_reply_delay
             rate = self.opts.simulated_typing_speed
 
-        if isinstance(msg, str) or isinstance(msg, unicode):
+        if isinstance(msg, str) or isinstance(msg, str):
             msg = [msg]
         first_line = True
         for item in msg:
