@@ -692,6 +692,23 @@ class NikkyAI(object):
         """Reset current internal state to that captured by state (returned by
         get_state)
         """
+        # Detect legacy state unpickled from Python 2 (as byte strings)
+        # and convert
+        if b'last_replies' in state:
+            new_state = {}
+            for key, value in state.items():
+                if key == b'last_replies':
+                    new_state[key.decode('utf-8')] = {
+                        key2.decode('utf-8', errors='backslashreplace'): value2
+                        for key2, value2 in state[key].items()
+                    }
+                elif key in (b'preferred_keywords', b'munge_list', b'replace_nicks_list'):
+                    new_state[key.decode('utf-8')] = {
+                        item.decode('utf-8', errors='backslashreplace')
+                        for item in state[key]
+                    }
+            state = new_state
+
         self.last_replies = state['last_replies']
         self.preferred_keywords = state['preferred_keywords']
         try:
@@ -715,7 +732,7 @@ class NikkyAI(object):
         if t is None:
             self.printdebug('[load_state] No state found for id "{}"'.format(self.id))
         else:
-            self.set_state(pickle.loads(str(t[0])))
+            self.set_state(pickle.loads(t[0], encoding='bytes'))
             self.printdebug(
                 '[load_state] Loaded state for id "{}"'.format(self.id))
         self.dbconn.rollback()
