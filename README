@@ -22,8 +22,8 @@ Commands/special features
 personas
 personalities
 
-Get a list of Markov personalities available, via private notice (used for
-“mimic” and “botchat”, explained below).
+Get a URL to a list of available Markov personalities (used for “mimic” and
+“botchat”, explained below).
 
 
 mimic [<personality>|someone [<message>]]
@@ -54,8 +54,7 @@ botchat nikky netham45
 don't highlight me
 
 Causes NikkyBot to attempt to avoid highlighting your current nick when it
-speaks by inserting a ‘·’ character somewhere in it.  This command will need to
-be repeated if your nick changes.
+mentions it.  This command will need to be repeated if your nick changes.
 
 
 highlight me
