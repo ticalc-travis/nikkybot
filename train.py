@@ -263,7 +263,7 @@ if __name__ == '__main__':
     reset = args.reset
     update_datestamp = not args.no_update_datestamp
 
-    stdin = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8', errors='replace')
+    stdin = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8', errors='backslashreplace')
 
     try:
         update(pname, reset, stdin, update_datestamp)

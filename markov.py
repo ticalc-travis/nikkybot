@@ -139,7 +139,7 @@ class PostgresMarkov(object):
             for a in args:
                 try:
                     new_args.append(str(a, encoding='utf8',
-                                        errors='replace'))
+                                        errors='backslashreplace'))
                 except TypeError:
                     new_args.append(a)
         return self.cursor.execute(querystr, new_args)

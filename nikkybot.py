@@ -332,7 +332,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         replaced so they won't cause later problems."""
         nick, host = user.split('!', 1)
         msg = sanitize(strip_color(raw_msg)).strip()
-        msg = msg.decode(encoding='utf8', errors='replace').encode(
+        msg = msg.encode(encoding='utf8', errors='backslashreplace').decode(
             encoding='utf8')
 
         # Parse/convert saxjax's messages
