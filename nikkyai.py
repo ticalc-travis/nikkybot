@@ -771,7 +771,7 @@ class NikkyAI(object):
             self.dbconn.commit()
 
     def _get_munge_char(self):
-        return '\xe2\x80\x8b'
+        return '\u200d'         # Unicode zero-width joiner
 
     def munge_word(self, word):
         """Insert a symbol character into the given word (e.g., for saying
