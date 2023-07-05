@@ -129,7 +129,6 @@ class TrainingCorpus(object):
                 rows = rows[limit:]
         if rows:
             yield (n, n), rows
-        raise StopIteration
 
     def context_rows(self, limit=PROGRESS_EVERY):
         """Return a set of rows of trained context data which can be passed to
@@ -146,7 +145,6 @@ class TrainingCorpus(object):
                 rows = []
         if rows:
             yield (n, n), rows
-        raise StopIteration
 
 
 class BadPersonalityError(KeyError):

@@ -16,6 +16,7 @@
 
 from collections import deque
 from datetime import datetime, timedelta
+import importlib
 from random import randint, choice
 import pickle
 from os import fstat, stat, getpid
@@ -646,14 +647,14 @@ class NikkyAI(object):
         """Return list of available personalities (wrapper around
         personalitiesrc.py function)
         """
-        reload(personalitiesrc)
+        importlib.reload(personalitiesrc)
         return personalitiesrc.get_personality_list()
 
     def get_personalities_text(self):
         """Return human-readable text for personalities list (wrapper around
         personalities.py function)
         """
-        reload(personalitiesrc)
+        importlib.reload(personalitiesrc)
         return personalitiesrc.get_personality_list_text()
 
     def normalize_personality(self, personality):
