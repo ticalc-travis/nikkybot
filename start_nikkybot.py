@@ -146,6 +146,7 @@ if __name__ == '__main__':
                          'sending messages for COOLDOWN seconds.')
     OPTS = ap.parse_args()
 
+    sys.stdout.reconfigure(encoding='utf-8', errors='backslashreplace')
     log.startLogging(sys.stdout)
     url, port = random.choice(OPTS.servers).split(':')
     print('Connecting to {}:{}'.format(url, port))
