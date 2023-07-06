@@ -198,7 +198,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         if is_private or is_highlight:
 
             # Apply flood protection for direct responses
-            if self.is_flooding(nick):
+            if not is_admin and self.is_flooding(nick):
                 print('Too many messages from {}; ignoring'.format(nick))
                 return
 
