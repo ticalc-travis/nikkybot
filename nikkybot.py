@@ -622,7 +622,10 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
     def exec_bot_chat(self, nick, channel, nick1, nick2):
         self.user_threads += 1
-        out = subprocess.check_output(['bot-chat', nick1, nick2])
+        out = subprocess.check_output(['bot-chat', nick1, nick2]).decode('utf-8')
+        # ^ Default decoding error handling; that script should never
+        # return invalid UTF-8, and if it does, better make a lot of
+        # noise about it so the problem is known
         print('DEBUG: *** Bot chat output ***\n')
         print(out)
         return nick, channel, out
