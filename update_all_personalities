@@ -1,9 +1,7 @@
 #!/bin/bash
 
-source /etc/profile.d/prll.sh
-
 personalities=$(python3 -c "import nikkyai; n = nikkyai.NikkyAI()
 for p in sorted(n.get_personalities()):
     print(p)")
 
-prll -s "./get_corpus.py \$1 $* | ./train.py \$1 $*" $personalities
+parallel "./get_corpus.py {} $* | ./train.py {} $*" ::: $personalities
