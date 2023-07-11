@@ -59,7 +59,7 @@ def output_corpus(pname, reset):
         for fn in [os.path.join('log', 'irc', 'konversation', x) for x in
                 ('calcgames.log', 'cemetech.log', 'tcpa.log', 'ti.log',
                 'efnet_#tiasm.log', 'omnimaga.log')]:
-            with open(os.path.join(home, fn), 'r') as f:
+            with open(os.path.join(home, fn), 'r', encoding='utf-8', errors='backslashreplace') as f:
                 for line in f:
                     line = line.strip()
                     m = re.match(r'^\[.*\] \[.*\] <saxjax>\t\(.\) \[?(.*?)[:\]] (.*)', line, re.I)
@@ -75,7 +75,7 @@ def output_corpus(pname, reset):
                 os.listdir(log_path))]:
             for fn in sorted(os.listdir(dn)):
                 with open(os.path.join(log_path, os.path.join(dn, fn)),
-                          'r') as f:
+                          'r', encoding='utf-8', errors='backslashreplace') as f:
                     for line in f:
                         line = line.strip()
                         m = re.match(r'^\[[0-9]{2}:[0-9]{2}:[0-9]{2}\] <[ @+]?(.*?)> (.*)', line, re.I)
@@ -86,7 +86,7 @@ def output_corpus(pname, reset):
         # Old #calcgames logs from elsewhere
         log_path = os.path.join(home, 'log', 'irc', 'calcgames')
         for fn in sorted(os.listdir(log_path)):
-            with open(os.path.join(log_path, fn), 'r') as f:
+            with open(os.path.join(log_path, fn), 'r', encoding='utf-8', errors='backslashreplace') as f:
                 for line in f:
                     line = line.strip()
                     m = re.match(r'^[0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?(.*?)> (.*)', line, re.I)
@@ -96,7 +96,7 @@ def output_corpus(pname, reset):
 
         # More miscellaneous junk I threw in a separate huge file because it
         # was too scattered around my system
-        with open('misc_irc_lines.txt', 'r') as f:
+        with open('misc_irc_lines.txt', 'r', encoding='utf-8', errors='backslashreplace') as f:
             for line in f:
                 line = line.strip()
                 if pregex[1]:
@@ -113,7 +113,7 @@ def output_corpus(pname, reset):
                     x.endswith('.txt') and not x.startswith('.') and not
                     x.startswith('#')]
         for fn in log_path:
-            with open(fn, 'r') as f:
+            with open(fn, 'r', encoding='utf-8', errors='backslashreplace') as f:
                 for line in f:
                     line = line.strip()
                     if line:
@@ -141,7 +141,8 @@ def output_corpus(pname, reset):
                             if channel != last_channel:
                                 print_context_break()
                                 last_channel = channel
-                            with open(os.path.join(log_path, dn, fn), 'r') as f:
+                            with open(os.path.join(log_path, dn, fn), 'r',
+                                      encoding='utf-8', errors='backslashreplace') as f:
                                 for line in f:
                                     line = line.strip()
                                     m = re.match(r'^[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} <[ @+]?saxjax> \(.\) \[?(.*?)[:\]] (.*)', line, re.I)
@@ -199,7 +200,7 @@ def output_corpus(pname, reset):
                     log_paths.append(log_path)
     for path in log_paths:
         stderr.write('Opening ' + path + '\n')
-        with open(path, 'r') as f:
+        with open(path, 'r', encoding='utf-8', errors='backslashreplace') as f:
             for line in f:
                 line = line.strip()
 
