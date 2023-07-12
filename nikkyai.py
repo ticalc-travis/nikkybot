@@ -531,7 +531,7 @@ class NikkyAI(object):
         """
         num_removed = 0
         orig_size = len(self.last_replies)
-        for k, d in self.last_replies.items():
+        for k, d in list(self.last_replies.items()):
             if (datetime.now() - d > self.pattern_response_expiry):
                 self.printdebug(
                     "[clean_up_last_replies] "
