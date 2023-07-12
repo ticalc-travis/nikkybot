@@ -13,7 +13,6 @@
 
 personality_regexes = {
     'adriweb': r'adriweb',
-    'barf': r'barf',
     'beck': r'beck$|beckadam',
     'brandonw': r'brandonw',
     'caesar': r'caesar(?![0-9][0-9])',
