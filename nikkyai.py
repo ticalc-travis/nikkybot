@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # “NikkyBot”
 # Copyright ©2012-2016 Travis Evans
 #
@@ -18,8 +16,9 @@
 
 from collections import deque
 from datetime import datetime, timedelta
+import importlib
 from random import randint, choice
-import cPickle
+import pickle
 from os import fstat, stat, getpid
 import re
 import subprocess
@@ -140,7 +139,7 @@ class NikkyAI(object):
         self.last_replies if add_response.  Do
         check_output_response().
         """
-        for i in xrange(self.recurse_limit):
+        for i in range(self.recurse_limit):
             try:
                 return self.check_output_response(
                     self.generic_remark(msg), add_response=add_response)
@@ -173,7 +172,7 @@ class NikkyAI(object):
         Do check_output_response().
         """
         search_time_save = self.search_time
-        for i in xrange(self.recurse_limit):
+        for i in range(self.recurse_limit):
             response, allow_repeat = self._pattern_reply(msg, context)
             response = self.dehighlight_sentence(response)
             try:
@@ -274,7 +273,7 @@ class NikkyAI(object):
         try:
             while msg.strip():
                 for o in (5, 4, 3, 2, 1):
-                    for i in xrange(len(words) - (o-1)):
+                    for i in range(len(words) - (o-1)):
                         if time() > start_time + self.search_time:
                             raise ResponseTimeUp
 
@@ -343,7 +342,7 @@ class NikkyAI(object):
             'also', 'back', 'after', 'use', 'two', 'how', 'our',
             'work', 'first', 'well', 'way', 'even', 'new', 'want',
             'because', 'any', 'these', 'give', 'day', 'most', 'us')
-        for i in xrange(self.recurse_limit):
+        for i in range(self.recurse_limit):
             chain = self.markov.str_to_chain(choice(generic_words))
             try:
                 msg = self.markov.sentence(
@@ -532,7 +531,7 @@ class NikkyAI(object):
         """
         num_removed = 0
         orig_size = len(self.last_replies)
-        for k, d in self.last_replies.items():
+        for k, d in list(self.last_replies.items()):
             if (datetime.now() - d > self.pattern_response_expiry):
                 self.printdebug(
                     "[clean_up_last_replies] "
@@ -648,14 +647,14 @@ class NikkyAI(object):
         """Return list of available personalities (wrapper around
         personalitiesrc.py function)
         """
-        reload(personalitiesrc)
+        importlib.reload(personalitiesrc)
         return personalitiesrc.get_personality_list()
 
     def get_personalities_text(self):
         """Return human-readable text for personalities list (wrapper around
         personalities.py function)
         """
-        reload(personalitiesrc)
+        importlib.reload(personalitiesrc)
         return personalitiesrc.get_personality_list_text()
 
     def normalize_personality(self, personality):
@@ -693,6 +692,23 @@ class NikkyAI(object):
         """Reset current internal state to that captured by state (returned by
         get_state)
         """
+        # Detect legacy state unpickled from Python 2 (as byte strings)
+        # and convert
+        if b'last_replies' in state:
+            new_state = {}
+            for key, value in state.items():
+                if key == b'last_replies':
+                    new_state[key.decode('utf-8')] = {
+                        key2.decode('utf-8', errors='backslashreplace'): value2
+                        for key2, value2 in state[key].items()
+                    }
+                elif key in (b'preferred_keywords', b'munge_list', b'replace_nicks_list'):
+                    new_state[key.decode('utf-8')] = {
+                        item.decode('utf-8', errors='backslashreplace')
+                        for item in state[key]
+                    }
+            state = new_state
+
         self.last_replies = state['last_replies']
         self.preferred_keywords = state['preferred_keywords']
         try:
@@ -716,7 +732,7 @@ class NikkyAI(object):
         if t is None:
             self.printdebug('[load_state] No state found for id "{}"'.format(self.id))
         else:
-            self.set_state(cPickle.loads(str(t[0])))
+            self.set_state(pickle.loads(t[0], encoding='bytes'))
             self.printdebug(
                 '[load_state] Loaded state for id "{}"'.format(self.id))
         self.dbconn.rollback()
@@ -727,7 +743,7 @@ class NikkyAI(object):
             return
         cur = self.dbconn.cursor()
         self._check_state_table()
-        state = cPickle.dumps(self.get_state())
+        state = pickle.dumps(self.get_state())
         try:
             cur.execute(
                 'INSERT INTO ".nikkyai-state" (id, state) VALUES (%s, %s)',
@@ -755,7 +771,7 @@ class NikkyAI(object):
             self.dbconn.commit()
 
     def _get_munge_char(self):
-        return '\xe2\x80\x8b'
+        return '\u200d'         # Unicode zero-width joiner
 
     def munge_word(self, word):
         """Insert a symbol character into the given word (e.g., for saying

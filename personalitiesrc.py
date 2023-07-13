@@ -106,4 +106,4 @@ def get_personality_list_text():
 
 def get_personality_list():
     """Return a sequence of available personality names"""
-    return personality_regexes.keys()
+    return list(personality_regexes.keys())

@@ -1,12 +1,10 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
-
-from __future__ import division
+#!/usr/bin/env python3
 
 import argparse
+import io
 import re
 from collections import deque, Counter
-from sys import stdin, stdout, exit
+import sys
 import psycopg2
 
 import markov
@@ -79,8 +77,6 @@ class TrainingCorpus(object):
         calling self.add_spoken(line), else train it as a context line
         by calling self.add_context(line).
         """
-        nick = unicode(nick, encoding='utf8', errors='replace')
-        line = unicode(line, encoding='utf8', errors='replace')
         if self.is_nick(nick):
             self.add_spoken(line)
         else:
@@ -133,7 +129,6 @@ class TrainingCorpus(object):
                 rows = rows[limit:]
         if rows:
             yield (n, n), rows
-        raise StopIteration
 
     def context_rows(self, limit=PROGRESS_EVERY):
         """Return a set of rows of trained context data which can be passed to
@@ -150,7 +145,6 @@ class TrainingCorpus(object):
                 rows = []
         if rows:
             yield (n, n), rows
-        raise StopIteration
 
 
 class BadPersonalityError(KeyError):
@@ -163,7 +157,7 @@ def update(pname, reset, infile, update_datestamp):
     except KeyError:
         raise BadPersonalityError
 
-    stdout.write('Starting {} Markov generation.\n'.format(pname))
+    sys.stdout.write('Starting {} Markov generation.\n'.format(pname))
 
     conn = psycopg2.connect('dbname=markovmix user=markovmix')
     mk = markov.PostgresMarkov(conn, pname, case_sensitive=False)
@@ -185,11 +179,11 @@ def update(pname, reset, infile, update_datestamp):
 
         mk.doquery('SELECT COUNT(*) FROM "{}"'.format(mk.table_name))
         old_row_count = mk.cursor.fetchone()[0]
-        stdout.write('Current Markov row count: %d\n' % old_row_count)
+        sys.stdout.write('Current Markov row count: %d\n' % old_row_count)
 
         mk.clear()
 
-        stdout.write('Reinitializing tables...\n')
+        sys.stdout.write('Reinitializing tables...\n')
         mk.doquery('DROP TABLE IF EXISTS ".markov.old"')
         mk.doquery('DROP TABLE IF EXISTS ".context.old"')
         mk.doquery('ALTER TABLE "{}" RENAME TO ".markov.old"'.format(
@@ -200,10 +194,10 @@ def update(pname, reset, infile, update_datestamp):
 
     for progress, rows in corpus.markov_rows():
         mk.add_markov_rows(rows)
-        stdout.write('Inserting Markov data {}/{}...\r'.format(
+        sys.stdout.write('Inserting Markov data {}/{}...\r'.format(
             progress[0], progress[1]))
-        stdout.flush()
-    stdout.write('\n')
+        sys.stdout.flush()
+    sys.stdout.write('\n')
 
     # Write context data
     for progress, rows in corpus.context_rows(PROGRESS_EVERY if reset else 1):
@@ -214,20 +208,20 @@ def update(pname, reset, infile, update_datestamp):
         else:
             inword, outword, freq = rows[0]
             mk.add_context(inword, outword, freq)
-        stdout.write('Inserting context data {}/{}...\r'.format(
+        sys.stdout.write('Inserting context data {}/{}...\r'.format(
             progress[0], progress[1]))
-        stdout.flush()
+        sys.stdout.flush()
 
-    stdout.write('\n')
+    sys.stdout.write('\n')
     if reset:
-        stdout.write('Indexing tables...\n')
+        sys.stdout.write('Indexing tables...\n')
         mk.index_tables()
         mk.doquery('SELECT COUNT(*) FROM "{}"'.format(mk.table_name))
         new_row_count = mk.cursor.fetchone()[0]
         row_count_increase = new_row_count - old_row_count
-        stdout.write('New Markov row count: %d\n' % new_row_count)
+        sys.stdout.write('New Markov row count: %d\n' % new_row_count)
         if old_row_count:
-            stdout.write('Row count change: %+d (%d%%)\n' % (
+            sys.stdout.write('Row count change: %+d (%d%%)\n' % (
                 row_count_increase, round(row_count_increase / old_row_count * 100)))
 
     # Update last-updated date if enabled (will only be written to DB if
@@ -239,12 +233,12 @@ def update(pname, reset, infile, update_datestamp):
         if not mk.cursor.rowcount:
             mk.doquery('INSERT INTO ".last-updated" VALUES (%s)', (pname,))
     else:
-        stdout.write('Skipping datestamp update.\n')
+        sys.stdout.write('Skipping datestamp update.\n')
 
-    stdout.write('Closing...\n')
+    sys.stdout.write('Closing...\n')
     mk.commit()
     conn.close()
-    stdout.write('Finished!\n\n')
+    sys.stdout.write('Finished!\n\n')
 
 
 def get_arg_parser():
@@ -269,8 +263,10 @@ if __name__ == '__main__':
     reset = args.reset
     update_datestamp = not args.no_update_datestamp
 
+    stdin = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8', errors='backslashreplace')
+
     try:
         update(pname, reset, stdin, update_datestamp)
     except BadPersonalityError:
-        print "Personality '{}' not defined in personalitiesrc.py".format(pname)
-        exit(2)
+        print("Personality '{}' not defined in personalitiesrc.py".format(pname))
+        sys.exit(2)

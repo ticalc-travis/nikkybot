@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Simple Markov chain implementation
 # Copyright ©2012-2016 Travis Evans
 #
@@ -140,8 +138,8 @@ class PostgresMarkov(object):
             new_args = []
             for a in args:
                 try:
-                    new_args.append(unicode(a, encoding='utf8',
-                                            errors='replace'))
+                    new_args.append(str(a, encoding='utf8',
+                                        errors='backslashreplace'))
                 except TypeError:
                     new_args.append(a)
         return self.cursor.execute(querystr, new_args)
@@ -349,7 +347,7 @@ class PostgresMarkov(object):
             q2.append(self.cursor.mogrify('prev3key=%s', (chain[3],)))
         if len(chain) >= 5 and chain[4] is not None:
             q2.append(self.cursor.mogrify('prev4key=%s', (chain[4],)))
-        q = q1 + ' AND '.join(q2)
+        q = q1.encode('utf-8') + b' AND '.join(q2)
         self.doquery(q)
         if not self.cursor.rowcount:
             chain.reverse()     # Back to original order for error message
@@ -391,7 +389,7 @@ class PostgresMarkov(object):
             q2.append(self.cursor.mogrify('next3key=%s', (chain[3],)))
         if len(chain) >= 5 and chain[4] is not None:
             q2.append(self.cursor.mogrify('next4key=%s', (chain[4],)))
-        q = q1 + ' AND '.join(q2)
+        q = q1.encode('utf-8') + b' AND '.join(q2)
         self.doquery(q)
         if not self.cursor.rowcount:
             raise KeyError("{}: chain not found".format(chain))

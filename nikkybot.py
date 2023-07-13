@@ -1,5 +1,4 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 # “NikkyBot”
 # Copyright ©2012-2016 Travis Evans
@@ -17,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function
+
 
 import datetime
 import random
@@ -333,7 +332,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
         replaced so they won't cause later problems."""
         nick, host = user.split('!', 1)
         msg = sanitize(strip_color(raw_msg)).strip()
-        msg = msg.decode(encoding='utf8', errors='replace').encode(
+        msg = msg.encode(encoding='utf8', errors='backslashreplace').decode(
             encoding='utf8')
 
         # Parse/convert saxjax's messages
@@ -623,7 +622,10 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
     def exec_bot_chat(self, nick, channel, nick1, nick2):
         self.user_threads += 1
-        out = subprocess.check_output(['bot-chat', nick1, nick2])
+        out = subprocess.check_output(['bot-chat', nick1, nick2]).decode('utf-8')
+        # ^ Default decoding error handling; that script should never
+        # return invalid UTF-8, and if it does, better make a lot of
+        # noise about it so the problem is known
         print('DEBUG: *** Bot chat output ***\n')
         print(out)
         return nick, channel, out
@@ -682,7 +684,7 @@ class NikkyBot(irc.IRCClient, Sensitive):
             delay = self.opts.initial_reply_delay
             rate = self.opts.simulated_typing_speed
 
-        if isinstance(msg, str) or isinstance(msg, unicode):
+        if isinstance(msg, str):
             msg = [msg]
         first_line = True
         for item in msg:

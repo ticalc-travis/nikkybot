@@ -1,5 +1,4 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 # “NikkyBot”
 # Copyright ©2012-2016 Travis Evans
@@ -17,13 +16,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function
+
 
 from collections import defaultdict
 from collections import deque
 
 import argparse
-import cPickle
+import pickle
 import random
 import time
 import sys
@@ -147,6 +146,7 @@ if __name__ == '__main__':
                          'sending messages for COOLDOWN seconds.')
     OPTS = ap.parse_args()
 
+    sys.stdout.reconfigure(encoding='utf-8', errors='backslashreplace')
     log.startLogging(sys.stdout)
     url, port = random.choice(OPTS.servers).split(':')
     print('Connecting to {}:{}'.format(url, port))

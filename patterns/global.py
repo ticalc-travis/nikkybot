@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # “NikkyBot”
 # Copyright ©2012-2016 Travis Evans
 #
@@ -18,7 +16,7 @@
 
 from math import ceil
 
-from _table import *
+from ._table import *
 import nikkyai
 
 def rule(nikky, context, fmt):
@@ -33,7 +31,7 @@ def rule(nikky, context, fmt):
     # in nikkyai, which will always reject it as a duplicate before ever being
     # output).
     saved_search_time = nikky.search_time
-    for i in xrange(0, int(ceil(nikky.search_time))):
+    for i in range(0, int(ceil(nikky.search_time))):
         # Approximate search time to nearest second, rounding up
         # (approx. 1 second per iteration)
         seed = choice(("Don't", "Just kick", "Just ban", "Just stop", "Stop",
