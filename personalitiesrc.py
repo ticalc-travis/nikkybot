@@ -12,6 +12,7 @@
 # }
 
 personality_regexes = {
+    # personality_name: nick_regex_to_match
     'adriweb': r'adriweb',
     'beck': r'beck$|beckadam',
     'brandonw': r'brandonw',
@@ -60,7 +61,8 @@ personality_config = {
 }
 
 personalities = {
-    # Aliases...:
+    # Aliases
+    # alias: target key in personality_regexes
     'nikkybot': 'nikky',
     'beckadam': 'beck',
     'astrid': 'chronomex',
