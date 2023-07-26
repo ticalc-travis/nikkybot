@@ -69,6 +69,7 @@ personalities = {
     'duncans': 'chronomex',
     'exmic': 'chronomex',
     'xmc': 'chronomex',
+    'imclevor': 'clevor',
     'comicidiot': 'comic',
     'comicsans': 'comic',
     'commandz': 'commandblockguy',
