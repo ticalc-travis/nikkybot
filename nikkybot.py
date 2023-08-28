@@ -86,6 +86,19 @@ class NikkyBot(irc.IRCClient, Sensitive):
 
     ## Overridden methods ##
 
+    def lineReceived(self, line):
+        """Add proper error handling for UTF-8 decoding because Twisted
+        apparently couldn't be bothered to provide its own.
+        """
+        if isinstance(line, bytes):
+            try:
+                line = line.decode('utf-8')
+                print('lineReceived: utf-8')
+            except UnicodeDecodeError:
+                line = line.decode('iso-8859-1', errors='replace')
+                print('lineReceived: utf-8 decode failed; assuming iso-8859-1')
+        super().lineReceived(line)
+
     def join(self, channel):
         """Log bot's channel joins"""
         print('Attempting to join {}'.format(channel))
