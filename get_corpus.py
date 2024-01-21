@@ -175,7 +175,7 @@ def output_corpus(pname, reset):
     log_root = os.path.join(home, 'log', 'irc', 'weechat')
     log_paths = []
     for channel_name in [
-            'calcgames', 'cemetech', 'tcpa', 'ti', 'omnimaga', 'flood',
+            'calcgames', 'cemetech', 'cemetech2', 'tcpa', 'ti', 'omnimaga', 'flood',
              'caleb', 'caleb-spam', 'hp48', 'markov', 'nspired', 'nspire-lua',
              'prizm', 'wikiti', 'cemetech-mc', 'codewalrus', 'gbadev',
              'kinginfinity', 'thebutton', 'thebuttondev'
