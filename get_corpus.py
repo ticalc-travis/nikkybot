@@ -199,55 +199,58 @@ def output_corpus(pname, reset):
                 ):
                     log_paths.append(log_path)
     for path in log_paths:
-        stderr.write('Opening ' + path + '\n')
-        with open(path, 'r', encoding='utf-8', errors='backslashreplace') as f:
-            for line in f:
-                line = line.strip()
+        try:
+            with open(path, 'r', encoding='utf-8', errors='backslashreplace') as f:
+                stderr.write('Opening ' + path + '\n')
+                for line in f:
+                    line = line.strip()
 
-                m1 = re.match(r'^([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2})(?: -[0-9]{4})?\t[+@]?(.*?)\t(.*)', line)
-                m2 = re.match(r'^(..., [0-9]{2} ... [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}) [-+][0-9]{4}\t[+@]?(.*?)\t(.*)', line)
-                if m1:
-                    date, nick, msg = m1.groups()
-                    date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
-                elif m2:
-                    date, nick, msg = m2.groups()
-                    date = datetime.strptime(date, '%a, %d %b %Y %H:%M:%S')
-                else:
-                    continue
-                # Okay, Weechat's default log format kind of stinks for parsing.
-                if not nick or nick in (
-                        '  <==  ', '  ==>  ', '  ---  ', ' * ', '[chanstat]'):
-                    continue
+                    m1 = re.match(r'^([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2})(?: -[0-9]{4})?\t[+@]?(.*?)\t(.*)', line)
+                    m2 = re.match(r'^(..., [0-9]{2} ... [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}) [-+][0-9]{4}\t[+@]?(.*?)\t(.*)', line)
+                    if m1:
+                        date, nick, msg = m1.groups()
+                        date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
+                    elif m2:
+                        date, nick, msg = m2.groups()
+                        date = datetime.strptime(date, '%a, %d %b %Y %H:%M:%S')
+                    else:
+                        continue
+                    # Okay, Weechat's default log format kind of stinks for parsing.
+                    if not nick or nick in (
+                            '  <==  ', '  ==>  ', '  ---  ', ' * ', '[chanstat]'):
+                        continue
 
-                # Special case to handle our silly nikky/nikkybot nick-swapping
-                #   stunt
-                if date < datetime(year=2014, month=5, day=2):
-                    if nick.lower().startswith('nikkybot'):
-                        nick = 'nikky'
-                    elif nick.lower().startswith('nikky'):
-                        nick = 'nikkybot'
+                    # Special case to handle our silly nikky/nikkybot nick-swapping
+                    #   stunt
+                    if date < datetime(year=2014, month=5, day=2):
+                        if nick.lower().startswith('nikkybot'):
+                            nick = 'nikky'
+                        elif nick.lower().startswith('nikky'):
+                            nick = 'nikkybot'
 
-                if date < last_updated or date > target_date:
-                    continue
-                if (nick.lower().startswith('saxjax') or
-                        nick.lower().startswith('disjax') or
-                        nick.lower().startswith('cemetecmc')):
-                    m = re.match(r'(?:[\[(].[\])] )?[\[<](.*?)[\]>] (.*)', msg)
-                elif nick.lower().startswith('omnomirc'):
-                    m = re.match(r'^(?:\(.\))?<(.*?)> (.*)', msg, re.I)
-                elif (nick.lower().startswith('walriibot') or
-                      nick.lower().startswith('wb') or
-                      nick.lower().startswith('i|') or
-                      nick.lower().startswith('l|') or
-                      nick.lower().startswith('j|') or
-                      nick.lower().startswith('yukitg')):
-                    m = re.match(r'^(?:\(.*?\))?(?:<(?:[ijl]\||yukitg)> )?<(.*?)> (.*)', msg, re.I)
-                else:
-                    m = None
-                if m:
-                    nick, msg = m.group(1), m.group(2)
-                print_line(nick, msg)
-        print_context_break()
+                    if date < last_updated or date > target_date:
+                        continue
+                    if (nick.lower().startswith('saxjax') or
+                            nick.lower().startswith('disjax') or
+                            nick.lower().startswith('cemetecmc')):
+                        m = re.match(r'(?:[\[(].[\])] )?[\[<](.*?)[\]>] (.*)', msg)
+                    elif nick.lower().startswith('omnomirc'):
+                        m = re.match(r'^(?:\(.\))?<(.*?)> (.*)', msg, re.I)
+                    elif (nick.lower().startswith('walriibot') or
+                          nick.lower().startswith('wb') or
+                          nick.lower().startswith('i|') or
+                          nick.lower().startswith('l|') or
+                          nick.lower().startswith('j|') or
+                          nick.lower().startswith('yukitg')):
+                        m = re.match(r'^(?:\(.*?\))?(?:<(?:[ijl]\||yukitg)> )?<(.*?)> (.*)', msg, re.I)
+                    else:
+                        m = None
+                    if m:
+                        nick, msg = m.group(1), m.group(2)
+                    print_line(nick, msg)
+            print_context_break()
+        except FileNotFoundError:
+            pass
 
     mk.commit()
     conn.close()

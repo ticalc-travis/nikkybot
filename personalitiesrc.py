@@ -22,6 +22,7 @@ personality_regexes = {
     'clevor': r'clevor',
     'comic': r'comic|comicidiot',
     'commandblockguy': r'commandblockguy|commandz|cmdtwo',
+    'commentednewline': r'commentednewline',
     'cvsoft': r'cv|notipa|cvsoft',
     'eeems': r'eeems',
     'ej': r'e-j|e-jl|el-j',
@@ -29,6 +30,7 @@ personality_regexes = {
     'epsilon5': r'epsilon5',
     'fghsgh': r'fghsgh',
     'glk': r'glk',
+    'hooloovoo': r'hooloovoo',
     'iambian': r'iambian',
     'iphoenix': r'_iphoenix_|iphoenix',
     'kerm': r'kerm(?!ut2ks)|kermmartian',
@@ -46,18 +48,18 @@ personality_regexes = {
     'nomkid': r'nomkid',
     'pieman': r'pieman',
     'roccolox': r'roccolox',
+    'sumde': r'sumde',
     'tari': r'tari',
     'tev': r'tev|travis|travis e',
     'thelastmillennial': r'thelastmillennial',
     'timmy': r'timmyturner',
     'tinyhacker': r'tiny_hacker',
+    'voblit': r'voblit',
     'wavejumper3': r'wavejumper3',
     'womp': r'mr womp womp',
 }
 
 personality_config = {
-    'iphoenix': {'order': 3},
-    'logical': {'order': 3},
 }
 
 personalities = {
