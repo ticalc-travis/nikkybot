@@ -47,14 +47,17 @@ personality_regexes = {
     'nikky': r'((nikky|allyn)(?!(?:bot|test))|allynfolksjr)',
     'nomkid': r'nomkid',
     'pieman': r'pieman',
+    'qrkadem': r'qrkadem',
     'roccolox': r'roccolox',
+    'stephenm': r'stephenm',
     'sumde': r'sumde',
     'tari': r'tari',
     'tev': r'tev|travis|travis e',
     'thelastmillennial': r'thelastmillennial',
+    'tikid': r'ti-kid',
     'timmy': r'timmyturner',
     'tinyhacker': r'tiny_hacker',
-    'voblit': r'voblit',
+    'voblit': r'voblit|ldc2\.conf',
     'wavejumper3': r'wavejumper3',
     'womp': r'mr womp womp',
 }
@@ -96,6 +99,7 @@ personalities = {
     'tlm': 'thelastmillennial',
     'timmyturner': 'timmy',
     'timmyturner62': 'timmy',
+    'ldc2conf': 'voblit',
 }
 
 # Fill in primary personas...
